@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ImmoAggregator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e3a5f, #0f172a);
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo-icon { font-size: 22px; }
+    .logo h1 { font-size: 15px; font-weight: 700; color: #fff; }
+    .logo small { font-size: 10px; color: #64748b; display: block; margin-top: 1px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px 16px;
+    }
+
+    .stat {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-number { font-size: 24px; font-weight: 800; color: #38bdf8; line-height: 1; }
+    .stat-label  { font-size: 10px; color: #64748b; margin-top: 3px; text-transform: uppercase; letter-spacing: .5px; }
+
+    .stat.criteo .stat-number { color: #fb923c; }
+
+    .sync-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px 14px;
+    }
+
+    .last-sync {
+      font-size: 11px;
+      color: #475569;
+    }
+
+    .btn-sync {
+      background: #0ea5e9;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-sync:hover { background: #0284c7; }
+    .btn-sync:disabled { background: #334155; color: #64748b; cursor: default; }
+
+    .actions {
+      padding: 0 16px 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 8px;
+      border-radius: 7px;
+      border: 1px solid #1e293b;
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+    }
+    .btn-action:hover { background: #0f172a; color: #e2e8f0; border-color: #334155; }
+    .btn-action .icon { display: block; font-size: 18px; margin-bottom: 3px; }
+
+    .config-section {
+      padding: 12px 16px;
+      border-top: 1px solid #1e293b;
+      display: none;
+    }
+    .config-section.open { display: block; }
+
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 11px; color: #64748b; margin-bottom: 4px; }
+    .field input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: #e2e8f0;
+      font-size: 12px;
+    }
+    .field input:focus { outline: none; border-color: #0ea5e9; }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .toggle {
+      width: 32px; height: 18px;
+      background: #334155;
+      border-radius: 9px;
+      position: relative;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle.on { background: #0ea5e9; }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 14px; height: 14px;
+      background: white;
+      border-radius: 50%;
+      transition: left .2s;
+    }
+    .toggle.on::after { left: 16px; }
+
+    .btn-save {
+      width: 100%;
+      margin-top: 10px;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-save:hover { background: #0284c7; }
+
+    .status-bar {
+      padding: 6px 16px;
+      font-size: 11px;
+      color: #22c55e;
+      background: #0f2617;
+      border-top: 1px solid #14532d;
+      min-height: 28px;
+    }
+    .status-bar.error { color: #f87171; background: #2d1212; border-color: #7f1d1d; }
+    .status-bar.idle  { color: #475569; background: transparent; border-top-color: #1e293b; }
+
+    .btn-gallery {
+      display: block;
+      width: calc(100% - 32px);
+      margin: 0 16px 14px;
+      padding: 10px;
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-icon">🏠</span>
+    <div>
+      <h1>ImmoAggregator</h1>
+      <small>Green Acres + Criteo — Galerie personnelle</small>
+    </div>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-number" id="stat-favorites">—</div>
+    <div class="stat-label">Favoris GA</div>
+  </div>
+  <div class="stat criteo">
+    <div class="stat-number" id="stat-criteo">—</div>
+    <div class="stat-label">Pubs Criteo</div>
+  </div>
+</div>
+
+<div class="sync-row">
+  <span class="last-sync" id="last-sync">Jamais synchronisé</span>
+  <button class="btn-sync" id="btn-sync">⬆ Sync</button>
+</div>
+
+<a class="btn-gallery" id="btn-gallery" href="#" target="_blank">🖼 Ouvrir la galerie</a>
+
+<div class="actions">
+  <button class="btn-action" id="btn-scrape">
+    <span class="icon">⭐</span>
+    Scraper<br>mes favoris
+  </button>
+  <button class="btn-action" id="btn-config">
+    <span class="icon">⚙️</span>
+    Configurer<br>le serveur
+  </button>
+  <button class="btn-action" id="btn-clear">
+    <span class="icon">🗑</span>
+    Vider<br>le cache
+  </button>
+</div>
+
+<div class="config-section" id="config-section">
+  <div class="field">
+    <label>URL du serveur</label>
+    <input type="url" id="cfg-server" placeholder="https://votre-serveur.com/immo/api/sync.php">
+  </div>
+  <div class="field">
+    <label>Clé API</label>
+    <input type="text" id="cfg-apikey" placeholder="Votre clé secrète">
+  </div>
+  <div class="field">
+    <label>URL de la galerie</label>
+    <input type="url" id="cfg-gallery" placeholder="https://votre-serveur.com/immo/">
+  </div>
+  <div class="toggle-row">
+    <span>Sync automatique</span>
+    <div class="toggle on" id="toggle-auto"></div>
+  </div>
+  <button class="btn-save" id="btn-save-config">Enregistrer</button>
+</div>
+
+<div class="status-bar idle" id="status-bar">Prêt</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

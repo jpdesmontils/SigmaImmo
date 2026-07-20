@@ -1,0 +1,75 @@
+{
+  "manifest_version": 3,
+  "name": "ImmoAggregator — Green Acres + Criteo",
+  "version": "1.0.0",
+  "description": "Capture vos favoris Green Acres et annonces Criteo dans une galerie personnelle",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "alarms",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.green-acres.fr/*",
+    "https://*.criteo.com/*",
+    "https://*.criteo.net/*",
+    "https://nominatim.openstreetmap.org/*",
+	"https://solenis-studio.fr/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.green-acres.fr/fr/favorite/all*"
+      ],
+      "js": [
+        "content_greenacres_favorites.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.green-acres.fr/fr/*"
+      ],
+      "js": [
+        "content_greenacres_listing.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content_criteo.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content_capture.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
