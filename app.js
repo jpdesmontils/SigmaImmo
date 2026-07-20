@@ -1,0 +1,775 @@
+// ============================================================
+// ImmoAggregator — app.js
+// SPA : Galerie / Liste / Carte + Slideshow
+// ============================================================
+
+// ── Config ────────────────────────────────────────────────────
+const API_URL = 'https://solenis-studio.fr/sigma-immo/api/listings.php';
+
+// ── État global ───────────────────────────────────────────────
+let allListings = [];
+let filtered    = [];
+let map         = null;
+let markers     = null;
+let currentView = 'gallery';
+
+const filters = {
+  source:    'all',
+  selection: 'all',
+  city:      '',
+  priceMin:  null,
+  priceMax:  null,
+  surfMin:   null,
+  surfMax:   null,
+  sort:      'date_desc'
+};
+
+const slideshow = {
+  items:    [],
+  index:    0,
+  playing:  false,
+  timer:    null,
+  interval: 5000
+};
+
+// ── Init ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('[ImmoAgg] DOM prêt, init...');
+  initViewSwitcher();
+  initFilters();
+  initLightbox();
+  initDeleteModal();
+  await loadData();
+});
+
+// ── Chargement données ────────────────────────────────────────
+async function loadData() {
+  console.log('[ImmoAgg] Chargement depuis', API_URL);
+  try {
+    const res = await fetch(API_URL + '?limit=500');
+    console.log('[ImmoAgg] HTTP status:', res.status, res.ok);
+
+    const text = await res.text();
+    console.log('[ImmoAgg] Réponse brute (200 chars):', text.slice(0, 200));
+
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (parseErr) {
+      console.error('[ImmoAgg] JSON parse error:', parseErr);
+      showError();
+      return;
+    }
+
+    console.log('[ImmoAgg] JSON ok, clés:', Object.keys(json));
+
+    // Support results ET items selon version API
+    allListings = json.results || json.items || [];
+    console.log('[ImmoAgg] allListings:', allListings.length, 'entrées');
+
+    if (allListings.length > 0) {
+      console.log('[ImmoAgg] Premier item:', JSON.stringify(allListings[0]).slice(0, 200));
+    }
+
+    updateHeaderStats();
+    applyFiltersAndRender();
+
+  } catch (e) {
+    console.error('[ImmoAgg] Erreur chargement:', e);
+    showError();
+  }
+}
+
+function updateHeaderStats() {
+  const favs  = allListings.filter(l => l._type === 'favorite').length;
+  const crits = allListings.filter(l => l._type === 'criteo').length;
+  console.log('[ImmoAgg] Stats:', favs, 'favoris,', crits, 'criteo');
+  document.getElementById('hdr-fav').textContent  = favs;
+  document.getElementById('hdr-crit').textContent = crits;
+}
+
+// ── Init modale suppression ──────────────────────────────────
+function initDeleteModal() {
+  document.getElementById('delete-modal-cancel').addEventListener('click', closeDeleteModal);
+  document.getElementById('delete-modal-confirm').addEventListener('click', confirmDelete);
+  document.getElementById('delete-modal').addEventListener('click', function(e) {
+    if (e.target === document.getElementById('delete-modal')) closeDeleteModal();
+  });
+}
+
+// ── Filtres ───────────────────────────────────────────────────
+function initFilters() {
+  document.querySelectorAll('.source-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filters.source = btn.dataset.source;
+      applyFiltersAndRender();
+    });
+  });
+
+  const debounced = debounce(applyFiltersAndRender, 300);
+
+  document.getElementById('f-city').addEventListener('input', e => {
+    filters.city = e.target.value.toLowerCase().trim();
+    debounced();
+  });
+  document.getElementById('f-price-min').addEventListener('input', e => {
+    filters.priceMin = e.target.value ? parseFloat(e.target.value) : null;
+    debounced();
+  });
+  document.getElementById('f-price-max').addEventListener('input', e => {
+    filters.priceMax = e.target.value ? parseFloat(e.target.value) : null;
+    debounced();
+  });
+  document.getElementById('f-surf-min').addEventListener('input', e => {
+    filters.surfMin = e.target.value ? parseFloat(e.target.value) : null;
+    debounced();
+  });
+  document.getElementById('f-surf-max').addEventListener('input', e => {
+    filters.surfMax = e.target.value ? parseFloat(e.target.value) : null;
+    debounced();
+  });
+  document.getElementById('f-sort').addEventListener('change', e => {
+    filters.sort = e.target.value;
+    applyFiltersAndRender();
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', resetFilters);
+
+  document.querySelectorAll('.selection-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.selection-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filters.selection = btn.dataset.selection;
+      applyFiltersAndRender();
+    });
+  });
+}
+
+function applyFiltersAndRender() {
+  filtered = allListings.filter(item => {
+    if (filters.source !== 'all' && item._type !== filters.source) return false;
+    if (filters.selection === 'shortlist' && item.selection !== 'shortlist') return false;
+    if (filters.selection === 'ecartee'   && item.selection !== 'ecartee')   return false;
+    if (filters.city && !getLoc(item).toLowerCase().includes(filters.city)) return false;
+    if (filters.priceMin !== null && (item.price === null || item.price < filters.priceMin)) return false;
+    if (filters.priceMax !== null && (item.price === null || item.price > filters.priceMax)) return false;
+    if (filters.surfMin  !== null && (item.surface === null || item.surface < filters.surfMin))  return false;
+    if (filters.surfMax  !== null && (item.surface === null || item.surface > filters.surfMax))  return false;
+    return true;
+  });
+
+  const [sortField, sortOrder] = filters.sort.split('_');
+  filtered.sort((a, b) => {
+    let va, vb;
+    switch (sortField) {
+      case 'price':   va = a.price   || Infinity; vb = b.price   || Infinity; break;
+      case 'surface': va = a.surface || 0;        vb = b.surface || 0;        break;
+      default:        va = a.capturedAt || 0;     vb = b.capturedAt || 0;
+    }
+    return sortOrder === 'asc' ? va - vb : vb - va;
+  });
+
+  console.log('[ImmoAgg] Filtré:', filtered.length, '/', allListings.length);
+  document.getElementById('result-count').textContent = filtered.length;
+
+  if (currentView === 'gallery') renderGallery();
+  if (currentView === 'list')    renderList();
+  if (currentView === 'map')     renderMap();
+}
+
+function resetFilters() {
+  filters.source    = 'all';
+  filters.selection = 'all';
+  filters.city      = '';
+  filters.priceMin = null;
+  filters.priceMax = null;
+  filters.surfMin  = null;
+  filters.surfMax  = null;
+  filters.sort     = 'date_desc';
+
+  document.getElementById('f-city').value      = '';
+  document.getElementById('f-price-min').value = '';
+  document.getElementById('f-price-max').value = '';
+  document.getElementById('f-surf-min').value  = '';
+  document.getElementById('f-surf-max').value  = '';
+  document.getElementById('f-sort').value      = 'date_desc';
+
+  document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.source-btn[data-source="all"]').classList.add('active');
+  document.querySelectorAll('.selection-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.selection-btn[data-selection="all"]').classList.add('active');
+
+  applyFiltersAndRender();
+}
+
+// ── Vue switcher ──────────────────────────────────────────────
+function initViewSwitcher() {
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentView = btn.dataset.view;
+
+      ['gallery', 'list', 'map'].forEach(v => {
+        document.getElementById('view-' + v).classList.toggle('active', v === currentView);
+      });
+
+      if (currentView === 'gallery') renderGallery();
+      if (currentView === 'list')    renderList();
+      if (currentView === 'map')     renderMap();
+    });
+  });
+}
+
+// ── Vue Galerie ───────────────────────────────────────────────
+function renderGallery() {
+  console.log('[ImmoAgg] renderGallery:', filtered.length, 'items');
+  const grid = document.getElementById('gallery-grid');
+
+  if (!grid) { console.error('[ImmoAgg] #gallery-grid introuvable'); return; }
+
+  if (filtered.length === 0) {
+    grid.innerHTML = emptyHTML();
+    return;
+  }
+
+  grid.innerHTML = filtered.map((item, idx) => cardHTML(item, idx)).join('');
+
+  grid.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      // Ne pas ouvrir le slideshow si clic sur un bouton action
+      if (e.target.closest('.card-btn-delete') || e.target.closest('.card-btn-map') || e.target.closest('.card-btn-tag')) return;
+      openSlideshow(parseInt(card.dataset.idx));
+    });
+  });
+
+  // Boutons carte
+  grid.querySelectorAll('.card-btn-map').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx);
+      showOnMap(idx);
+    });
+  });
+
+  // Boutons tag sélection
+  grid.querySelectorAll('.card-btn-tag').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx);
+      const sel = btn.dataset.sel;
+      toggleSelection(idx, sel);
+    });
+  });
+
+  // Boutons suppression
+  grid.querySelectorAll('.card-btn-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx);
+      openDeleteModal(idx);
+    });
+  });
+}
+
+function cardHTML(item, idx) {
+  const imgSrc = getImageUrl(item);
+  const imgEl  = imgSrc
+    ? `<img class="card-img" src="${esc(imgSrc)}" alt="${esc(item.title || '')}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const placeholder = `<div class="card-img-placeholder" style="${imgSrc ? 'display:none' : ''}">🏠</div>`;
+
+  const sel = item.selection || '';
+  const badge = sel === 'shortlist'
+    ? '<div class="card-selection-badge badge-shortlist">⭐ ShortList</div>'
+    : sel === 'ecartee'
+    ? '<div class="card-selection-badge badge-ecartee">✕ Écartée</div>'
+    : '';
+
+  const btnShort = `<button class="card-btn-tag ${sel === 'shortlist' ? 'tag-shortlist-active' : ''}" data-idx="${idx}" data-sel="shortlist" title="ShortList">⭐</button>`;
+  const btnEcart = `<button class="card-btn-tag ${sel === 'ecartee' ? 'tag-ecartee-active' : ''}" data-idx="${idx}" data-sel="ecartee" title="Écarter">✕</button>`;
+
+  return `
+    <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
+      ${badge}
+      ${imgEl}${placeholder}
+      <div class="card-body">
+        <div class="card-tags">
+          ${item._type === 'favorite' ? '<span class="tag tag-fav">⭐ Favori</span>' : ''}
+          ${item._type === 'criteo'   ? '<span class="tag tag-crit">📢 Criteo</span>' : ''}
+        </div>
+        <div class="card-title">${esc(item.title || 'Annonce immobilière')}</div>
+        <div class="card-meta">
+          ${item.price   ? `<span class="card-price">${formatPrice(item.price)}</span>` : ''}
+          ${item.surface ? `<span>${item.surface} m²</span>` : ''}
+          ${item.rooms   ? `<span>${item.rooms}</span>` : ''}
+        </div>
+        <div class="card-location">${esc(getLoc(item))}</div>
+        <div class="card-actions">
+          ${btnShort}
+          ${btnEcart}
+          <button class="card-btn-map" data-idx="${idx}" title="Voir sur la carte">🗺</button>
+          <button class="card-btn-delete" data-idx="${idx}" title="Supprimer">🗑</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Vue Liste ─────────────────────────────────────────────────
+async function renderList() {
+  console.log('[ImmoAgg] renderList:', filtered.length, 'items');
+  const tbody = document.getElementById('list-tbody');
+
+  if (!tbody) { console.error('[ImmoAgg] #list-tbody introuvable'); return; }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7">${emptyHTML()}</td></tr>`;
+    return;
+  }
+
+  // Enrichir avec code postal si absent
+  var needPostal = filtered.filter(function(i) { return !i.postalCode && i.location; });
+  if (needPostal.length > 0) {
+    await Promise.all(needPostal.map(async function(item) {
+      try {
+        var cityMatch = item.location.match(/^([^(]+)/);
+        var city = cityMatch ? cityMatch[1].trim() : '';
+        if (!city) return;
+        var r = await fetch('https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(city) + '&fields=codesPostaux&limit=1&boost=population');
+        var res = await r.json();
+        if (res && res[0] && res[0].codesPostaux && res[0].codesPostaux[0]) {
+          item.postalCode = res[0].codesPostaux[0];
+        }
+      } catch(e) {}
+    }));
+  }
+
+  tbody.innerHTML = filtered.map(function(item, idx) {
+    var imgSrc = getImageUrl(item);
+    var thumb = imgSrc
+      ? '<img class="list-thumb" src="' + esc(imgSrc) + '" alt="" loading="lazy">'
+      : '<div class="list-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface2)">🏠</div>';
+    var cp = item.postalCode ? '<br><small style="color:var(--muted)">' + esc(item.postalCode) + ' · ' + esc(getDept(item)) + '</small>' : '<br><small style="color:var(--muted)">' + esc(getDept(item)) + '</small>';
+
+    return '<tr style="cursor:pointer" onclick="openSlideshow(' + idx + ')">'
+      + '<td>' + thumb + '</td>'
+      + '<td>' + esc(item.title || '—') + '</td>'
+      + '<td>' + (item.price ? formatPrice(item.price) : '—') + '</td>'
+      + '<td>' + (item.surface ? item.surface + ' m²' : '—') + '</td>'
+      + '<td>' + esc(getLoc(item)) + cp + '</td>'
+      + '<td>' + (item._type === 'favorite' ? '<span class="tag tag-fav">⭐ Favori</span>' : '') + (item._type === 'criteo' ? '<span class="tag tag-crit">📢 Criteo</span>' : '') + '</td>'
+      + '<td>' + (item.url ? '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent);font-size:12px;">Voir →</a>' : '') + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+// ── Vue Carte ─────────────────────────────────────────────────
+async function renderMap() {
+  console.log('[ImmoAgg] renderMap:', filtered.length, 'items');
+
+  if (!map) {
+    map = L.map('map').setView([46.8, 2.3], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      crossOrigin: true
+    }).addTo(map);
+  }
+
+  // Supprimer ancien cluster + listeners
+  if (markers) { map.removeLayer(markers); }
+  map.off('popupopen');
+
+  // Cluster group avec compteur
+  markers = L.markerClusterGroup({
+    maxClusterRadius: 60,
+    iconCreateFunction: function(cluster) {
+      var count = cluster.getChildCount();
+      return L.divIcon({
+        html: '<div style="width:36px;height:36px;background:#2563eb;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4);">' + count + '</div>',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        className: ''
+      });
+    }
+  });
+  map.addLayer(markers);
+
+  // Géocoder les items sans coords
+  var toGeocode = filtered.filter(function(item) { return !item.coords && item.location; });
+  console.log('[ImmoAgg] Items à géocoder:', toGeocode.length);
+
+  await Promise.all(toGeocode.map(async function(item) {
+    try {
+      var cityMatch = item.location.match(/^([^(]+)/);
+      var city = cityMatch ? cityMatch[1].trim() : item.location;
+      var r = await fetch('https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(city) + '&fields=centre&limit=1&boost=population');
+      var results = await r.json();
+      if (results && results[0] && results[0].centre) {
+        var coords = results[0].centre.coordinates;
+        item.coords = { lat: coords[1], lng: coords[0] };
+      }
+    } catch(e) {
+      console.warn('[ImmoAgg] Coords échouées:', item.location, e);
+    }
+  }));
+
+  var withCoords = filtered.filter(function(item) { return item.coords && item.coords.lat && item.coords.lng; });
+  console.log('[ImmoAgg] Items avec coords:', withCoords.length);
+  if (withCoords.length === 0) { return; }
+
+  // Calcul dégradé prix
+  var prices = withCoords.map(function(i) { return i.price || 0; }).filter(function(p) { return p > 0; });
+  var minPrice = prices.length ? Math.min.apply(null, prices) : 0;
+  var maxPrice = prices.length ? Math.max.apply(null, prices) : 1;
+  var bounds = [];
+
+  withCoords.forEach(function(item, idx) {
+    var lat = item.coords.lat;
+    var lng = item.coords.lng;
+
+    var color = '#94a3b8';
+    if (item.price && maxPrice > minPrice) {
+      var t = (item.price - minPrice) / (maxPrice - minPrice);
+      var rv = Math.round(34  + (239 - 34)  * t);
+      var gv = Math.round(197 + (68  - 197) * t);
+      var bv = Math.round(94  + (68  - 94)  * t);
+      color = 'rgb(' + rv + ',' + gv + ',' + bv + ')';
+    }
+
+    var icon = L.divIcon({
+      html: '<div style="width:28px;height:28px;background:' + color + ';border:2px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      className: ''
+    });
+
+    var marker = L.marker([lat, lng], { icon: icon });
+    marker.bindPopup(popupHTML(item, idx), { maxWidth: 280 });
+    markers.addLayer(marker);
+    bounds.push([lat, lng]);
+  });
+
+  if (bounds.length > 0) { map.fitBounds(bounds, { padding: [40, 40] }); }
+
+  // Villes de référence — hors cluster, directement sur map
+  var refCities = [
+    { name: 'Avignon',         lat: 43.9493, lng: 4.8055  },
+    { name: 'Marseille',       lat: 43.2965, lng: 5.3698  },
+    { name: 'Aix-en-Provence', lat: 43.5297, lng: 5.4474  },
+    { name: 'La Rochelle',     lat: 46.1603, lng: -1.1511 },
+    { name: 'Bordeaux',        lat: 44.8378, lng: -0.5792 },
+    { name: 'Nantes',          lat: 47.2184, lng: -1.5536 },
+    { name: 'Nimes',           lat: 43.8367, lng: 4.3607  },
+    { name: 'Gare Agen',    lat: 44.2010, lng: 0.6215  }
+  ];
+
+  var cityIcon = L.divIcon({
+    html: '<div style="width:22px;height:22px;background:#3b82f6;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>',
+    iconSize: [22, 22], iconAnchor: [11, 11], className: ''
+  });
+
+  refCities.forEach(function(city) {
+    L.marker([city.lat, city.lng], { icon: cityIcon, zIndexOffset: -100 })
+      .addTo(map)
+      .bindPopup('<div style="font-family:system-ui;font-size:13px;font-weight:600;padding:4px 2px;">' + (city.name.includes('Gare') ? '🚉' : '📍') + ' ' + city.name + '</div>', { maxWidth: 160 });
+  });
+
+  // Listener popup — une seule fois grâce au map.off() en début de fonction
+  map.on('popupopen', function(e) {
+    var popup = e.popup.getElement();
+    if (!popup) return;
+
+    var btnSlide = popup.querySelector('[data-open-slide]');
+    if (btnSlide && !btnSlide._bound) {
+      btnSlide._bound = true;
+      btnSlide.addEventListener('click', function() { openSlideshow(parseInt(btnSlide.dataset.openSlide)); });
+    }
+
+    popup.querySelectorAll('[data-popup-tag]').forEach(function(btn) {
+      if (btn._bound) return;
+      btn._bound = true;
+      btn.addEventListener('click', function() {
+        var popupIdx = parseInt(btn.dataset.popupIdx);
+        var tagVal   = btn.dataset.popupTag;
+        toggleSelection(popupIdx, tagVal);
+        map.closePopup();
+        renderMap();
+      });
+    });
+  });
+}
+
+
+function popupHTML(item, idx) {
+  const imgSrc = getImageUrl(item);
+  const sel = item.selection || '';
+
+  const btnStyle = 'flex:1;padding:6px 4px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;text-align:center;border:1px solid';
+  const shortActive = sel === 'shortlist';
+  const ecartActive = sel === 'ecartee';
+
+  const btnShort = `<button data-popup-tag="shortlist" data-popup-idx="${idx}" style="${btnStyle} ${shortActive ? '#059669;background:rgba(16,185,129,.2);color:#34d399' : '#334155;background:#1e293b;color:#94a3b8'}">⭐ ShortList</button>`;
+  const btnEcart = `<button data-popup-tag="ecartee"   data-popup-idx="${idx}" style="${btnStyle} ${ecartActive ? '#dc2626;background:rgba(239,68,68,.2);color:#f87171'   : '#334155;background:#1e293b;color:#94a3b8'}">✕ Écarter</button>`;
+
+  return `
+    <div style="font-family:system-ui;font-size:13px;min-width:220px;">
+      ${imgSrc ? `<img src="${esc(imgSrc)}" style="width:100%;height:110px;object-fit:cover;border-radius:6px;margin-bottom:8px;" loading="lazy">` : ''}
+      <div style="font-weight:600;margin-bottom:4px;line-height:1.3;">${esc(item.title || 'Annonce')}</div>
+      ${item.price ? `<div style="color:#f59e0b;font-weight:700;margin-bottom:2px;">${formatPrice(item.price)}</div>` : ''}
+      ${item.surface ? `<div style="color:#94a3b8;font-size:12px;margin-bottom:6px;">${item.surface} m²</div>` : ''}
+      <div style="display:flex;gap:5px;margin-bottom:6px;">
+        ${btnShort}${btnEcart}
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button data-open-slide="${idx}" style="${btnStyle} #2563eb;background:#2563eb;color:#fff;flex:1;">🖼 Galerie</button>
+        ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="${btnStyle} #334155;background:#1e293b;color:#e2e8f0;flex:1;text-decoration:none;display:block;">→ Annonce</a>` : ''}
+      </div>
+    </div>`;
+}
+
+// ── Slideshow / Lightbox ──────────────────────────────────────
+function initLightbox() {
+  document.getElementById('lb-close').addEventListener('click', closeLightbox);
+  document.getElementById('lb-prev').addEventListener('click', () => slideshowStep(-1));
+  document.getElementById('lb-next').addEventListener('click', () => slideshowStep(1));
+  document.getElementById('lb-play').addEventListener('click', togglePlay);
+
+  document.getElementById('lb-speed').addEventListener('change', e => {
+    slideshow.interval = parseInt(e.target.value);
+    if (slideshow.playing) { clearInterval(slideshow.timer); startAutoPlay(); }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('lightbox').classList.contains('open')) return;
+    if (e.key === 'ArrowLeft')  slideshowStep(-1);
+    if (e.key === 'ArrowRight') slideshowStep(1);
+    if (e.key === 'Escape')     closeLightbox();
+    if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+  });
+
+  document.getElementById('lightbox').addEventListener('click', e => {
+    if (e.target === document.getElementById('lightbox')) closeLightbox();
+  });
+}
+
+function openSlideshow(startIdx) {
+  slideshow.items = filtered;
+  slideshow.index = startIdx;
+  document.getElementById('lightbox').classList.add('open');
+  updateSlide();
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  stopAutoPlay();
+}
+
+function slideshowStep(dir) {
+  slideshow.index = (slideshow.index + dir + slideshow.items.length) % slideshow.items.length;
+  updateSlide();
+  if (slideshow.playing) { clearInterval(slideshow.timer); startAutoPlay(); }
+}
+
+function updateSlide() {
+  const item = slideshow.items[slideshow.index];
+  if (!item) return;
+
+  document.getElementById('lb-title').textContent = item.title || 'Annonce immobilière';
+  document.getElementById('lb-idx').textContent   = slideshow.index + 1;
+  document.getElementById('lb-total').textContent = slideshow.items.length;
+
+  const imgSrc = getImageUrl(item);
+  const img = document.getElementById('lb-img');
+  img.src = imgSrc || '';
+  img.style.display = imgSrc ? '' : 'none';
+
+  document.getElementById('lb-price').textContent    = item.price ? formatPrice(item.price) : 'Prix non renseigné';
+  document.getElementById('lb-surface').textContent  = item.surface ? item.surface + ' m²' : '';
+  document.getElementById('lb-location').textContent = getLoc(item);
+
+  const link = document.getElementById('lb-link');
+  const linkUrl = item.url || item.destinationUrl || '';
+  if (linkUrl) { link.href = linkUrl; link.style.display = ''; }
+  else { link.style.display = 'none'; }
+
+  document.getElementById('lb-progress-bar').style.width = '0%';
+}
+
+function togglePlay() {
+  slideshow.playing ? stopAutoPlay() : startAutoPlay();
+}
+
+function startAutoPlay() {
+  slideshow.playing = true;
+  document.getElementById('lb-play').textContent = '⏸ Pause';
+  document.getElementById('lb-play').classList.add('active');
+
+  let elapsed = 0;
+  const step  = 50;
+  slideshow.timer = setInterval(() => {
+    elapsed += step;
+    document.getElementById('lb-progress-bar').style.width = ((elapsed / slideshow.interval) * 100) + '%';
+    if (elapsed >= slideshow.interval) { elapsed = 0; slideshowStep(1); }
+  }, step);
+}
+
+function stopAutoPlay() {
+  slideshow.playing = false;
+  clearInterval(slideshow.timer);
+  document.getElementById('lb-play').textContent = '▶ Lecture';
+  document.getElementById('lb-play').classList.remove('active');
+  document.getElementById('lb-progress-bar').style.width = '0%';
+}
+
+// ── Toggle sélection ─────────────────────────────────────────
+async function toggleSelection(idx, sel) {
+  const item = filtered[idx];
+  if (!item) return;
+
+  // Toggle : si déjà actif → neutre, sinon → nouveau tag
+  const newSel = item.selection === sel ? null : sel;
+  item.selection = newSel;
+
+  // Persister côté serveur
+  try {
+    await fetch('https://solenis-studio.fr/sigma-immo/api/tag.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: item.id, selection: newSel })
+    });
+  } catch(e) {
+    console.warn('[ImmoAgg] Tag serveur échoué (local OK):', e);
+  }
+
+  // Re-render sans recharger les données
+  renderGallery();
+}
+
+// ── Actions carte depuis galerie ─────────────────────────────
+async function showOnMap(idx) {
+  const item = filtered[idx];
+  if (!item) return;
+
+  // Passer en vue carte
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.view-btn[data-view="map"]').classList.add('active');
+  currentView = 'map';
+  ['gallery', 'list', 'map'].forEach(v => {
+    document.getElementById('view-' + v).classList.toggle('active', v === 'map');
+  });
+
+  await renderMap();
+
+  // Centrer sur cet item et ouvrir son popup
+  if (item.coords && item.coords.lat) {
+    map.setView([item.coords.lat, item.coords.lng], 13);
+    // Trouver le marker correspondant et ouvrir son popup
+    markers.eachLayer(function(layer) {
+      if (layer.getLatLng) {
+        var ll = layer.getLatLng();
+        if (Math.abs(ll.lat - item.coords.lat) < 0.001 && Math.abs(ll.lng - item.coords.lng) < 0.001) {
+          layer.openPopup();
+        }
+      }
+    });
+  }
+}
+
+// ── Modale suppression ────────────────────────────────────────
+let deleteTargetIdx = null;
+
+function openDeleteModal(idx) {
+  deleteTargetIdx = idx;
+  const item = filtered[idx];
+  document.getElementById('delete-modal-title').textContent = item ? item.title || 'cette annonce' : 'cette annonce';
+  document.getElementById('delete-modal').classList.add('open');
+}
+
+function closeDeleteModal() {
+  deleteTargetIdx = null;
+  document.getElementById('delete-modal').classList.remove('open');
+}
+
+async function confirmDelete() {
+  if (deleteTargetIdx === null) return;
+  const item = filtered[deleteTargetIdx];
+  if (!item) { closeDeleteModal(); return; }
+
+  // Supprimer de allListings
+  const globalIdx = allListings.indexOf(item);
+  if (globalIdx !== -1) allListings.splice(globalIdx, 1);
+
+  // Appeler API suppression
+  try {
+    await fetch('https://solenis-studio.fr/sigma-immo/api/delete.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: item.id, type: item._type })
+    });
+  } catch(e) {
+    console.warn('[ImmoAgg] Suppression serveur échouée (locale OK):', e);
+  }
+
+  closeDeleteModal();
+  applyFiltersAndRender();
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function getImageUrl(item) {
+  if (item.imageUrl)    return item.imageUrl;
+  if (item.images && item.images[0]) return item.images[0];
+  return '';
+}
+
+function getLoc(item) {
+  return item.location || item.address || '';
+}
+
+function getDept(item) {
+  const loc = item.location || '';
+  const match = loc.match(/\(([^)]+)\)/);
+  return match ? match[1] : '';
+}
+
+function formatPrice(price) {
+  if (!price) return '';
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
+}
+
+function esc(str) {
+  return (str || '').toString()
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function emptyHTML() {
+  return `
+    <div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">🏚</div>
+      <p>Aucune annonce ne correspond à vos filtres.<br>
+      Utilisez l'extension Chrome pour capturer vos favoris et annonces Criteo.</p>
+    </div>`;
+}
+
+function showError() {
+  const grid = document.getElementById('gallery-grid');
+  if (grid) grid.innerHTML = `
+    <div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">⚠️</div>
+      <p>Impossible de charger les données.<br>
+      Vérifiez la console pour plus de détails.</p>
+    </div>`;
+}
+
+function debounce(fn, delay) {
+  let timer;
+  return function() {
+    clearTimeout(timer);
+    var args = arguments;
+    timer = setTimeout(function() { fn.apply(null, args); }, delay);
+  };
+}
+
+window.openSlideshow = openSlideshow;
