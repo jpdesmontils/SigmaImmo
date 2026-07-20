@@ -15,7 +15,6 @@ async function loadStats() {
   try {
     const stats = await sendMsg({ type: 'GET_STATS' });
     $('stat-favorites').textContent = stats.favorites;
-    $('stat-criteo').textContent    = stats.criteo;
     if (stats.lastSync) {
       const d = new Date(stats.lastSync);
       $('last-sync').textContent = 'Sync ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });

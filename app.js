@@ -14,7 +14,6 @@ let markers     = null;
 let currentView = 'gallery';
 
 const filters = {
-  source:    'all',
   selection: 'all',
   city:      '',
   priceMin:  null,
@@ -81,11 +80,7 @@ async function loadData() {
 }
 
 function updateHeaderStats() {
-  const favs  = allListings.filter(l => l._type === 'favorite').length;
-  const crits = allListings.filter(l => l._type === 'criteo').length;
-  console.log('[ImmoAgg] Stats:', favs, 'favoris,', crits, 'criteo');
-  document.getElementById('hdr-fav').textContent  = favs;
-  document.getElementById('hdr-crit').textContent = crits;
+  document.getElementById('hdr-fav').textContent = allListings.length;
 }
 
 // ── Init modale suppression ──────────────────────────────────
@@ -99,15 +94,6 @@ function initDeleteModal() {
 
 // ── Filtres ───────────────────────────────────────────────────
 function initFilters() {
-  document.querySelectorAll('.source-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      filters.source = btn.dataset.source;
-      applyFiltersAndRender();
-    });
-  });
-
   const debounced = debounce(applyFiltersAndRender, 300);
 
   document.getElementById('f-city').addEventListener('input', e => {
@@ -149,7 +135,6 @@ function initFilters() {
 
 function applyFiltersAndRender() {
   filtered = allListings.filter(item => {
-    if (filters.source !== 'all' && item._type !== filters.source) return false;
     if (filters.selection === 'shortlist' && item.selection !== 'shortlist') return false;
     if (filters.selection === 'ecartee'   && item.selection !== 'ecartee')   return false;
     if (filters.city && !getLoc(item).toLowerCase().includes(filters.city)) return false;
@@ -180,7 +165,6 @@ function applyFiltersAndRender() {
 }
 
 function resetFilters() {
-  filters.source    = 'all';
   filters.selection = 'all';
   filters.city      = '';
   filters.priceMin = null;
@@ -196,8 +180,6 @@ function resetFilters() {
   document.getElementById('f-surf-max').value  = '';
   document.getElementById('f-sort').value      = 'date_desc';
 
-  document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.source-btn[data-source="all"]').classList.add('active');
   document.querySelectorAll('.selection-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.selection-btn[data-selection="all"]').classList.add('active');
 
@@ -297,8 +279,7 @@ function cardHTML(item, idx) {
       ${imgEl}${placeholder}
       <div class="card-body">
         <div class="card-tags">
-          ${item._type === 'favorite' ? '<span class="tag tag-fav">⭐ Favori</span>' : ''}
-          ${item._type === 'criteo'   ? '<span class="tag tag-crit">📢 Criteo</span>' : ''}
+          <span class="tag tag-fav">⭐ Favori</span>
         </div>
         <div class="card-title">${esc(item.title || 'Annonce immobilière')}</div>
         <div class="card-meta">
@@ -359,7 +340,7 @@ async function renderList() {
       + '<td>' + (item.price ? formatPrice(item.price) : '—') + '</td>'
       + '<td>' + (item.surface ? item.surface + ' m²' : '—') + '</td>'
       + '<td>' + esc(getLoc(item)) + cp + '</td>'
-      + '<td>' + (item._type === 'favorite' ? '<span class="tag tag-fav">⭐ Favori</span>' : '') + (item._type === 'criteo' ? '<span class="tag tag-crit">📢 Criteo</span>' : '') + '</td>'
+      + '<td><span class="tag tag-fav">⭐ Favori</span></td>'
       + '<td>' + (item.url ? '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent);font-size:12px;">Voir →</a>' : '') + '</td>'
       + '</tr>';
   }).join('');
@@ -706,7 +687,7 @@ async function confirmDelete() {
     await fetch('https://solenis-studio.fr/sigma-immo/api/delete.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.id, type: item._type })
+      body: JSON.stringify({ id: item.id })
     });
   } catch(e) {
     console.warn('[ImmoAgg] Suppression serveur échouée (locale OK):', e);
@@ -749,7 +730,7 @@ function emptyHTML() {
     <div class="empty" style="grid-column:1/-1">
       <div class="empty-icon">🏚</div>
       <p>Aucune annonce ne correspond à vos filtres.<br>
-      Utilisez l'extension Chrome pour capturer vos favoris et annonces Criteo.</p>
+      Utilisez l'extension Chrome pour capturer vos annonces.</p>
     </div>`;
 }
 

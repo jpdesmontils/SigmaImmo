@@ -5,6 +5,8 @@
 
 const CONFIG_KEY = 'immo_config';
 const QUEUE_KEY  = 'immo_queue';
+const QUEUE_VERSION_KEY = 'immo_queue_version';
+const QUEUE_VERSION = 2;
 
 const DEFAULT_CONFIG = {
   serverUrl: 'https://solenis-studio.fr/sigma-immo/api/sync.php',
@@ -19,6 +21,13 @@ chrome.runtime.onInstalled.addListener(async () => {
   if (!cfg) {
     await chrome.storage.local.set({ [CONFIG_KEY]: DEFAULT_CONFIG });
     console.log('[ImmoAgg] Config initialisée avec les valeurs par défaut');
+  }
+  // La version précédente conservait toute la collection localement. Cette
+  // migration la vide afin qu'une annonce supprimée ne soit jamais recréée.
+  const { [QUEUE_VERSION_KEY]: queueVersion } = await chrome.storage.local.get(QUEUE_VERSION_KEY);
+  if (queueVersion !== QUEUE_VERSION) {
+    await chrome.storage.local.remove(QUEUE_KEY);
+    await chrome.storage.local.set({ [QUEUE_VERSION_KEY]: QUEUE_VERSION });
   }
   scheduleAlarm();
 });
@@ -40,7 +49,6 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'GA_FAVORITES')  handleFavorites(msg.data, sendResponse);
   if (msg.type === 'GA_LISTING')    handleListing(msg.data, sendResponse);
-  if (msg.type === 'CRITEO_ADS')    handleCriteo(msg.data, sendResponse);
   if (msg.type === 'GET_STATS')     getStats(sendResponse);
   if (msg.type === 'FORCE_SYNC')    flushQueue().then(() => sendResponse({ ok: true }));
   if (msg.type === 'SAVE_CONFIG')   saveConfig(msg.data, sendResponse);
@@ -81,22 +89,6 @@ async function handleListing(listing, sendResponse) {
   sendResponse({ ok: true });
 }
 
-async function handleCriteo(ads, sendResponse) {
-  const queue = await getQueue();
-  let added = 0;
-  for (const ad of ads) {
-    const key = ad.imageUrl;
-    if (!queue.criteo[key]) {
-      queue.criteo[key] = { ...ad, capturedAt: Date.now(), source: 'criteo' };
-      added++;
-    }
-  }
-  await saveQueue(queue);
-  console.log(`[ImmoAgg] ${added} nouvelles annonces Criteo capturées`);
-  sendResponse({ ok: true, added });
-  await autoSync();
-}
-
 // ── Sync serveur ──────────────────────────────────────────────
 
 async function autoSync() {
@@ -118,17 +110,9 @@ async function flushQueue() {
 
   const queue = await getQueue();
   const favorites = Object.values(queue.favorites || {});
-  const criteo = Object.values(queue.criteo || {});
+  console.log('Queue count:', { favorites: favorites.length });
 
-  console.log('Queue counts:', {
-    favorites: favorites.length,
-    criteo: criteo.length
-  });
-
-  console.log('First favorite:', favorites[0] || null);
-  console.log('First criteo:', criteo[0] || null);
-
-  if (favorites.length === 0 && criteo.length === 0) {
+  if (favorites.length === 0) {
     console.warn('[ImmoAgg][SYNC] Queue vide');
     console.groupEnd();
     return { ok: true, reason: 'EMPTY_QUEUE' };
@@ -136,7 +120,6 @@ async function flushQueue() {
 
   const payload = {
     favorites,
-    criteo,
     syncedAt: Date.now()
   };
 
@@ -166,6 +149,14 @@ async function flushQueue() {
     }
 
     if (res.ok) {
+      // Le stockage local est une file de livraison, pas une seconde base de
+      // données. Ne supprimer que les éléments inclus dans cette requête pour
+      // préserver les captures éventuelles arrivées pendant la synchronisation.
+      const currentQueue = await getQueue();
+      for (const listing of favorites) {
+        delete currentQueue.favorites[normalizeUrl(listing.url)];
+      }
+      await saveQueue(currentQueue);
       await chrome.storage.local.set({ immo_last_sync: Date.now() });
       console.log('[ImmoAgg][SYNC] Sync OK:', result);
       console.groupEnd();
@@ -186,7 +177,7 @@ async function flushQueue() {
 
 async function getQueue() {
   const { [QUEUE_KEY]: q } = await chrome.storage.local.get(QUEUE_KEY);
-  return q || { favorites: {}, criteo: {} };
+  return { favorites: q?.favorites || {} };
 }
 
 async function saveQueue(queue) {
@@ -198,7 +189,6 @@ async function getStats(sendResponse) {
   const { immo_last_sync } = await chrome.storage.local.get('immo_last_sync');
   sendResponse({
     favorites: Object.keys(queue.favorites).length,
-    criteo:    Object.keys(queue.criteo).length,
     lastSync:  immo_last_sync || null
   });
 }

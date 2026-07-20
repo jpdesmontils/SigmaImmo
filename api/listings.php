@@ -22,8 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 // ── Config ────────────────────────────────────────────────────
 define('DATA_DIR', __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
-define('CRITEO_FILE', DATA_DIR . 'criteo.json');
-define('MERGED_FILE', DATA_DIR . 'merged.json');
 define('DEBUG_FILE', DATA_DIR . 'debug_listings.log');
 
 // ── Debug ─────────────────────────────────────────────────────
@@ -45,50 +43,16 @@ debugLog('REQUEST', [
     'method' => $_SERVER['REQUEST_METHOD'],
     'query' => $_GET,
     'data_dir' => DATA_DIR,
-    'favorites_exists' => file_exists(FAVORITES_FILE),
-    'criteo_exists' => file_exists(CRITEO_FILE),
-    'merged_exists' => file_exists(MERGED_FILE)
+    'favorites_exists' => file_exists(FAVORITES_FILE)
 ]);
 
 // ── Query params ──────────────────────────────────────────────
-$type = isset($_GET['type']) ? $_GET['type'] : 'merged';
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'date_desc';
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
 
 // ── Load data ─────────────────────────────────────────────────
-if ($type === 'favorites') {
-    $items = array_values(loadJson(FAVORITES_FILE, []));
-    foreach ($items as &$item) {
-        $item['_type'] = 'favorite';
-    }
-    unset($item);
-} elseif ($type === 'criteo') {
-    $items = array_values(loadJson(CRITEO_FILE, []));
-    foreach ($items as &$item) {
-        $item['_type'] = 'criteo';
-    }
-    unset($item);
-} else {
-    if (file_exists(MERGED_FILE)) {
-        $items = array_values(loadJson(MERGED_FILE, []));
-    } else {
-        $favorites = array_values(loadJson(FAVORITES_FILE, []));
-        $criteo = array_values(loadJson(CRITEO_FILE, []));
-
-        foreach ($favorites as &$f) {
-            $f['_type'] = 'favorite';
-        }
-        unset($f);
-
-        foreach ($criteo as &$c) {
-            $c['_type'] = 'criteo';
-        }
-        unset($c);
-
-        $items = array_merge($favorites, $criteo);
-    }
-}
+$items = array_values(loadJson(FAVORITES_FILE, []));
 
 // ── Search ────────────────────────────────────────────────────
 if ($q !== '') {
@@ -143,22 +107,16 @@ if ($limit > 0 && $total > $limit) {
 // ── Response ──────────────────────────────────────────────────
 $response = [
     'ok' => true,
-    'type' => $type,
     'query' => $q,
     'sort' => $sort,
     'total' => $total,
     'count' => count($items),
     'items' => $items,
-    'debug' => [
-        'favorites_file' => fileInfo(FAVORITES_FILE),
-        'criteo_file' => fileInfo(CRITEO_FILE),
-        'merged_file' => fileInfo(MERGED_FILE)
-    ],
+    'debug' => ['favorites_file' => fileInfo(FAVORITES_FILE)],
     'ts' => time()
 ];
 
 debugLog('RESPONSE', [
-    'type' => $type,
     'total' => $total,
     'count' => count($items),
     'first' => isset($items[0]) ? $items[0] : null

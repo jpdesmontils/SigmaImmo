@@ -17,9 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { jsonError(405, 'Method not allow
 define('API_KEY',       getenv('IMMO_API_KEY') ?: 'CHANGE_ME');
 define('DATA_DIR',      __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
-define('CRITEO_FILE',    DATA_DIR . 'criteo.json');
-define('MERGED_FILE',    DATA_DIR . 'merged.json');
-define('MAX_CRITEO',    500);   // Limite d'annonces Criteo conservées
 define('MAX_FAVORITES', 1000);
 
 // ── Auth ──────────────────────────────────────────────────────
@@ -37,17 +34,11 @@ if (!$data || !is_array($data)) {
 }
 
 // ── Traitement ────────────────────────────────────────────────
-$stats = ['favorites_added' => 0, 'favorites_updated' => 0, 'criteo_added' => 0];
+$stats = ['favorites_added' => 0, 'favorites_updated' => 0];
 
 if (!empty($data['favorites'])) {
     $stats = array_merge($stats, processFavorites($data['favorites']));
 }
-
-if (!empty($data['criteo'])) {
-    $stats = array_merge($stats, processCriteo($data['criteo']));
-}
-
-buildMerged();
 
 jsonOk(['ok' => true, 'stats' => $stats, 'ts' => time()]);
 
@@ -114,77 +105,6 @@ function processFavorites($incoming) {
     return array('favorites_added' => $added, 'favorites_updated' => $updated);
 }
 
-// ── Criteo ────────────────────────────────────────────────────
-function processCriteo($incoming) {
-    $store = loadJson(CRITEO_FILE, []);
-    $added = 0;
-
-    foreach ($incoming as $ad) {
-        if (empty($ad['imageUrl'])) continue;
-        $key = $ad['imageUrl'];
-
-        if (!isset($store[$key])) {
-            // Télécharger et cacher l'image localement
-            $localPath = cacheImage($ad['imageUrl']);
-            $store[$key] = [
-                'imageUrl'       => $ad['imageUrl'],
-                'localImage'     => $localPath,
-                'destinationUrl' => $ad['destinationUrl'] ?? '',
-                'pageUrl'        => $ad['pageUrl'] ?? '',
-                'isGreenAcres'   => $ad['isGreenAcres'] ?? false,
-                'capturedAt'     => $ad['timestamp'] ?? time() * 1000,
-                'source'         => 'criteo'
-            ];
-            $added++;
-        }
-    }
-
-    // Garder les N plus récents
-    uasort($store, function($a, $b) { return ($b['capturedAt'] ? $b['capturedAt'] : 0) - ($a['capturedAt'] ? $a['capturedAt'] : 0); });
-    if (count($store) > MAX_CRITEO) {
-        $store = array_slice($store, 0, MAX_CRITEO, true);
-    }
-
-    saveJsonObject(CRITEO_FILE, $store);
-    return array('criteo_added' => $added);
-}
-
-// ── Build merged.json ─────────────────────────────────────────
-function buildMerged() {
-    $favStore  = loadJson(FAVORITES_FILE, array());
-    $critStore = loadJson(CRITEO_FILE, array());
-
-    // Dédupliquer favorites.json si corrompu en tableau indexé
-    $favStore = deduplicateStore($favStore, 'id');
-    $critStore = deduplicateStore($critStore, 'imageUrl');
-
-    $favorites = array_values($favStore);
-    $criteo    = array_values($critStore);
-
-    // Marquer chaque entrée
-    foreach ($favorites as &$f) { $f['_type'] = 'favorite'; }
-    foreach ($criteo    as &$c) { $c['_type'] = 'criteo';   }
-
-    // Déduplication finale dans merged par id
-    $merged = array();
-    $seen   = array();
-    foreach (array_merge($favorites, $criteo) as $item) {
-        $key = !empty($item['id']) ? $item['id'] : (!empty($item['imageUrl']) ? $item['imageUrl'] : null);
-        if (!$key || isset($seen[$key])) continue;
-        $seen[$key] = true;
-        $merged[] = $item;
-    }
-
-    // Tri par date décroissante
-    usort($merged, function($a, $b) {
-        $va = isset($a['capturedAt']) ? $a['capturedAt'] : 0;
-        $vb = isset($b['capturedAt']) ? $b['capturedAt'] : 0;
-        return $vb - $va;
-    });
-
-    saveJson(MERGED_FILE, $merged);
-}
-
 // ── Dédupliquer un store (tableau indexé ou associatif) ────────
 function deduplicateStore($store, $keyField) {
     $clean = array();
@@ -225,26 +145,6 @@ function geocode($address) {
     ];
 }
 
-// ── Cache images Criteo ───────────────────────────────────────
-function cacheImage($url) {
-    $cacheDir = DATA_DIR . 'img_cache/';
-    if (!is_dir($cacheDir)) mkdir($cacheDir, 0755, true);
-
-    $ext      = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
-    $filename = md5($url) . '.' . $ext;
-    $path     = $cacheDir . $filename;
-
-    if (!file_exists($path)) {
-        $ctx = stream_context_create(['http' => [
-            'timeout' => 5,
-            'header'  => "Referer: https://www.google.com/\r\n"
-        ]]);
-        $img = @file_get_contents($url, false, $ctx);
-        if ($img) file_put_contents($path, $img);
-    }
-
-    return file_exists($path) ? 'data/img_cache/' . $filename : '';
-}
 
 // ── Sanitize ──────────────────────────────────────────────────
 function sanitizeListing($l) {
@@ -285,13 +185,6 @@ function loadJson($file, $default) {
 
 // Sauvegarder un objet associatif (garde les clés)
 function saveJsonObject($file, $data) {
-    $dir = dirname($file);
-    if (!is_dir($dir)) mkdir($dir, 0755, true);
-    $data = cleanUtf8($data);
-    file_put_contents($file, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-}
-
-function saveJson($file, $data) {
     $dir = dirname($file);
     if (!is_dir($dir)) mkdir($dir, 0755, true);
     $data = cleanUtf8($data);

@@ -11,8 +11,6 @@ header('Content-Type: application/json');
 
 define('DATA_DIR',       __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
-define('CRITEO_FILE',    DATA_DIR . 'criteo.json');
-define('MERGED_FILE',    DATA_DIR . 'merged.json');
 
 $report = array();
 
@@ -39,58 +37,6 @@ $report['favorites'] = array(
 );
 
 saveJson(FAVORITES_FILE, $favClean);
-
-// ── Nettoyer criteo.json ──────────────────────────────────────
-$critRaw   = loadJson(CRITEO_FILE);
-$critClean = array();
-$critSeen  = array();
-$critDups  = 0;
-
-foreach ($critRaw as $item) {
-    if (!is_array($item)) continue;
-    $k = isset($item['imageUrl']) ? $item['imageUrl'] : null;
-    if (!$k) continue;
-    if (isset($critSeen[$k])) { $critDups++; continue; }
-    $critSeen[$k] = true;
-    $critClean[$k] = $item;
-}
-
-$report['criteo'] = array(
-    'before' => count($critRaw),
-    'after'  => count($critClean),
-    'duplicates_removed' => $critDups
-);
-
-saveJson(CRITEO_FILE, $critClean);
-
-// ── Rebuild merged.json propre ────────────────────────────────
-$favorites = array_values($favClean);
-$criteo    = array_values($critClean);
-
-foreach ($favorites as &$f) { $f['_type'] = 'favorite'; }
-foreach ($criteo    as &$c) { $c['_type'] = 'criteo'; }
-
-$merged = array();
-$seen   = array();
-foreach (array_merge($favorites, $criteo) as $item) {
-    $k = isset($item['id']) ? $item['id']
-       : (isset($item['imageUrl']) ? $item['imageUrl'] : null);
-    if (!$k || isset($seen[$k])) continue;
-    $seen[$k] = true;
-    $merged[] = $item;
-}
-
-usort($merged, function($a, $b) {
-    $va = isset($a['capturedAt']) ? $a['capturedAt'] : 0;
-    $vb = isset($b['capturedAt']) ? $b['capturedAt'] : 0;
-    return $vb - $va;
-});
-
-saveJson(MERGED_FILE, $merged);
-
-$report['merged'] = array(
-    'total' => count($merged)
-);
 
 $report['status'] = 'OK - Supprimez ce fichier après exécution !';
 
