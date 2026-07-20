@@ -288,7 +288,8 @@
       text-transform: uppercase;
       letter-spacing: .5px;
     }
-    .tag-fav  { background: rgba(37,99,235,.2); color: #60a5fa; }
+    .tag-fav    { background: rgba(37,99,235,.2);  color: #60a5fa; }
+    .tag-invest { background: rgba(245,158,11,.2); color: #fbbf24; }
 
     .card-title {
       font-size: 14px;
@@ -336,6 +337,7 @@
     .card-btn-tag:hover    { background: var(--surface2); color: var(--text); }
     .tag-shortlist-active { background: rgba(16,185,129,.25) !important; color: #34d399 !important; border-color: #059669 !important; }
     .tag-ecartee-active   { background: rgba(239,68,68,.25)  !important; color: #f87171 !important; border-color: #dc2626 !important; }
+    .tag-invest-active    { background: rgba(245,158,11,.25) !important; color: #fbbf24 !important; border-color: #b45309 !important; }
 
     /* ── Badge sélection sur vignette ─────────────────────────── */
     .card { position: relative; overflow: hidden; }
@@ -353,6 +355,7 @@
     }
     .badge-shortlist { background: #059669; color: #fff; }
     .badge-ecartee   { background: #dc2626; color: #fff; }
+    .badge-invest    { background: #b45309; color: #fff; }
 
     /* ── Modale suppression ──────────────────────────────────── */
     .delete-modal {
@@ -741,6 +744,7 @@
         <button class="selection-btn active" data-selection="all">Toutes</button>
         <button class="selection-btn" data-selection="shortlist" style="color:#34d399">⭐ ShortList</button>
         <button class="selection-btn" data-selection="ecartee" style="color:#f87171">✕ Écartées</button>
+        <button class="selection-btn" data-selection="invest" style="color:#fbbf24">$ Invest</button>
       </div>
     </div>
 
@@ -812,6 +816,8 @@
     <div class="lb-price" id="lb-price">—</div>
     <div class="lb-detail" id="lb-surface">—</div>
     <div class="lb-detail" id="lb-location">—</div>
+    <span class="tag tag-invest" id="lb-invest-badge" hidden>$ Invest</span>
+    <button class="lb-btn" id="lb-invest" type="button" aria-pressed="false" title="Marquer comme investissement locatif">$ Invest</button>
     <a class="lb-link" id="lb-link" href="#" target="_blank" rel="noopener">Voir l'annonce →</a>
   </div>
 </div>
