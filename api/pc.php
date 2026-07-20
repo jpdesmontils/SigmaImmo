@@ -11,7 +11,6 @@ header('Content-Type: application/json; charset=utf-8');
 
 define('DATA_DIR',       __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
-define('MERGED_FILE',    DATA_DIR . 'merged.json');
 
 $report = array(
     'scanned'  => 0,
@@ -90,35 +89,6 @@ unset($item);
 // ── Sauvegarder favorites.json ────────────────────────────────
 if ($report['fixed'] > 0) {
     saveJson(FAVORITES_FILE, $favorites);
-
-    // Rebuild merged.json
-    $criteo = loadJson(DATA_DIR . 'criteo.json');
-
-    $favArr  = array_values($favorites);
-    $critArr = array_values($criteo);
-
-    foreach ($favArr  as &$f) { $f['_type'] = 'favorite'; }
-    foreach ($critArr as &$c) { $c['_type'] = 'criteo'; }
-    unset($f, $c);
-
-    $merged = array();
-    $seen   = array();
-    foreach (array_merge($favArr, $critArr) as $item) {
-        $k = isset($item['id']) ? $item['id']
-           : (isset($item['imageUrl']) ? $item['imageUrl'] : null);
-        if (!$k || isset($seen[$k])) continue;
-        $seen[$k] = true;
-        $merged[] = $item;
-    }
-
-    usort($merged, function($a, $b) {
-        $va = isset($a['capturedAt']) ? $a['capturedAt'] : 0;
-        $vb = isset($b['capturedAt']) ? $b['capturedAt'] : 0;
-        return $vb - $va;
-    });
-
-    saveJson(MERGED_FILE, $merged);
-    $report['merged_rebuilt'] = count($merged);
 }
 
 $report['status'] = 'OK — Supprimez ce fichier après exécution !';

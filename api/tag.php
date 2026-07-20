@@ -14,8 +14,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo js
 
 define('DATA_DIR',       __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
-define('CRITEO_FILE',    DATA_DIR . 'criteo.json');
-define('MERGED_FILE',    DATA_DIR . 'merged.json');
 
 $body = file_get_contents('php://input');
 $data = json_decode($body, true);
@@ -53,48 +51,6 @@ foreach ($favorites as $key => &$item) {
 }
 unset($item);
 if ($updated) saveJson(FAVORITES_FILE, $favorites);
-
-// Mettre à jour dans criteo.json si pas trouvé
-if (!$updated) {
-    $criteo = loadJson(CRITEO_FILE);
-    foreach ($criteo as $key => &$item) {
-        if ((isset($item['id']) && $item['id'] === $id) ||
-            (isset($item['imageUrl']) && $item['imageUrl'] === $id)) {
-            if ($sel === null) unset($item['selection']);
-            else $item['selection'] = $sel;
-            $updated = true;
-            break;
-        }
-    }
-    unset($item);
-    if ($updated) saveJson(CRITEO_FILE, $criteo);
-}
-
-// Rebuild merged.json
-if ($updated) {
-    $favs  = array_values(loadJson(FAVORITES_FILE));
-    $crits = array_values(loadJson(CRITEO_FILE));
-    foreach ($favs  as &$f) { $f['_type'] = 'favorite'; }
-    foreach ($crits as &$c) { $c['_type'] = 'criteo'; }
-
-    $merged = array();
-    $seen   = array();
-    foreach (array_merge($favs, $crits) as $item) {
-        $k = isset($item['id']) ? $item['id']
-           : (isset($item['imageUrl']) ? $item['imageUrl'] : null);
-        if (!$k || isset($seen[$k])) continue;
-        $seen[$k] = true;
-        $merged[] = $item;
-    }
-
-    usort($merged, function($a, $b) {
-        $va = isset($a['capturedAt']) ? $a['capturedAt'] : 0;
-        $vb = isset($b['capturedAt']) ? $b['capturedAt'] : 0;
-        return $vb - $va;
-    });
-
-    saveJson(MERGED_FILE, $merged);
-}
 
 echo json_encode(array('ok' => true, 'id' => $id, 'selection' => $sel, 'updated' => $updated));
 

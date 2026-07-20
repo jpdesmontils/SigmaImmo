@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ImmoAggregator — Green Acres + Criteo",
+  "name": "ImmoAggregator — Green Acres",
   "version": "1.0.0",
-  "description": "Capture vos favoris Green Acres et annonces Criteo dans une galerie personnelle",
+  "description": "Capture vos annonces Green Acres dans une galerie personnelle",
   "permissions": [
     "storage",
     "activeTab",
@@ -12,8 +12,6 @@
   ],
   "host_permissions": [
     "https://www.green-acres.fr/*",
-    "https://*.criteo.com/*",
-    "https://*.criteo.net/*",
     "https://nominatim.openstreetmap.org/*",
 	"https://solenis-studio.fr/*"
   ],
@@ -36,15 +34,6 @@
       ],
       "js": [
         "content_greenacres_listing.js"
-      ],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content_criteo.js"
       ],
       "run_at": "document_idle"
     },

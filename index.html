@@ -22,7 +22,6 @@
       --gold:       #f59e0b;
       --green:      #10b981;
       --fav-tag:    #2563eb;
-      --crit-tag:   #f59e0b;
       --radius:     10px;
       --font:       'Inter', system-ui, -apple-system, sans-serif;
     }
@@ -170,12 +169,12 @@
       gap: 8px;
     }
 
-    .source-btns {
+    .selection-btns {
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
     }
-    .source-btn {
+    .selection-btn {
       padding: 5px 12px;
       border-radius: 20px;
       border: 1px solid var(--border);
@@ -185,13 +184,11 @@
       cursor: pointer;
       transition: all .15s;
     }
-    .source-btn.active {
+    .selection-btn.active {
       border-color: var(--accent);
       background: var(--accent);
       color: #fff;
     }
-    .source-btn.fav.active  { background: var(--fav-tag);  border-color: var(--fav-tag); }
-    .source-btn.crit.active { background: var(--crit-tag); border-color: var(--crit-tag); color: #000; }
 
     .sort-select {
       width: 100%;
@@ -292,8 +289,6 @@
       letter-spacing: .5px;
     }
     .tag-fav  { background: rgba(37,99,235,.2); color: #60a5fa; }
-    .tag-crit { background: rgba(245,158,11,.2); color: #fbbf24; }
-    .tag-ga   { background: rgba(16,185,129,.2); color: #34d399; }
 
     .card-title {
       font-size: 14px;
@@ -689,7 +684,6 @@
   <div class="header-logo">Immo<span>Agg</span></div>
   <div class="header-stats">
     <span>⭐ <b id="hdr-fav">—</b> favoris</span>
-    <span>📢 <b id="hdr-crit">—</b> Criteo</span>
   </div>
   <div class="spacer"></div>
   <button class="btn-filters-mobile" id="btn-filters-mobile">⚙ Filtres</button>
@@ -707,14 +701,6 @@
 
   <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="filter-group">
-      <h3>Source</h3>
-      <div class="source-btns">
-        <button class="source-btn active" data-source="all">Tout</button>
-        <button class="source-btn fav"  data-source="favorite">⭐ Favoris</button>
-        <button class="source-btn crit" data-source="criteo">📢 Criteo</button>
-      </div>
-    </div>
 
     <div class="filter-group">
       <h3>Ville</h3>
@@ -751,7 +737,7 @@
 
     <div class="filter-group">
       <h3>Sélection</h3>
-      <div class="source-btns">
+      <div class="selection-btns">
         <button class="selection-btn active" data-selection="all">Toutes</button>
         <button class="selection-btn" data-selection="shortlist" style="color:#34d399">⭐ ShortList</button>
         <button class="selection-btn" data-selection="ecartee" style="color:#f87171">✕ Écartées</button>
@@ -869,7 +855,7 @@
 
   // Fermer après changement de filtre sur mobile
   document.addEventListener('DOMContentLoaded', function() {
-    var inputs = document.querySelectorAll('.sidebar input, .sidebar select, .source-btn, #btn-reset');
+    var inputs = document.querySelectorAll('.sidebar input, .sidebar select, .selection-btn, #btn-reset');
     inputs.forEach(function(el) {
       el.addEventListener('change', function() {
         if (window.innerWidth <= 768) closeSidebar();
