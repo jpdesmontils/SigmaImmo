@@ -135,8 +135,7 @@ function initFilters() {
 
 function applyFiltersAndRender() {
   filtered = allListings.filter(item => {
-    if (filters.selection === 'shortlist' && item.selection !== 'shortlist') return false;
-    if (filters.selection === 'ecartee'   && item.selection !== 'ecartee')   return false;
+    if (filters.selection !== 'all' && item.selection !== filters.selection) return false;
     if (filters.city && !getLoc(item).toLowerCase().includes(filters.city)) return false;
     if (filters.priceMin !== null && (item.price === null || item.price < filters.priceMin)) return false;
     if (filters.priceMax !== null && (item.price === null || item.price > filters.priceMax)) return false;
@@ -264,14 +263,11 @@ function cardHTML(item, idx) {
   const placeholder = `<div class="card-img-placeholder" style="${imgSrc ? 'display:none' : ''}">🏠</div>`;
 
   const sel = item.selection || '';
-  const badge = sel === 'shortlist'
-    ? '<div class="card-selection-badge badge-shortlist">⭐ ShortList</div>'
-    : sel === 'ecartee'
-    ? '<div class="card-selection-badge badge-ecartee">✕ Écartée</div>'
-    : '';
+  const badge = selectionBadgeHTML(sel);
 
-  const btnShort = `<button class="card-btn-tag ${sel === 'shortlist' ? 'tag-shortlist-active' : ''}" data-idx="${idx}" data-sel="shortlist" title="ShortList">⭐</button>`;
-  const btnEcart = `<button class="card-btn-tag ${sel === 'ecartee' ? 'tag-ecartee-active' : ''}" data-idx="${idx}" data-sel="ecartee" title="Écarter">✕</button>`;
+  const btnShort = selectionButtonHTML(idx, 'shortlist', 'card-btn-tag');
+  const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag');
+  const btnInvest = selectionButtonHTML(idx, 'invest', 'card-btn-tag');
 
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
@@ -279,7 +275,7 @@ function cardHTML(item, idx) {
       ${imgEl}${placeholder}
       <div class="card-body">
         <div class="card-tags">
-          <span class="tag tag-fav">⭐ Favori</span>
+          <span class="tag tag-fav">⭐ Favori</span>${selectionTagHTML(sel)}
         </div>
         <div class="card-title">${esc(item.title || 'Annonce immobilière')}</div>
         <div class="card-meta">
@@ -291,6 +287,7 @@ function cardHTML(item, idx) {
         <div class="card-actions">
           ${btnShort}
           ${btnEcart}
+          ${btnInvest}
           <button class="card-btn-map" data-idx="${idx}" title="Voir sur la carte">🗺</button>
           <button class="card-btn-delete" data-idx="${idx}" title="Supprimer">🗑</button>
         </div>
@@ -340,7 +337,7 @@ async function renderList() {
       + '<td>' + (item.price ? formatPrice(item.price) : '—') + '</td>'
       + '<td>' + (item.surface ? item.surface + ' m²' : '—') + '</td>'
       + '<td>' + esc(getLoc(item)) + cp + '</td>'
-      + '<td><span class="tag tag-fav">⭐ Favori</span></td>'
+      + '<td><span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(item.selection) + '</td>'
       + '<td>' + (item.url ? '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent);font-size:12px;">Voir →</a>' : '') + '</td>'
       + '</tr>';
   }).join('');
@@ -491,17 +488,21 @@ function popupHTML(item, idx) {
   const shortActive = sel === 'shortlist';
   const ecartActive = sel === 'ecartee';
 
+  const investActive = sel === 'invest';
+
   const btnShort = `<button data-popup-tag="shortlist" data-popup-idx="${idx}" style="${btnStyle} ${shortActive ? '#059669;background:rgba(16,185,129,.2);color:#34d399' : '#334155;background:#1e293b;color:#94a3b8'}">⭐ ShortList</button>`;
   const btnEcart = `<button data-popup-tag="ecartee"   data-popup-idx="${idx}" style="${btnStyle} ${ecartActive ? '#dc2626;background:rgba(239,68,68,.2);color:#f87171'   : '#334155;background:#1e293b;color:#94a3b8'}">✕ Écarter</button>`;
+  const btnInvest = `<button data-popup-tag="invest" data-popup-idx="${idx}" style="${btnStyle} ${investActive ? '#b45309;background:rgba(245,158,11,.2);color:#fbbf24' : '#334155;background:#1e293b;color:#94a3b8'}">$ Invest</button>`;
 
   return `
     <div style="font-family:system-ui;font-size:13px;min-width:220px;">
       ${imgSrc ? `<img src="${esc(imgSrc)}" style="width:100%;height:110px;object-fit:cover;border-radius:6px;margin-bottom:8px;" loading="lazy">` : ''}
       <div style="font-weight:600;margin-bottom:4px;line-height:1.3;">${esc(item.title || 'Annonce')}</div>
+      ${selectionTagHTML(sel)}
       ${item.price ? `<div style="color:#f59e0b;font-weight:700;margin-bottom:2px;">${formatPrice(item.price)}</div>` : ''}
       ${item.surface ? `<div style="color:#94a3b8;font-size:12px;margin-bottom:6px;">${item.surface} m²</div>` : ''}
       <div style="display:flex;gap:5px;margin-bottom:6px;">
-        ${btnShort}${btnEcart}
+        ${btnShort}${btnEcart}${btnInvest}
       </div>
       <div style="display:flex;gap:5px;">
         <button data-open-slide="${idx}" style="${btnStyle} #2563eb;background:#2563eb;color:#fff;flex:1;">🖼 Galerie</button>
@@ -516,6 +517,7 @@ function initLightbox() {
   document.getElementById('lb-prev').addEventListener('click', () => slideshowStep(-1));
   document.getElementById('lb-next').addEventListener('click', () => slideshowStep(1));
   document.getElementById('lb-play').addEventListener('click', togglePlay);
+  document.getElementById('lb-invest').addEventListener('click', () => toggleSelection(slideshow.index, 'invest'));
 
   document.getElementById('lb-speed').addEventListener('change', e => {
     slideshow.interval = parseInt(e.target.value);
@@ -570,6 +572,12 @@ function updateSlide() {
   document.getElementById('lb-surface').textContent  = item.surface ? item.surface + ' m²' : '';
   document.getElementById('lb-location').textContent = getLoc(item);
 
+  const investControl = document.getElementById('lb-invest');
+  const isInvest = item.selection === 'invest';
+  investControl.classList.toggle('active', isInvest);
+  investControl.setAttribute('aria-pressed', isInvest ? 'true' : 'false');
+  document.getElementById('lb-invest-badge').hidden = !isInvest;
+
   const link = document.getElementById('lb-link');
   const linkUrl = item.url || item.destinationUrl || '';
   if (linkUrl) { link.href = linkUrl; link.style.display = ''; }
@@ -609,23 +617,48 @@ async function toggleSelection(idx, sel) {
   const item = filtered[idx];
   if (!item) return;
 
-  // Toggle : si déjà actif → neutre, sinon → nouveau tag
-  const newSel = item.selection === sel ? null : sel;
+  // Les sélections sont exclusives : un second clic retire le tag actif.
+  const previousSel = item.selection || null;
+  const newSel = previousSel === sel ? null : sel;
   item.selection = newSel;
 
-  // Persister côté serveur
   try {
-    await fetch('https://solenis-studio.fr/sigma-immo/api/tag.php', {
+    const response = await fetch('https://solenis-studio.fr/sigma-immo/api/tag.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: item.id, selection: newSel })
     });
+    const result = await response.json();
+    if (!response.ok || !result.ok || !result.updated) throw new Error(result.error || 'Tag non enregistré');
   } catch(e) {
-    console.warn('[ImmoAgg] Tag serveur échoué (local OK):', e);
+    item.selection = previousSel;
+    console.warn('[ImmoAgg] Tag serveur échoué, modification annulée:', e);
   }
 
-  // Re-render sans recharger les données
-  renderGallery();
+  applyFiltersAndRender();
+  if (document.getElementById('lightbox').classList.contains('open')) updateSlide();
+}
+
+function selectionTagHTML(selection) {
+  return selection === 'invest' ? '<span class="tag tag-invest">$ Invest</span>' : '';
+}
+
+function selectionBadgeHTML(selection) {
+  if (selection === 'shortlist') return '<div class="card-selection-badge badge-shortlist">⭐ ShortList</div>';
+  if (selection === 'ecartee') return '<div class="card-selection-badge badge-ecartee">✕ Écartée</div>';
+  if (selection === 'invest') return '<div class="card-selection-badge badge-invest">$ Invest</div>';
+  return '';
+}
+
+function selectionButtonHTML(idx, selection, className) {
+  const labels = {
+    shortlist: { label: '⭐', title: 'ShortList' },
+    ecartee: { label: '✕', title: 'Écarter' },
+    invest: { label: '$', title: 'Marquer comme investissement locatif' }
+  };
+  const option = labels[selection];
+  const active = filtered[idx].selection === selection ? ` tag-${selection}-active` : '';
+  return `<button class="${className}${active}" data-idx="${idx}" data-sel="${selection}" title="${option.title}" aria-label="${option.title}">${option.label}</button>`;
 }
 
 // ── Actions carte depuis galerie ─────────────────────────────
