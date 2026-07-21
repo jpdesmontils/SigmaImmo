@@ -485,21 +485,58 @@
     }
     .viewer.open { display: flex; }
 
-    .viewer-close {
+    .viewer-top-actions {
       position: absolute;
       top: 20px; right: 24px;
       z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .viewer-listing-nav {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 4px 16px rgba(0,0,0,.22);
+    }
+    .viewer-listing-nav[hidden] { display: none; }
+    .viewer-listing-nav-btn {
+      width: 40px; height: 40px;
+      border: 0;
+      background: #fff;
+      color: #1e3a8a;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s;
+    }
+    .viewer-listing-nav-btn:hover { background: #eff6ff; color: var(--accent); }
+    .viewer-listing-counter {
+      min-width: 48px;
+      padding: 0 8px;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .viewer-close {
       width: 40px; height: 40px;
       border-radius: 50%;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.15);
-      color: #fff;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      color: #334155;
       font-size: 18px;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: background .15s;
+      box-shadow: 0 4px 16px rgba(0,0,0,.22);
+      transition: background .15s, color .15s;
     }
-    .viewer-close:hover { background: rgba(255,255,255,.2); }
+    .viewer-close:hover { background: #eff6ff; color: var(--accent); }
 
     .viewer-content {
       width: 100%;
@@ -888,7 +925,14 @@
 
 <!-- ── Visionneuse d'annonce ──────────────────────────────── -->
 <div class="viewer" id="viewer">
-  <button class="viewer-close" id="viewer-close" aria-label="Fermer">✕</button>
+  <div class="viewer-top-actions">
+    <div class="viewer-listing-nav" id="viewer-listing-nav" aria-label="Navigation entre les annonces">
+      <button class="viewer-listing-nav-btn" id="viewer-listing-prev" aria-label="Annonce précédente">‹</button>
+      <span class="viewer-listing-counter" id="viewer-listing-counter">1 / 1</span>
+      <button class="viewer-listing-nav-btn" id="viewer-listing-next" aria-label="Annonce suivante">›</button>
+    </div>
+    <button class="viewer-close" id="viewer-close" aria-label="Fermer">✕</button>
+  </div>
   <div class="viewer-content">
 
     <!-- Carrousel photos de l'annonce en cours -->
