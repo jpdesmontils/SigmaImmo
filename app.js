@@ -510,10 +510,12 @@ function popupHTML(item, idx) {
 }
 
 // ── Visionneuse d'annonce ──────────────────────────────────────
-// Le carrousel fait défiler les PHOTOS de l'annonce affichée
-// (pas les annonces elles-mêmes — pas de mode diaporama/auto-play).
+// Le carrousel fait défiler les PHOTOS de l'annonce affichée.
+// Les contrôles en haut à droite font défiler les annonces filtrées.
 function initViewer() {
   document.getElementById('viewer-close').addEventListener('click', closeViewer);
+  document.getElementById('viewer-listing-prev').addEventListener('click', () => listingStep(-1));
+  document.getElementById('viewer-listing-next').addEventListener('click', () => listingStep(1));
   document.getElementById('viewer-photo-prev').addEventListener('click', () => photoStep(-1));
   document.getElementById('viewer-photo-next').addEventListener('click', () => photoStep(1));
   document.getElementById('viewer-map-btn').addEventListener('click', () => showOnMap(viewer.listingIndex));
@@ -558,12 +560,27 @@ function renderViewer() {
   const item = filtered[viewer.listingIndex];
   if (!item) { closeViewer(); return; }
 
+  renderViewerListingNav();
   viewer.photos     = getImages(item);
   viewer.photoIndex = 0;
 
   renderViewerPhoto();
   renderViewerThumbs();
   renderViewerInfo(item);
+}
+
+// ── Navigation entre annonces ─────────────────────────────────
+function listingStep(dir) {
+  if (filtered.length <= 1) return;
+  viewer.listingIndex = (viewer.listingIndex + dir + filtered.length) % filtered.length;
+  renderViewer();
+}
+
+function renderViewerListingNav() {
+  const nav = document.getElementById('viewer-listing-nav');
+  nav.hidden = filtered.length <= 1;
+  document.getElementById('viewer-listing-counter').textContent =
+    (viewer.listingIndex + 1) + ' / ' + filtered.length;
 }
 
 // ── Carrousel photos (annonce en cours) ────────────────────────
