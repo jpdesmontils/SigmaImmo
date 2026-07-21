@@ -337,16 +337,30 @@
       listing.scrapedAt = Date.now();
       listing.id = 'cap_' + Date.now();
 
-      console.log('[ImmoCapture] Envoi au background:', listing);
-      chrome.runtime.sendMessage({ type: 'GA_FAVORITES', data: [listing] }, (res) => {
-        console.log('[ImmoCapture] Réponse background:', res, 'lastError:', chrome.runtime.lastError);
+      const runtime = getExtensionRuntime();
+      if (!runtime) {
         modal.remove();
-        if (chrome.runtime.lastError) {
-          showToast('❌ Erreur runtime: ' + chrome.runtime.lastError.message);
-          return;
-        }
-        showToast(res && res.ok ? '✅ Annonce ajoutée aux favoris !' : '❌ Erreur: ' + JSON.stringify(res));
-      });
+        showToast('⚠️ Extension mise à jour : rechargez cette page puis réessayez.');
+        return;
+      }
+
+      console.log('[ImmoCapture] Envoi au background:', listing);
+      try {
+        runtime.sendMessage({ type: 'GA_FAVORITES', data: [listing] }, (res) => {
+          const lastError = runtime.lastError;
+          console.log('[ImmoCapture] Réponse background:', res, 'lastError:', lastError);
+          modal.remove();
+          if (lastError) {
+            showToast('❌ Erreur runtime: ' + lastError.message);
+            return;
+          }
+          showToast(res && res.ok ? '✅ Annonce ajoutée aux favoris !' : '❌ Erreur: ' + JSON.stringify(res));
+        });
+      } catch (error) {
+        modal.remove();
+        console.error('[ImmoCapture] Runtime indisponible:', error);
+        showToast('⚠️ Extension indisponible : rechargez cette page puis réessayez.');
+      }
     });
   }
 
@@ -362,6 +376,11 @@
     toast.textContent = msg;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
+  }
+
+  function getExtensionRuntime() {
+    if (typeof chrome === 'undefined' || !chrome.runtime) return null;
+    return typeof chrome.runtime.sendMessage === 'function' ? chrome.runtime : null;
   }
 
   function escHtml(str) {
