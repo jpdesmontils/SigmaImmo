@@ -471,117 +471,214 @@
       border: 1px solid var(--border);
     }
 
-    /* ── Slideshow / Lightbox ────────────────────────────────── */
-    .lightbox {
+    /* ── Visionneuse d'annonce ───────────────────────────────── */
+    .viewer {
       display: none;
       position: fixed;
       inset: 0;
       z-index: 1000;
       background: rgba(0,0,0,.92);
       backdrop-filter: blur(8px);
-    }
-    .lightbox.open { display: flex; flex-direction: column; }
-
-    .lb-header {
-      display: flex;
-      align-items: center;
-      padding: 16px 24px;
-      gap: 16px;
-      background: rgba(0,0,0,.4);
-    }
-    .lb-title { flex: 1; font-size: 16px; font-weight: 600; }
-    .lb-counter { font-size: 13px; color: var(--muted); }
-
-    .lb-controls { display: flex; gap: 8px; }
-    .lb-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 14px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all .15s;
-    }
-    .lb-btn:hover { background: var(--surface); }
-    .lb-btn.active { background: var(--accent); border-color: var(--accent); }
-    .lb-btn-close {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 22px;
-      cursor: pointer;
-      padding: 4px 8px;
-    }
-    .lb-btn-close:hover { color: var(--text); }
-
-    .lb-body {
-      flex: 1;
-      display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
-      overflow: hidden;
+      padding: 28px;
     }
+    .viewer.open { display: flex; }
 
-    .lb-img {
-      max-width: 90%;
-      max-height: 80vh;
-      object-fit: contain;
-      border-radius: 8px;
-    }
-
-    .lb-nav {
+    .viewer-close {
       position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0,0,0,.6);
-      border: none;
-      color: white;
-      font-size: 28px;
-      width: 48px;
-      height: 48px;
+      top: 20px; right: 24px;
+      z-index: 20;
+      width: 40px; height: 40px;
       border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      color: #fff;
+      font-size: 18px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       transition: background .15s;
     }
-    .lb-nav:hover { background: rgba(37,99,235,.8); }
-    .lb-nav-prev { left: 16px; }
-    .lb-nav-next { right: 16px; }
+    .viewer-close:hover { background: rgba(255,255,255,.2); }
 
-    .lb-info {
-      padding: 16px 24px;
-      background: rgba(0,0,0,.4);
+    .viewer-content {
+      width: 100%;
+      max-width: 1180px;
+      height: 100%;
+      max-height: 840px;
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.6);
+      overflow: hidden;
       display: flex;
-      gap: 24px;
-      align-items: center;
-      flex-wrap: wrap;
     }
-    .lb-price { color: var(--gold); font-size: 20px; font-weight: 800; }
-    .lb-detail { font-size: 13px; color: var(--muted); }
-    .lb-link {
-      margin-left: auto;
-      padding: 8px 18px;
-      background: var(--accent);
+
+    /* Média / carrousel photos */
+    .viewer-media {
+      flex: 1.4;
+      min-width: 0;
+      position: relative;
+      background: #05070d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .viewer-img { width: 100%; height: 100%; object-fit: contain; user-select: none; }
+    .viewer-placeholder { font-size: 64px; color: #334155; }
+
+    .viewer-nav {
+      position: absolute;
+      top: calc(50% - 22px);
+      background: rgba(0,0,0,.5);
+      border: none;
       color: #fff;
+      font-size: 24px;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+      z-index: 5;
+    }
+    .viewer-nav:hover { background: rgba(37,99,235,.85); }
+    .viewer-nav-prev { left: 14px; }
+    .viewer-nav-next { right: 14px; }
+    .viewer-nav[hidden] { display: none; }
+
+    .viewer-photo-counter {
+      position: absolute;
+      top: 14px; left: 14px;
+      background: rgba(0,0,0,.55);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 11px;
+      border-radius: 20px;
+      z-index: 5;
+    }
+
+    .viewer-thumbs {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      gap: 6px;
+      padding: 12px;
+      overflow-x: auto;
+      background: linear-gradient(to top, rgba(0,0,0,.75), transparent);
+    }
+    .viewer-thumb {
+      width: 56px; height: 42px;
+      flex-shrink: 0;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      opacity: .55;
+      padding: 0;
+      transition: opacity .15s, border-color .15s;
+    }
+    .viewer-thumb:hover { opacity: .85; }
+    .viewer-thumb.active { opacity: 1; border-color: var(--accent); }
+    .viewer-thumbs[hidden] { display: none; }
+
+    /* Panneau d'informations */
+    .viewer-panel {
+      flex: 1;
+      min-width: 320px;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .viewer-panel-scroll { flex: 1; overflow-y: auto; padding: 24px; }
+
+    .viewer-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+
+    .viewer-title { font-size: 19px; font-weight: 700; line-height: 1.35; color: var(--text); margin-bottom: 12px; }
+
+    .viewer-price-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+    .viewer-price { font-size: 26px; font-weight: 800; color: var(--gold); }
+    .viewer-price-reduction {
+      font-size: 11px; font-weight: 700;
+      color: #34d399; background: rgba(16,185,129,.15);
+      padding: 3px 9px; border-radius: 20px;
+    }
+
+    .viewer-location { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+
+    .viewer-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .viewer-stat { background: var(--surface2); border-radius: 8px; padding: 10px 12px; }
+    .viewer-stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 4px; }
+    .viewer-stat-value { font-size: 15px; font-weight: 700; color: var(--text); }
+
+    .viewer-section { margin-bottom: 20px; }
+    .viewer-section h3 {
+      font-size: 11px; text-transform: uppercase; letter-spacing: .8px;
+      color: var(--muted); margin-bottom: 8px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .viewer-section p { font-size: 13px; line-height: 1.6; color: var(--text); white-space: pre-line; }
+
+    .viewer-features { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+    .viewer-feature { font-size: 12px; display: flex; flex-direction: column; gap: 1px; }
+    .viewer-feature-k { color: var(--muted); }
+    .viewer-feature-v { color: var(--text); font-weight: 600; }
+
+    .viewer-meta { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); }
+    .viewer-meta b { color: var(--text); font-weight: 600; }
+
+    .viewer-actions { padding: 16px 24px; border-top: 1px solid var(--border); }
+    .viewer-selection-btns { display: flex; gap: 8px; margin-bottom: 10px; }
+    .viewer-sel-btn {
+      flex: 1;
+      padding: 8px 0;
       border-radius: 8px;
-      text-decoration: none;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+    }
+    .viewer-sel-btn:hover { border-color: var(--text); color: var(--text); }
+
+    .viewer-cta-row { display: flex; gap: 8px; }
+    .viewer-btn {
+      flex: 1;
+      padding: 9px 0;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
       font-size: 13px;
       font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      white-space: nowrap;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all .15s;
     }
-    .lb-link:hover { background: var(--accent-h); }
+    .viewer-btn-icon { flex: 0 0 44px; font-size: 16px; }
+    .viewer-btn-delete:hover { background: #7f1d1d; color: #fca5a5; border-color: #991b1b; }
+    .viewer-btn-map:hover    { background: var(--surface); border-color: var(--accent); }
+    .viewer-btn-primary { flex: 1; background: var(--accent); color: #fff; border-color: var(--accent); }
+    .viewer-btn-primary:hover { background: var(--accent-h); }
 
-    .lb-progress {
-      height: 3px;
-      background: var(--border);
-    }
-    .lb-progress-bar {
-      height: 100%;
-      background: var(--accent);
-      transition: width .3s linear;
+    @media (max-width: 900px) {
+      .viewer { padding: 0; }
+      .viewer-content { max-height: none; border-radius: 0; flex-direction: column; }
+      .viewer-media { flex: none; height: 42%; }
+      .viewer-panel { max-width: none; min-width: 0; border-left: none; border-top: 1px solid var(--border); }
     }
 
     /* ── Loading / Empty ─────────────────────────────────────── */
@@ -789,36 +886,60 @@
   </main>
 </div>
 
-<!-- ── Lightbox / Slideshow ───────────────────────────────── -->
-<div class="lightbox" id="lightbox">
-  <div class="lb-header">
-    <div class="lb-title" id="lb-title">—</div>
-    <div class="lb-counter"><span id="lb-idx">1</span> / <span id="lb-total">1</span></div>
-    <div class="lb-controls">
-      <button class="lb-btn" id="lb-play">▶ Lecture</button>
-      <span style="font-size:11px;color:var(--muted);align-self:center;">Intervalle :</span>
-      <select class="lb-btn" id="lb-speed" style="padding:6px 10px;">
-        <option value="3000">3s</option>
-        <option value="5000" selected>5s</option>
-        <option value="8000">8s</option>
-        <option value="12000">12s</option>
-      </select>
+<!-- ── Visionneuse d'annonce ──────────────────────────────── -->
+<div class="viewer" id="viewer">
+  <button class="viewer-close" id="viewer-close" aria-label="Fermer">✕</button>
+  <div class="viewer-content">
+
+    <!-- Carrousel photos de l'annonce en cours -->
+    <div class="viewer-media" id="viewer-media">
+      <button class="viewer-nav viewer-nav-prev" id="viewer-photo-prev" aria-label="Photo précédente">‹</button>
+      <img class="viewer-img" id="viewer-img" src="" alt="">
+      <div class="viewer-placeholder" id="viewer-placeholder" hidden>🏠</div>
+      <button class="viewer-nav viewer-nav-next" id="viewer-photo-next" aria-label="Photo suivante">›</button>
+      <div class="viewer-photo-counter" id="viewer-photo-counter" hidden>1 / 1</div>
+      <div class="viewer-thumbs" id="viewer-thumbs" hidden></div>
     </div>
-    <button class="lb-btn-close" id="lb-close">✕</button>
-  </div>
-  <div class="lb-progress"><div class="lb-progress-bar" id="lb-progress-bar" style="width:0%"></div></div>
-  <div class="lb-body">
-    <button class="lb-nav lb-nav-prev" id="lb-prev">‹</button>
-    <img class="lb-img" id="lb-img" src="" alt="">
-    <button class="lb-nav lb-nav-next" id="lb-next">›</button>
-  </div>
-  <div class="lb-info">
-    <div class="lb-price" id="lb-price">—</div>
-    <div class="lb-detail" id="lb-surface">—</div>
-    <div class="lb-detail" id="lb-location">—</div>
-    <span class="tag tag-invest" id="lb-invest-badge" hidden>$ Invest</span>
-    <button class="lb-btn" id="lb-invest" type="button" aria-pressed="false" title="Marquer comme investissement locatif">$ Invest</button>
-    <a class="lb-link" id="lb-link" href="#" target="_blank" rel="noopener">Voir l'annonce →</a>
+
+    <!-- Informations complètes de l'annonce -->
+    <div class="viewer-panel">
+      <div class="viewer-panel-scroll">
+        <div class="viewer-tags" id="viewer-tags"></div>
+        <h2 class="viewer-title" id="viewer-title">—</h2>
+
+        <div class="viewer-price-row">
+          <span class="viewer-price" id="viewer-price">—</span>
+          <span class="viewer-price-reduction" id="viewer-price-reduction" hidden></span>
+        </div>
+        <div class="viewer-location" id="viewer-location">—</div>
+
+        <div class="viewer-stats" id="viewer-stats"></div>
+
+        <div class="viewer-section" id="viewer-desc-section" hidden>
+          <h3>Description</h3>
+          <p id="viewer-description"></p>
+        </div>
+
+        <div class="viewer-section" id="viewer-features-section" hidden>
+          <h3>Caractéristiques</h3>
+          <div class="viewer-features" id="viewer-features"></div>
+        </div>
+
+        <div class="viewer-section" id="viewer-meta-section">
+          <h3>Informations</h3>
+          <div class="viewer-meta" id="viewer-meta"></div>
+        </div>
+      </div>
+
+      <div class="viewer-actions">
+        <div class="viewer-selection-btns" id="viewer-selection-btns"></div>
+        <div class="viewer-cta-row">
+          <button class="viewer-btn viewer-btn-icon viewer-btn-map" id="viewer-map-btn" title="Voir sur la carte" aria-label="Voir sur la carte">🗺</button>
+          <button class="viewer-btn viewer-btn-icon viewer-btn-delete" id="viewer-delete-btn" title="Supprimer" aria-label="Supprimer">🗑</button>
+          <a class="viewer-btn viewer-btn-primary" id="viewer-link" href="#" target="_blank" rel="noopener">Voir l'annonce →</a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
