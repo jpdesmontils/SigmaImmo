@@ -267,13 +267,20 @@ function cardHTML(item, idx) {
   const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag');
   const btnInvest = selectionButtonHTML(idx, 'invest', 'card-btn-tag');
 
+  // Lien vers la fiche d'opportunité — affiché uniquement si l'annonce a déjà une fiche
+  // renseignée (champ item.ficheUrl). Aucune génération de fiche ici.
+  const hasFiche = !!item.ficheUrl;
+  const btnFiche = hasFiche
+    ? `<a class="card-btn-fiche" href="${esc(item.ficheUrl)}" target="_blank" rel="noopener" title="Voir la fiche d'opportunité" onclick="event.stopPropagation()">📄</a>`
+    : '';
+
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
       ${badge}
       ${imgEl}${placeholder}
       <div class="card-body">
         <div class="card-tags">
-          <span class="tag tag-fav">⭐ Favori</span>${selectionTagHTML(sel)}
+          <span class="tag tag-fav">⭐ Favori</span>${selectionTagHTML(sel)}${hasFiche ? '<span class="tag tag-fiche">📄 Fiche</span>' : ''}
         </div>
         <div class="card-title">${esc(item.title || 'Annonce immobilière')}</div>
         <div class="card-meta">
@@ -287,6 +294,7 @@ function cardHTML(item, idx) {
           ${btnEcart}
           ${btnInvest}
           <button class="card-btn-map" data-idx="${idx}" title="Voir sur la carte">🗺</button>
+          ${btnFiche}
           <button class="card-btn-delete" data-idx="${idx}" title="Supprimer">🗑</button>
         </div>
       </div>
@@ -329,6 +337,10 @@ async function renderList() {
       : '<div class="list-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface2)">🏠</div>';
     var cp = item.postalCode ? '<br><small style="color:var(--muted)">' + esc(item.postalCode) + ' · ' + esc(getDept(item)) + '</small>' : '<br><small style="color:var(--muted)">' + esc(getDept(item)) + '</small>';
 
+    var ficheLink = item.ficheUrl
+      ? '<a href="' + esc(item.ficheUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--go);font-size:12px;">📄 Fiche</a>'
+      : '';
+
     return '<tr style="cursor:pointer" onclick="openViewer(' + idx + ')">'
       + '<td>' + thumb + '</td>'
       + '<td>' + esc(item.title || '—') + '</td>'
@@ -336,7 +348,10 @@ async function renderList() {
       + '<td>' + (item.surface ? item.surface + ' m²' : '—') + '</td>'
       + '<td>' + esc(getLoc(item)) + cp + '</td>'
       + '<td><span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(item.selection) + '</td>'
-      + '<td>' + (item.url ? '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent);font-size:12px;">Voir →</a>' : '') + '</td>'
+      + '<td style="display:flex;gap:10px;align-items:center;">'
+      +   (item.url ? '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--text);font-size:12px;">Voir →</a>' : '')
+      +   ficheLink
+      + '</td>'
       + '</tr>';
   }).join('');
 }
@@ -643,7 +658,7 @@ function renderViewerInfo(item) {
   const sel = item.selection || '';
 
   document.getElementById('viewer-tags').innerHTML =
-    '<span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(sel);
+    '<span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(sel) + (item.ficheUrl ? '<span class="tag tag-fiche">📄 Fiche</span>' : '');
 
   document.getElementById('viewer-title').textContent = item.title || 'Annonce immobilière';
 
@@ -685,6 +700,11 @@ function renderViewerInfo(item) {
   const linkUrl = item.url || item.destinationUrl || '';
   if (linkUrl) { link.href = linkUrl; link.style.display = ''; }
   else { link.style.display = 'none'; }
+
+  // Lien fiche d'opportunité — visible uniquement si déjà renseigné (item.ficheUrl)
+  const ficheLink = document.getElementById('viewer-fiche-link');
+  if (item.ficheUrl) { ficheLink.href = item.ficheUrl; ficheLink.hidden = false; }
+  else { ficheLink.hidden = true; }
 }
 
 function viewerStatsHTML(item) {

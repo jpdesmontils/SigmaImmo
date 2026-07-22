@@ -133,6 +133,60 @@
     }
     .view-btn:hover:not(.active) { color: var(--header-text); }
 
+    /* ── Menu Guides ─────────────────────────────────────────── */
+    .guides-menu-wrap { position: relative; }
+    .btn-guides {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245,243,238,.1);
+      border: 1px solid rgba(245,243,238,.16);
+      color: var(--header-text-dim);
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-guides:hover, .btn-guides.open { color: var(--header-text); border-color: rgba(245,243,238,.32); }
+
+    .guides-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 150;
+      width: 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 16px 40px rgba(22,21,15,.22);
+      overflow: hidden;
+    }
+    .guides-menu-item {
+      display: block;
+      padding: 12px 16px;
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+    .guides-menu-item:last-child { border-bottom: none; }
+    .guides-menu-item:hover { background: var(--surface2); }
+    .guides-menu-item-title {
+      display: block;
+      font-family: var(--font-d);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+    .guides-menu-item-sub {
+      display: block;
+      font-family: var(--font-m);
+      font-size: 10px;
+      letter-spacing: .02em;
+      color: var(--muted);
+    }
+
     /* ── Sidebar filtres ──────────────────────────────────────── */
     .layout {
       display: flex;
@@ -312,6 +366,7 @@
     }
     .tag-fav    { background: var(--text);    color: var(--bg); }
     .tag-invest { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
+    .tag-fiche  { background: var(--go-bg);   color: var(--go);   border: 1px solid var(--go-border); }
 
     .card-title {
       font-size: 14px;
@@ -341,7 +396,7 @@
       margin-top: 8px;
     }
     /* Boutons uniformes sur les cartes */
-    .card-btn-map, .card-btn-delete, .card-btn-tag {
+    .card-btn-map, .card-btn-delete, .card-btn-tag, .card-btn-fiche {
       flex: 1;
       padding: 5px 0;
       border-radius: 3px;
@@ -352,11 +407,15 @@
       cursor: pointer;
       transition: all .15s;
       text-align: center;
+      text-decoration: none;
       line-height: 1.4;
+      display: block;
     }
     .card-btn-map:hover    { background: var(--text);      color: var(--bg);     border-color: var(--text); }
     .card-btn-delete:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
     .card-btn-tag:hover    { background: var(--surface3);  color: var(--text); }
+    .card-btn-fiche        { background: var(--go-bg); color: var(--go); border-color: var(--go-border); }
+    .card-btn-fiche:hover  { background: var(--go); color: var(--bg); border-color: var(--go); }
     .tag-shortlist-active { background: var(--go-bg)     !important; color: var(--go)     !important; border-color: var(--go-border)     !important; }
     .tag-ecartee-active   { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: var(--danger-border) !important; }
     .tag-invest-active    { background: var(--warn-bg)   !important; color: var(--warn)   !important; border-color: var(--warn-border)   !important; }
@@ -740,6 +799,8 @@
     .viewer-btn-icon { flex: 0 0 44px; font-size: 16px; }
     .viewer-btn-delete:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
     .viewer-btn-map:hover    { background: var(--surface); border-color: var(--text); }
+    .viewer-btn-fiche { flex: 0 0 auto; padding: 9px 14px; background: var(--warn-bg); color: var(--warn); border-color: var(--warn-border); }
+    .viewer-btn-fiche:hover  { background: var(--warn-border); color: var(--surface); }
     .viewer-btn-primary { flex: 1; background: var(--text); color: var(--bg); border-color: var(--text); }
     .viewer-btn-primary:hover { background: var(--ink-hover); }
 
@@ -830,6 +891,19 @@
   </div>
   <div class="spacer"></div>
   <button class="btn-filters-mobile" id="btn-filters-mobile">⚙ Filtres</button>
+  <div class="guides-menu-wrap">
+    <button class="btn-guides" id="btn-guides" aria-haspopup="true" aria-expanded="false">📖 Guides</button>
+    <div class="guides-menu" id="guides-menu" hidden>
+      <a class="guides-menu-item" href="guide-mdb-division-parcellaire.html" target="_blank" rel="noopener">
+        <span class="guides-menu-item-title">Guide opérationnel — Marchand de biens</span>
+        <span class="guides-menu-item-sub">Division parcellaire · 100 k€ d'apport</span>
+      </a>
+      <a class="guides-menu-item" href="guide-investissement-locatif.html" target="_blank" rel="noopener">
+        <span class="guides-menu-item-title">Guide opérationnel — Investissement locatif</span>
+        <span class="guides-menu-item-sub">Sélection à mise en location · 125 k€ d'apport</span>
+      </a>
+    </div>
+  </div>
   <div class="view-switcher">
     <button class="view-btn active" data-view="gallery" title="Galerie">⊞</button>
     <button class="view-btn" data-view="list" title="Liste">≡</button>
@@ -985,6 +1059,7 @@
         <div class="viewer-cta-row">
           <button class="viewer-btn viewer-btn-icon viewer-btn-map" id="viewer-map-btn" title="Voir sur la carte" aria-label="Voir sur la carte">🗺</button>
           <button class="viewer-btn viewer-btn-icon viewer-btn-delete" id="viewer-delete-btn" title="Supprimer" aria-label="Supprimer">🗑</button>
+          <a class="viewer-btn viewer-btn-fiche" id="viewer-fiche-link" href="#" target="_blank" rel="noopener" hidden>📄 Fiche</a>
           <a class="viewer-btn viewer-btn-primary" id="viewer-link" href="#" target="_blank" rel="noopener">Voir l'annonce →</a>
         </div>
       </div>
@@ -1015,6 +1090,32 @@
 
   if (btnFilters) btnFilters.addEventListener('click', openSidebar);
   if (overlayEl)  overlayEl.addEventListener('click', closeSidebar);
+
+  // Menu Guides
+  var btnGuides   = document.getElementById('btn-guides');
+  var guidesMenu  = document.getElementById('guides-menu');
+
+  function closeGuidesMenu() {
+    guidesMenu.hidden = true;
+    btnGuides.classList.remove('open');
+    btnGuides.setAttribute('aria-expanded', 'false');
+  }
+
+  if (btnGuides) {
+    btnGuides.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var willOpen = guidesMenu.hidden;
+      guidesMenu.hidden = !willOpen;
+      btnGuides.classList.toggle('open', willOpen);
+      btnGuides.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+    document.addEventListener('click', function(e) {
+      if (!guidesMenu.hidden && !guidesMenu.contains(e.target) && e.target !== btnGuides) closeGuidesMenu();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeGuidesMenu();
+    });
+  }
 
   // Fermer après changement de filtre sur mobile
   document.addEventListener('DOMContentLoaded', function() {
