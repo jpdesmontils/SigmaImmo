@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { jsonError(405, 'Method not allowed'); }
 
 // ── Config ────────────────────────────────────────────────────
-define('API_KEY',       getenv('IMMO_API_KEY') ?: 'CHANGE_ME');
+define('API_KEY',       file_get_contents('keyfile.txt') ?: 'CHANGE_ME');
 define('DATA_DIR',      __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
 define('MAX_FAVORITES', 1000);

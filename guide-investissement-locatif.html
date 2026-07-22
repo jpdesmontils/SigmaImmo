@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide Investissement Locatif · 125 k€ d'apport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f3ee;--surface:#fff;--card:#edeae3;--card-hi:#e4e1d8;
+  --border:#d0ccc3;--border-hi:#a8a49b;
+  --ink:#16150f;--ink-2:#5a5850;--ink-3:#9a9890;
+  --go:#145a2e;--go-bg:#d6f0df;--go-border:#7ec99a;
+  --warn:#7a4108;--warn-bg:#faefd5;--warn-border:#e0a84a;
+  --danger:#831515;--danger-bg:#fce8e8;--danger-border:#d97373;
+  --accent:#16150f;
+  --font-d:'Space Grotesk',sans-serif;--font-b:'Inter',sans-serif;--font-m:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* HEADER */
+.site-header{background:var(--ink);color:#f5f3ee;padding:20px 32px;display:flex;justify-content:space-between;align-items:center}
+.site-logo{font-family:var(--font-d);font-size:15px;font-weight:600;letter-spacing:.02em}
+.site-logo span{font-weight:300;opacity:.6}
+.site-tag{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;opacity:.5}
+
+/* HERO */
+.hero{padding:40px 32px 32px;border-bottom:1px solid var(--border);background:var(--surface)}
+.hero-eyebrow{font-family:var(--font-m);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px}
+.hero-title{font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--ink);line-height:1.1;margin-bottom:10px}
+.hero-title em{font-style:normal;font-weight:300}
+.hero-sub{font-size:14px;color:var(--ink-2);max-width:680px;line-height:1.7;margin-bottom:24px}
+.hero-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(122px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.hkpi{background:var(--bg);padding:14px 16px}
+.hkpi-l{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+.hkpi-v{font-family:var(--font-m);font-size:20px;font-weight:700;color:var(--ink);line-height:1}
+.hkpi-v.g{color:var(--go)}.hkpi-v.w{color:var(--warn)}.hkpi-v.r{color:var(--danger)}
+.hkpi-s{font-size:11px;color:var(--ink-3);margin-top:3px}
+
+/* TABS */
+.tabs-nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto;gap:0;position:sticky;top:0;z-index:10;box-shadow:0 1px 0 var(--border)}
+.tab-btn{font-family:var(--font-b);font-size:13px;font-weight:500;color:var(--ink-3);padding:14px 20px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{color:var(--ink);border-bottom-color:var(--ink)}
+.tab-content{display:none;padding:32px;max-width:980px;margin:0 auto}
+.tab-content.active{display:block}
+
+/* SECTION TITLE */
+.stitle{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:18px;margin-top:32px}
+.stitle:first-child{margin-top:0}
+
+/* NARRATIVE */
+.narrative{background:var(--card);border-left:3px solid var(--ink);padding:14px 18px;font-size:13px;color:var(--ink-2);line-height:1.75;margin-bottom:20px}
+.narrative.go{border-left-color:var(--go)}
+.narrative.warn{border-left-color:var(--warn)}
+
+/* ALERTS */
+.alert{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border-radius:3px;font-size:12px;line-height:1.65;border:1px solid;margin-bottom:10px}
+.alert.g{background:var(--go-bg);border-color:var(--go-border);color:var(--go)}
+.alert.w{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn)}
+.alert.d{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger)}
+.alert b{font-weight:600}
+.ai{flex-shrink:0;margin-top:1px}
+
+/* ENV GRID */
+.env-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:16px}
+.env-cell{background:var(--surface);padding:16px 18px}
+.env-label{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.env-val{font-family:var(--font-m);font-size:20px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:3px}
+.env-val.g{color:var(--go)}.env-val.w{color:var(--warn)}.env-val.r{color:var(--danger)}
+.env-sub{font-size:11px;color:var(--ink-3)}
+
+/* DATA TABLES */
+.dtable{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.dtable th{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:8px 12px;background:var(--card-hi);border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.dtable th.r{text-align:right}.dtable th:last-child{border-right:none}
+.dtable td{padding:8px 12px;font-size:12px;color:var(--ink-2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable td:last-child{border-right:none}.dtable tr:last-child td{border-bottom:none}
+.dtable tr:hover td{background:var(--card)}.dtable td.r{text-align:right}
+.dtable .grp td{font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);background:var(--card-hi);padding-top:10px;border-top:1px solid var(--border-hi)}
+.dtable .tot td{font-weight:600;background:var(--card-hi);border-top:1px solid var(--border-hi)}
+.mono{font-family:var(--font-m);color:var(--ink)}
+.tg{color:var(--go)!important;font-weight:500}.tw{color:var(--warn)!important}.tr{color:var(--danger)!important}
+.dept-num{display:inline-block;font-family:var(--font-m);font-size:9px;font-weight:700;background:var(--ink);color:#f5f3ee;padding:2px 6px;border-radius:2px;margin-right:4px}
+.star{display:inline-block;font-family:var(--font-m);font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--go-bg);color:var(--go);margin-left:4px}
+.midbadge{display:inline-block;font-family:var(--font-m);font-size:9px;padding:1px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn);margin-left:4px}
+
+/* BILAN */
+.bilan{border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.brow{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;border-bottom:1px solid var(--border);font-size:12px;gap:12px}
+.brow:last-child{border-bottom:none}
+.brow.grp{background:var(--card-hi);font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding-top:10px}
+.brow.total{background:var(--ink);color:#f5f3ee}
+.bl{color:var(--ink-2)}.brow.total .bl{color:rgba(245,243,238,.65)}
+.bv{font-family:var(--font-m);font-weight:500;color:var(--ink);white-space:nowrap}
+.bv.g{color:var(--go)}.bv.r{color:var(--danger)}.bv.w{color:var(--warn)}
+.brow.total .bv{color:#f5f3ee;font-size:14px;font-weight:700}
+
+/* MARGE BAR */
+.marge-bar-wrap{height:32px;background:var(--card);border-radius:3px;overflow:hidden;position:relative;margin:12px 0}
+.marge-bar-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;justify-content:flex-end;padding-right:10px}
+.marge-bar-label{font-family:var(--font-m);font-size:11px;font-weight:700;color:#fff}
+.marge-bar-axis{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:9px;color:var(--ink-3);margin-bottom:4px}
+
+/* VILLES */
+.villes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.ville-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:12px 14px}
+.ville-card.top{border-color:var(--go);border-width:1.5px}
+.ville-name{font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.ville-dept{font-family:var(--font-m);font-size:9px;color:var(--ink-3);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase}
+.vrow{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px solid var(--border)}
+.vrow:last-child{border-bottom:none}
+.vl{color:var(--ink-2)}.vv{font-weight:500;color:var(--ink)}
+.vv.g{color:var(--go)}.vv.w{color:var(--warn)}
+
+/* PLANNING */
+.planning{border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.plan-step{display:grid;grid-template-columns:32px 180px 90px 1fr;align-items:start;border-bottom:1px solid var(--border);background:var(--surface)}
+.plan-step:last-of-type{border-bottom:none}
+.plan-step:hover{background:var(--card)}
+.pn{font-family:var(--font-m);font-size:10px;font-weight:700;color:var(--ink-3);padding:11px 0 11px 14px}
+.pp{font-size:12px;font-weight:500;color:var(--ink);padding:11px 10px;line-height:1.4}
+.pd{font-family:var(--font-m);font-size:11px;color:var(--warn);padding:11px 8px;font-weight:600;white-space:nowrap}
+.pno{font-size:11px;color:var(--ink-2);padding:11px 14px 11px 0;line-height:1.55}
+.plan-total{background:var(--ink);display:flex;justify-content:space-between;padding:10px 16px}
+.ptl{font-family:var(--font-m);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,243,238,.5)}
+.ptv{font-family:var(--font-m);font-size:12px;font-weight:700;color:#f5f3ee}
+
+/* TYPO CARDS */
+.typo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.typo-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.typo-card.best{border-color:var(--go);border-width:1.5px}
+.typo-hdr{padding:11px 14px;border-bottom:1px solid var(--border);background:var(--card)}
+.typo-hdr.A{background:rgba(20,90,46,.06)}
+.typo-hdr.B{background:rgba(122,65,8,.06)}
+.typo-hdr-name{font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.typo-hdr-tag{font-size:10px;color:var(--ink-3)}
+.typo-body{padding:11px 14px}
+.trow{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border)}
+.trow:last-child{border-bottom:none}
+.tl{color:var(--ink-2)}.tv{font-weight:500;color:var(--ink)}
+.tv.g{color:var(--go)}.tv.w{color:var(--warn)}.tv.r{color:var(--danger)}
+.typo-foot{background:var(--card);display:flex;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border)}
+.typo-fl{font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.typo-fv{font-family:var(--font-m);font-size:14px;font-weight:700}
+
+/* FISCAL GRID */
+.fisc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.fisc-card{border:1px solid var(--border);border-radius:3px;overflow:hidden;background:var(--surface)}
+.fisc-hdr{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card);font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--ink)}
+.fisc-row{display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid var(--border);font-size:12px}
+.fisc-row:last-child{border-bottom:none}
+.fl{color:var(--ink-3)}.fv{font-family:var(--font-m);font-weight:500;font-size:11px;color:var(--ink)}
+.fisc-foot{background:var(--card);padding:8px 14px;font-size:11px;color:var(--ink-3);line-height:1.5}
+
+/* SIMULATEUR */
+.sim-layout{display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start}
+@media(max-width:820px){.sim-layout{grid-template-columns:1fr}}
+.sim-panel{background:var(--surface);border:1px solid var(--border);border-radius:3px;overflow:hidden;position:sticky;top:60px}
+.sim-panel-hdr{background:var(--ink);color:#f5f3ee;padding:12px 16px}
+.sim-phdr-title{font-family:var(--font-d);font-size:15px;font-weight:600}
+.sim-phdr-sub{font-family:var(--font-b);font-size:11px;font-weight:400;opacity:.55;margin-top:2px}
+.sim-group{padding:14px 16px;border-bottom:1px solid var(--border)}
+.sim-group:last-child{border-bottom:none}
+.sim-group-title{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.sim-field{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+.sim-field:last-child{margin-bottom:0}
+.sim-label{font-size:12px;color:var(--ink-2);flex:1;min-width:0}
+.sim-input-wrap{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.sim-input{font-family:var(--font-m);font-size:12px;font-weight:500;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:5px 8px;width:100px;text-align:right}
+.sim-input:focus{outline:none;border-color:var(--ink)}
+.sim-unit{font-family:var(--font-m);font-size:10px;color:var(--ink-3);width:28px;flex-shrink:0}
+.sim-select{font-family:var(--font-m);font-size:11px;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:5px 8px;width:134px}
+.sim-select:focus{outline:none;border-color:var(--ink)}
+
+/* Résultats simulateur */
+.res-panel{display:flex;flex-direction:column;gap:12px}
+.verdict-bar{border-radius:3px;padding:14px 18px;border:1px solid}
+.verdict-bar.go{background:var(--go-bg);border-color:var(--go-border)}
+.verdict-bar.cond{background:var(--warn-bg);border-color:var(--warn-border)}
+.verdict-bar.nogo{background:var(--danger-bg);border-color:var(--danger-border)}
+.verdict-title{font-family:var(--font-d);font-size:20px;font-weight:700;margin-bottom:4px}
+.verdict-bar.go .verdict-title{color:var(--go)}
+.verdict-bar.cond .verdict-title{color:var(--warn)}
+.verdict-bar.nogo .verdict-title{color:var(--danger)}
+.verdict-sub{font-size:12px;line-height:1.6}
+.verdict-bar.go .verdict-sub{color:var(--go)}
+.verdict-bar.cond .verdict-sub{color:var(--warn)}
+.verdict-bar.nogo .verdict-sub{color:var(--danger)}
+.kpi4{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.kpi4-cell{background:var(--surface);padding:12px 14px}
+.kpi4-lbl{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.kpi4-val{font-family:var(--font-m);font-size:18px;font-weight:700;color:var(--ink);line-height:1}
+.kpi4-val.g{color:var(--go)}.kpi4-val.w{color:var(--warn)}.kpi4-val.r{color:var(--danger)}
+.kpi4-sub{font-size:11px;color:var(--ink-3);margin-top:3px}
+.bilan-res{border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.br{display:grid;grid-template-columns:1fr auto;padding:7px 14px;border-bottom:1px solid var(--border);font-size:12px}
+.br:last-child{border-bottom:none}
+.br.grp{background:var(--card-hi);font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-top:9px}
+.br.total{background:var(--ink)}
+.br-lbl{color:var(--ink-2)}.br.total .br-lbl{color:rgba(245,243,238,.65)}
+.br-val{font-family:var(--font-m);font-weight:500;color:var(--ink);text-align:right}
+.br-val.g{color:var(--go)}.br-val.r{color:var(--danger)}.br-val.w{color:var(--warn)}
+.br.total .br-val{color:#f5f3ee;font-size:14px;font-weight:700}
+.sensi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.sensi-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:10px 12px}
+.sensi-scenario{font-family:var(--font-m);font-size:10px;color:var(--ink-3);margin-bottom:4px}
+.sensi-val{font-family:var(--font-m);font-size:15px;font-weight:700}
+.sensi-delta{font-size:11px;color:var(--ink-3);margin-top:2px}
+.res-alert{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:3px;font-size:11px;line-height:1.6;border:1px solid;margin-top:4px}
+.res-alert.w{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn)}
+.res-alert.d{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger)}
+.res-alert.g{background:var(--go-bg);border-color:var(--go-border);color:var(--go)}
+.res-alert b{font-weight:600}
+
+/* SOURCES */
+.sources-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:16px}
+.src{font-size:11px;color:var(--ink-3);line-height:1.5}
+.src::before{content:"→ ";color:var(--border-hi)}
+
+/* FOOTER */
+.site-footer{margin-top:60px;border-top:1px solid var(--border);padding:20px 32px;display:flex;justify-content:space-between;font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+
+@media(max-width:720px){
+  .hero{padding:24px 16px 20px}.tabs-nav{padding:0 16px}.tab-content{padding:20px 16px}
+  .villes-grid,.typo-grid,.fisc-grid{grid-template-columns:1fr}
+  .plan-step{grid-template-columns:28px 1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-logo">Guide Investissement Locatif <span>· 125 k€ d'apport</span></div>
+  <div class="site-tag">Analyse · Juillet 2026</div>
+</header>
+
+<div class="hero">
+  <div class="hero-eyebrow">Stratégie Investisseur · 125 k€ de cash disponible</div>
+  <h1 class="hero-title">L'investissement locatif,<br><em>de la sélection à la mise en location</em></h1>
+  <p class="hero-sub">Guide complet pour choisir sa typologie, identifier les marchés les plus rentables, structurer son financement et piloter le rendement net après impôt — avec 125 000 € d'apport et un crédit sur 15 à 20 ans.</p>
+  <div class="hero-kpis">
+    <div class="hkpi"><div class="hkpi-l">Cash apport</div><div class="hkpi-v">125 k€</div><div class="hkpi-s">Fonds propres</div></div>
+    <div class="hkpi"><div class="hkpi-l">Budget total</div><div class="hkpi-v g">350–500 k€</div><div class="hkpi-s">Avec crédit 20 ans</div></div>
+    <div class="hkpi"><div class="hkpi-l">Rendement brut cible</div><div class="hkpi-v g">6–10 %</div><div class="hkpi-s">Selon marché</div></div>
+    <div class="hkpi"><div class="hkpi-l">Rendement net cible</div><div class="hkpi-v g">3,5–6 %</div><div class="hkpi-s">Après charges</div></div>
+    <div class="hkpi"><div class="hkpi-l">Objectif cash-flow</div><div class="hkpi-v w">≥ 0 €/mois</div><div class="hkpi-s">Autofinancement</div></div>
+    <div class="hkpi"><div class="hkpi-l">Horizon recommandé</div><div class="hkpi-v">8–15 ans</div><div class="hkpi-s">Amortissement frais</div></div>
+  </div>
+</div>
+
+<nav class="tabs-nav" role="tablist">
+  <button class="tab-btn active" onclick="showTab('cadrage')">Cadrage financier</button>
+  <button class="tab-btn" onclick="showTab('bilan')">Bilan type</button>
+  <button class="tab-btn" onclick="showTab('departements')">Départements</button>
+  <button class="tab-btn" onclick="showTab('villes')">Villes cibles</button>
+  <button class="tab-btn" onclick="showTab('process')">Process opérationnel</button>
+  <button class="tab-btn" onclick="showTab('typologies')">Typologies</button>
+  <button class="tab-btn" onclick="showTab('fiscalite')">Fiscalité</button>
+  <button class="tab-btn" onclick="showTab('simulateur')" style="color:var(--go);font-weight:600">Simulateur ↗</button>
+</nav>
+
+<!-- ═══════════════ CADRAGE FINANCIER ═══════════════ -->
+<section class="tab-content active" id="cadrage">
+<div class="stitle">Enveloppe financière réelle — 125 k€ cash + crédit immobilier</div>
+
+<div class="narrative">
+  Avec 125 000 € de cash, l'apport recommandé dans l'investissement locatif est de <strong>20–30 % du prix total</strong> (frais de notaire inclus). En pratique : un apport de 80–100 k€ injecté dans l'opération, et 25–40 k€ conservés en réserve pour les travaux éventuels, la vacance initiale et les imprévus. Le crédit immobilier locatif se différencie du crédit résidence principale : les banques intègrent <strong>70 à 80 % des loyers futurs</strong> dans le calcul du taux d'endettement.
+</div>
+
+<div class="env-grid">
+  <div class="env-cell"><div class="env-label">Cash disponible</div><div class="env-val">125 k€</div><div class="env-sub">Fonds propres totaux</div></div>
+  <div class="env-cell"><div class="env-label">Réserve à garder</div><div class="env-val w">25–40 k€</div><div class="env-sub">Travaux, vacance, imprévus</div></div>
+  <div class="env-cell"><div class="env-label">Apport injecté</div><div class="env-val">85–100 k€</div><div class="env-sub">Frais notaire inclus</div></div>
+  <div class="env-cell"><div class="env-label">Crédit (20 ans, 3,4 %)</div><div class="env-val g">250–375 k€</div><div class="env-sub">LTV 70–80 %</div></div>
+  <div class="env-cell"><div class="env-label">Budget acquisition max</div><div class="env-val g">350–480 k€</div><div class="env-sub">Prix + notaire inclus</div></div>
+  <div class="env-cell"><div class="env-label">Loyer mensuel cible</div><div class="env-val g">1 200–2 000 €</div><div class="env-sub">Pour s'autofinancer</div></div>
+</div>
+
+<div class="alert w">
+  <span class="ai">⚠</span>
+  <div><b>Règle des 70 % :</b> les banques ne retiennent que 70 % des loyers attendus dans le calcul du taux d'endettement. Sur un loyer de 1 200 €/mois, seuls 840 € compensent la mensualité du crédit. Vérifier l'impact sur le taux d'endettement total avant de s'engager, particulièrement si vous avez déjà une résidence principale à crédit.</div>
+</div>
+
+<div class="stitle">Comparaison : apport 20 % vs 30 % sur un bien à 300 k€</div>
+<table class="dtable">
+  <thead><tr><th>Paramètre</th><th class="r">Apport 20 % — 60 k€</th><th class="r">Apport 30 % — 90 k€</th></tr></thead>
+  <tbody>
+    <tr><td>Frais de notaire (7,5 %)</td><td class="r mono">22 500 €</td><td class="r mono">22 500 €</td></tr>
+    <tr><td>Apport injecté total</td><td class="r mono">60 000 €</td><td class="r mono">90 000 €</td></tr>
+    <tr><td>Capital emprunté</td><td class="r mono">262 500 €</td><td class="r mono">232 500 €</td></tr>
+    <tr><td>Mensualité (20 ans · 3,4 %)</td><td class="r mono">1 506 €</td><td class="r mono">1 333 €</td></tr>
+    <tr><td>Réserve conservée (sur 125 k€)</td><td class="r mono tg">65 000 €</td><td class="r mono tw">35 000 €</td></tr>
+    <tr><td>Rendement sur fonds propres (loyer 1 200 €)</td><td class="r mono tg">+24 % RFP</td><td class="r mono">+16 % RFP</td></tr>
+    <tr><td>Cash-flow mensuel net estimé (loyer 1 200 €)</td><td class="r mono tr">−606 €/mois</td><td class="r mono tw">−433 €/mois</td></tr>
+  </tbody>
+</table>
+
+<div class="alert g">
+  <span class="ai">✓</span>
+  <div><b>Stratégie recommandée à 125 k€ :</b> apport de 80–100 k€ sur un bien à 200–280 k€ (soit 30–40 %) pour maximiser la réserve de liquidité et minimiser l'effort mensuel. Un bien à 200 k€ avec 80 k€ d'apport donne une mensualité de ~870 € sur 20 ans — autofinancé dès 900 €/mois de loyer dans un marché à 5 % brut.</div>
+</div>
+
+<div class="stitle">Établissements bancaires — profil investisseur locatif</div>
+<table class="dtable">
+  <thead><tr><th>Établissement</th><th>Profil</th><th class="r">LTV max</th><th>Spécificité</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">Banques mutualistes (CE, CM, CA)</td><td>Clients fidèles, 1re invest.</td><td class="r mono">80 %</td><td>Conditionnent souvent à la domiciliation des revenus</td></tr>
+    <tr><td class="mono">BNP / Société Générale</td><td>Profil cadre · revenus stables</td><td class="r mono">80–85 %</td><td>Bonne écoute sur dossiers bien construits</td></tr>
+    <tr><td class="mono">Courtiers (Cafpi, Vousfinancer, Pretto)</td><td>Tous profils</td><td class="r mono">80–90 %</td><td>Comparent plusieurs banques — recommandé pour 1re invest.</td></tr>
+    <tr><td class="mono">BoursoBank / Hello Bank</td><td>Profil digital, CDI stable</td><td class="r mono">80 %</td><td>Taux compétitifs mais moins flexibles sur les dossiers locatifs</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ═══════════════ BILAN TYPE ═══════════════ -->
+<section class="tab-content" id="bilan">
+<div class="stitle">Logique de l'opération locative</div>
+<div class="narrative">
+  Un investissement locatif génère de la valeur sur deux axes simultanés : le <strong>flux locatif mensuel</strong> (loyers − charges − mensualité crédit) et la <strong>valorisation patrimoniale</strong> à long terme. L'objectif n'est pas nécessairement un cash-flow positif immédiat — un effort mensuel de 100–200 € sur un bien qui se valorise à 2–3 %/an et dont le crédit est remboursé par le locataire reste une opération excellente.
+</div>
+
+<div class="stitle">Bilan type — appartement T3 200 k€ à Troyes · loyer 850 €/mois</div>
+<div class="bilan">
+  <div class="brow grp"><span>Coût d'acquisition</span><span></span></div>
+  <div class="brow"><span class="bl">Prix d'achat net vendeur</span><span class="bv">200 000 €</span></div>
+  <div class="brow"><span class="bl">Frais de notaire (7,5 % — ancien)</span><span class="bv r">+ 15 000 €</span></div>
+  <div class="brow"><span class="bl">Travaux de remise en état estimés</span><span class="bv r">+ 15 000 €</span></div>
+  <div class="brow"><span class="bl">Coût total projet</span><span class="bv">230 000 €</span></div>
+  <div class="brow grp"><span>Financement</span><span></span></div>
+  <div class="brow"><span class="bl">Apport injecté (sur 125 k€ disponibles)</span><span class="bv">80 000 €</span></div>
+  <div class="brow"><span class="bl">Réserve conservée</span><span class="bv g">45 000 €</span></div>
+  <div class="brow"><span class="bl">Capital emprunté (20 ans · 3,4 %)</span><span class="bv">150 000 €</span></div>
+  <div class="brow"><span class="bl">Mensualité crédit</span><span class="bv">860 €/mois</span></div>
+  <div class="brow grp"><span>Recettes annuelles</span><span></span></div>
+  <div class="brow"><span class="bl">Loyer HC annuel (850 € × 11 mois — vacance 1 mois)</span><span class="bv g">9 350 €</span></div>
+  <div class="brow grp"><span>Charges annuelles non récupérables</span><span></span></div>
+  <div class="brow"><span class="bl">Taxe foncière estimée</span><span class="bv r">− 1 200 €</span></div>
+  <div class="brow"><span class="bl">Charges copropriété NR (~30 %)</span><span class="bv r">− 600 €</span></div>
+  <div class="brow"><span class="bl">Assurance PNO</span><span class="bv r">− 180 €</span></div>
+  <div class="brow"><span class="bl">Entretien courant (0,5 % valeur bien)</span><span class="bv r">− 1 000 €</span></div>
+  <div class="brow"><span class="bl">Gestion locative (0 % — autogéré)</span><span class="bv">0 €</span></div>
+  <div class="brow"><span class="bl">Vacance locative (1 mois/an déjà intégrée)</span><span class="bv">inclus ci-dessus</span></div>
+  <div class="brow"><span class="bl">Total charges NR</span><span class="bv r">− 2 980 €</span></div>
+  <div class="brow grp"><span>Résultats</span><span></span></div>
+  <div class="brow"><span class="bl">Rendement brut (loyers HC / coût total)</span><span class="bv g">4,3 %</span></div>
+  <div class="brow"><span class="bl">Revenu net exploitation (loyers − charges NR)</span><span class="bv g">6 370 €/an</span></div>
+  <div class="brow"><span class="bl">Rendement net avant impôt</span><span class="bv g">2,8 %</span></div>
+  <div class="brow total"><span class="bl">Cash-flow mensuel net</span><span class="bv">−329 €/mois</span></div>
+</div>
+<div class="alert w">
+  <span class="ai">⚠</span>
+  <div><b>Cash-flow négatif de −329 €/mois :</b> cet effort est compensé par (1) le remboursement mensuel du capital crédit (~480 €/mois en début de prêt) acquis par le locataire, et (2) la valorisation du bien. Sur 20 ans à 2 % de revalorisation/an, le bien vaut ~297 k€ à terme pour un achat à 200 k€. Pour atteindre l'autofinancement, il faut un loyer de 1 180 €/mois — soit un bien à plus fort rendement (voir onglet Villes cibles).</div>
+</div>
+
+<div class="stitle">Sensibilité cash-flow selon loyer et apport</div>
+<table class="dtable">
+  <thead><tr><th>Loyer/mois</th><th class="r">Apport 25 % (57 k€)</th><th class="r">Apport 35 % (80 k€)</th><th class="r">Apport 50 % (115 k€)</th></tr></thead>
+  <tbody>
+    <tr><td>700 €/mois (petit marché)</td><td class="r mono tr">−650 €/mois</td><td class="r mono tr">−497 €/mois</td><td class="r mono tr">−297 €/mois</td></tr>
+    <tr><td>850 €/mois (base)</td><td class="r mono tw">−503 €/mois</td><td class="r mono tw">−329 €/mois</td><td class="r mono tw">−143 €/mois</td></tr>
+    <tr><td>1 050 €/mois (bon marché)</td><td class="r mono tw">−303 €/mois</td><td class="r mono tw">−129 €/mois</td><td class="r mono tg">+57 €/mois</td></tr>
+    <tr><td>1 300 €/mois (marché tendu)</td><td class="r mono tw">−53 €/mois</td><td class="r mono tg">+121 €/mois</td><td class="r mono tg">+307 €/mois</td></tr>
+    <tr><td>1 600 €/mois (grande ville)</td><td class="r mono tg">+247 €/mois</td><td class="r mono tg">+421 €/mois</td><td class="r mono tg">+607 €/mois</td></tr>
+  </tbody>
+</table>
+<div style="font-size:11px;color:var(--ink-3);line-height:1.6;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:3px">Hypothèses : bien à 200 000 €, notaire 15 000 €, travaux 15 000 €, charges NR 2 980 €/an, crédit 20 ans 3,4 %. L'autofinancement (ligne verte) est atteint dès 1 300 €/loyer avec 35 % d'apport sur 125 k€.
+</div>
+
+<div class="stitle">Curseur interactif — sensibilité rendement net selon loyer</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:16px 18px;margin-bottom:16px">
+  <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);margin-bottom:8px">
+    <span>Loyer mensuel HC : <b id="loyer-label" style="font-family:var(--font-m);color:var(--ink)">850 €</b></span>
+    <span>Bien 200 k€ · coût total 230 k€ · apport 35 %</span>
+  </div>
+  <input type="range" min="500" max="2000" value="850" step="25" id="loyer-slider" style="width:100%;margin-bottom:12px">
+  <div class="marge-bar-wrap"><div class="marge-bar-fill" id="rendement-bar" style="width:0%;background:var(--warn)"><span class="marge-bar-label" id="rendement-label">—</span></div></div>
+  <div class="marge-bar-axis"><span>0 %</span><span>3 %</span><span>6 %</span><span>9 %</span><span>12 %+</span></div>
+  <div style="margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden">
+    <div style="background:var(--surface);padding:10px 12px"><div style="font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px">Loyer brut/an</div><div style="font-family:var(--font-m);font-size:16px;font-weight:700;color:var(--ink)" id="lb-an">—</div></div>
+    <div style="background:var(--surface);padding:10px 12px"><div style="font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px">Rendement brut</div><div style="font-family:var(--font-m);font-size:16px;font-weight:700" id="r-brut">—</div></div>
+    <div style="background:var(--surface);padding:10px 12px"><div style="font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px">Rendement net</div><div style="font-family:var(--font-m);font-size:16px;font-weight:700" id="r-net">—</div></div>
+    <div style="background:var(--surface);padding:10px 12px"><div style="font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px">Cash-flow/mois</div><div style="font-family:var(--font-m);font-size:16px;font-weight:700" id="cf-mois">—</div></div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════ DÉPARTEMENTS ═══════════════ -->
+<section class="tab-content" id="departements">
+<div class="stitle">Classement par rapport rendement brut / liquidité / demande locative</div>
+<div class="narrative">
+  Le critère de sélection n'est pas le prix le plus bas, mais le meilleur rapport entre le prix d'achat au m², le loyer de marché et la profondeur du bassin locataire. Un marché à 1 200 €/m² avec 10 €/m² de loyer (rendement brut 10 %) vaut mieux qu'un marché à 2 500 €/m² avec 15 €/m² de loyer (rendement 7,2 %) — si la liquidité est comparable.
+</div>
+<table class="dtable">
+  <thead>
+    <tr>
+      <th>Département</th><th class="r">Prix achat/m²</th><th class="r">Loyer marché/m²</th><th class="r">Rendement brut</th><th class="r">Part locataires</th><th>Liquidité revente</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="dept-num">10</span><b>Aube</b><br><span style="font-size:11px;color:var(--ink-3)">Troyes · Romilly</span></td>
+      <td class="r mono tg">1 200–1 800 €</td><td class="r mono">9–13 €</td>
+      <td class="r"><span class="tg">8–10 %</span><span class="star">★ Top</span></td>
+      <td class="r mono">41 %</td><td class="tw">Modérée</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">66</span><b>Pyrénées-Orientales</b><br><span style="font-size:11px;color:var(--ink-3)">Perpignan · Rivesaltes</span></td>
+      <td class="r mono tg">1 400–2 200 €</td><td class="r mono">10–15 €</td>
+      <td class="r"><span class="tg">7–9 %</span><span class="star">★ Top</span></td>
+      <td class="r mono">53 %</td><td class="tw">Modérée</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">02</span><b>Aisne</b><br><span style="font-size:11px;color:var(--ink-3)">Soissons · Château-Thierry · Laon</span></td>
+      <td class="r mono tg">800–1 400 €</td><td class="r mono">8–11 €</td>
+      <td class="r"><span class="tg">7–9 %</span><span class="star">★ Top</span></td>
+      <td class="r mono">38 %</td><td class="tr">Faible</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">51</span><b>Marne</b><br><span style="font-size:11px;color:var(--ink-3)">Reims · Châlons · Épernay</span></td>
+      <td class="r mono">1 600–2 400 €</td><td class="r mono">10–14 €</td>
+      <td class="r"><span class="tg">6–8 %</span><span class="star">★ Top</span></td>
+      <td class="r mono">48 %</td><td class="tw">Bonne (Reims)</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">57</span><b>Moselle</b><br><span style="font-size:11px;color:var(--ink-3)">Metz · Forbach · Thionville</span></td>
+      <td class="r mono">1 400–2 200 €</td><td class="r mono">9–13 €</td>
+      <td class="r"><span class="tw">6–8 %</span><span class="midbadge">Bon</span></td>
+      <td class="r mono">46 %</td><td class="tw">Bonne (Metz)</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">59</span><b>Nord</b><br><span style="font-size:11px;color:var(--ink-3)">Lille couronne · Roubaix · Valenciennes</span></td>
+      <td class="r mono">1 500–2 500 €</td><td class="r mono">10–15 €</td>
+      <td class="r"><span class="tw">6–8 %</span><span class="midbadge">Bon</span></td>
+      <td class="r mono">52 %</td><td class="tw">Bonne</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">30</span><b>Gard</b><br><span style="font-size:11px;color:var(--ink-3)">Nîmes · Alès · Bagnols</span></td>
+      <td class="r mono">1 500–2 500 €</td><td class="r mono">10–14 €</td>
+      <td class="r"><span class="tw">6–8 %</span><span class="midbadge">Bon</span></td>
+      <td class="r mono">46 %</td><td class="tw">Modérée</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">45</span><b>Loiret</b><br><span style="font-size:11px;color:var(--ink-3)">Orléans · Montargis · Pithiviers</span></td>
+      <td class="r mono">1 800–2 800 €</td><td class="r mono">11–15 €</td>
+      <td class="r"><span class="tw">5–7 %</span><span class="midbadge">Bon</span></td>
+      <td class="r mono">44 %</td><td class="tg">Bonne (Orléans)</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">67</span><b>Bas-Rhin</b><br><span style="font-size:11px;color:var(--ink-3)">Strasbourg · Schiltigheim · Illkirch</span></td>
+      <td class="r mono">2 200–3 500 €</td><td class="r mono">13–17 €</td>
+      <td class="r"><span class="tw">5–6 %</span></td>
+      <td class="r mono">56 %</td><td class="tg">Très bonne</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">34</span><b>Hérault</b><br><span style="font-size:11px;color:var(--ink-3)">Montpellier · Béziers · Sète</span></td>
+      <td class="r mono">2 200–4 000 €</td><td class="r mono">13–18 €</td>
+      <td class="r"><span class="tw">5–6 %</span></td>
+      <td class="r mono">55 %</td><td class="tg">Très bonne</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">44</span><b>Loire-Atlantique</b><br><span style="font-size:11px;color:var(--ink-3)">Nantes · Saint-Nazaire · Rezé</span></td>
+      <td class="r mono">2 800–4 500 €</td><td class="r mono">14–18 €</td>
+      <td class="r"><span class="tw">4–5 %</span></td>
+      <td class="r mono">53 %</td><td class="tg">Excellente</td>
+    </tr>
+    <tr>
+      <td><span class="dept-num">69</span><b>Rhône</b><br><span style="font-size:11px;color:var(--ink-3)">Lyon couronne · Villeurbanne · Vénissieux</span></td>
+      <td class="r mono">2 800–5 000 €</td><td class="r mono">14–20 €</td>
+      <td class="r"><span class="tr">3–5 %</span></td>
+      <td class="r mono">58 %</td><td class="tg">Excellente</td>
+    </tr>
+  </tbody>
+</table>
+<div class="alert g">
+  <span class="ai">✓</span>
+  <div><b>Règle de sélection :</b> cibler les départements où le rendement brut dépasse 6 % ET où la part de locataires dépasse 40 %. Le 10, le 66, le 51 et le 02 offrent ce double critère avec un budget d'achat compatible avec 125 k€ d'apport. Le 59 et le 30 ajoutent une liquidité correcte. Les 44, 34, 69 sont excellents sur la liquidité mais les prix ont trop monté pour générer du rendement significatif.
+  </div>
+</div>
+<div style="font-size:11px;color:var(--ink-3);line-height:1.5;margin-top:4px">Sources : DVF+ Cerema 2023–2026 · ANIL/Clameur observatoire loyers 2024 · INSEE RP 2020 (part locataires) · Notaires de France données régionales 2025</div>
+</section>
+
+<!-- ═══════════════ VILLES CIBLES ═══════════════ -->
+<section class="tab-content" id="villes">
+<div class="stitle">Top 9 villes — profil investisseur · rendement + liquidité + dynamisme</div>
+<div class="narrative">
+  Les villes sélectionnées cumulent : prix d'acquisition compatible avec 125 k€ d'apport, rendement brut ≥ 6 %, part de locataires ≥ 38 %, et bassin d'emploi suffisant pour assurer la rotation locative. Les villes marquées ★ sont recommandées pour une première acquisition.
+</div>
+<div class="villes-grid">
+  <div class="ville-card top">
+    <div class="ville-name">Troyes</div>
+    <div class="ville-dept">10 — Aube · ★ 1re acquisition</div>
+    <div class="vrow"><span class="vl">Budget T2/T3</span><span class="vv">80–160 k€</span></div>
+    <div class="vrow"><span class="vl">Loyer marché T2</span><span class="vv g">550–750 €/mois</span></div>
+    <div class="vrow"><span class="vl">Rendement brut T2</span><span class="vv g">8–11 %</span></div>
+    <div class="vrow"><span class="vl">Part locataires</span><span class="vv g">48 %</span></div>
+    <div class="vrow"><span class="vl">Délai relocation</span><span class="vv g">2–5 semaines</span></div>
+    <div class="vrow"><span class="vl">Atout</span><span class="vv" style="font-size:10px">TGV Paris-Est 1h30</span></div>
+  </div>
+  <div class="ville-card top">
+    <div class="ville-name">Perpignan</div>
+    <div class="ville-dept">66 — Pyrénées-Orientales · ★</div>
+    <div class="vrow"><span class="vl">Budget T2/T3</span><span class="vv">80–180 k€</span></div>
+    <div class="vrow"><span class="vl">Loyer marché T2</span><span class="vv g">550–750 €/mois</span></div>
+    <div class="vrow"><span class="vl">Rendement brut T2</span><span class="vv g">7–10 %</span></div>
+    <div class="vrow"><span class="vl">Part locataires</span><span class="vv g">53 %</span></div>
+    <div class="vrow"><span class="vl">Délai relocation</span><span class="vv g">1–4 semaines</span></div>
+    <div class="vrow"><span class="vl">Atout</span><span class="vv" style="font-size:10px">Marché profond · université</span></div>
+  </div>
+  <div class="ville-card top">
+    <div class="ville-name">Reims</div>
+    <div class="ville-dept">51 — Marne · ★</div>
+    <div class="vrow"><span class="vl">Budget T2/T3</span><span class="vv">100–200 k€</span></div>
+    <div class="vrow"><span class="vl">Loyer marché T2</span><span class="vv g">600–850 €/mois</span></div>
+    <div class="vrow"><span class="vl">Rendement brut T2</span><span class="vv g">6–8 %</span></div>
+    <div class="vrow"><span class="vl">Part locataires</span><span class="vv g">55 %</span></div>
+    <div class="vrow"><span class="vl">Délai relocation</span><span class="vv g">1–3 semaines</span></div>
+    <div class="vrow"><span class="vl">Atout</span><span class="vv" style="font-size:10px">TGV Paris-Est 45 min</span></div>
+  </div>
+  <div class="ville-card top">
+    <div class="ville-name">Metz</div>
+    <div class="ville-dept">57 — Moselle · ★</div>
+    <div class="vrow"><span class="vl">Budget T2/T3</span><span class="vv">100–200 k€</span></div>
+    <div class="vrow"><span class="vl">Loyer marché T2</span><span class="vv g">600–850 €/mois</span></div>
+    <div class="vrow"><span class="vl">Rendement brut T2</span><span class="vv g">6–8 %</span></div>
+    <div class="vrow"><span class="vl">Part locataires</span><span class="vv g">52 %</span></div>
+    <div class="vrow"><span class="vl">Délai relocation</span><span class="vv g">1–3 semaines</span></div>
+    <div class="vrow"><span class="vl">Atout</span><span class="vv" style="font-size:10px">Économie transfrontalière</span></div>
+  </div>
+  <div class="ville-card top">
+    <div class="ville-name">Nîmes</div>
+    <div class="ville-dept">30 — Gard</div>
+    <div class="vrow"><span class="vl">Budget T2/T3</span><span class="vv">100–200 k€</span></div>
+    <div class="vrow"><span class="vl">Loyer marché T2</span><span class="vv g">600–800 €/mois</span></div>
+    <div class="vrow"><span class="vl">Rendement brut T2</span><span class="vv g">6–8 %</span></div>
+    <div class="vrow"><span class="vl">Part locataires</span><span class="vv">46 %</span></div>
+    <div class="vrow"><span class="vl">Délai relocation</span><span class="vv w">2–6 semaines</span></div>
+    <div class="vrow"><span class="vl">Atout</span><span class="vv" style="font-size:10px">TGV · attrait Occitanie</span></div>
+  </div>
+  <div class="ville-card">
+    <div class="ville-name">Orléans</div>
+    <div class="ville-dept">45 — Loiret</div>
+    <div class="vrow"><span class="vl">Budget T2/T3</span><span class="vv">130–240 k€</span></div>
+    <div class="vrow"><span class="vl">Loyer marché T2</span><span class="vv g">700–950 €/mois</span></div>
+    <div class="vrow"><span class="vl">Rendement brut T2</span><span class="vv g">5–7 %</span></div>
+    <div class="vrow"><span class="vl">Part locataires</span><span class="vv">49 %</span></div>
+    <div class="vrow"><span class="vl">Délai relocation</span><span class="vv g">1–3 semaines</span></div>
+    <div class="vrow"><span class="vl">Atout</span><span class="vv" style="font-size:10px">Paris-Austerlitz 1h · université</span></div>
+  </div>
+  <div class="ville-card">
+    <div class="ville-name">Strasbourg</div>
+    <div class="ville-dept">67 — Bas-Rhin</div>
+    <div class="vrow"><span class="vl">Budget T2/T3</span><span class="vv">180–300 k€</span></div>
+    <div class="vrow"><span class="vl">Loyer marché T2</span><span class="vv">800–1 100 €/mois</span></div>
+    <div class="vrow"><span class="vl">Rendement brut T2</span><span class="vv w">5–6 %</span></div>
+    <div class="vrow"><span class="vl">Part locataires</span><span class="vv g">60 %</span></div>
+    <div class="vrow"><span class="vl">Délai relocation</span><span class="vv g">&lt; 2 semaines</span></div>
+    <div class="vrow"><span class="vl">Atout</span><span class="vv" style="font-size:10px">Tension locative extrême</span></div>
+  </div>
+  <div class="ville-card">
+    <div class="ville-name">Montpellier</div>
+    <div class="ville-dept">34 — Hérault</div>
+    <div class="vrow"><span class="vl">Budget T2/T3</span><span class="vv">180–320 k€</span></div>
+    <div class="vrow"><span class="vl">Loyer marché T2</span><span class="vv">800–1 100 €/mois</span></div>
+    <div class="vrow"><span class="vl">Rendement brut T2</span><span class="vv w">4,5–6 %</span></div>
+    <div class="vrow"><span class="vl">Part locataires</span><span class="vv g">62 %</span></div>
+    <div class="vrow"><span class="vl">Délai relocation</span><span class="vv g">&lt; 2 semaines</span></div>
+    <div class="vrow"><span class="vl">Atout</span><span class="vv" style="font-size:10px">Croissance démographique forte</span></div>
+  </div>
+  <div class="ville-card">
+    <div class="ville-name">Roubaix / Tourcoing</div>
+    <div class="ville-dept">59 — Nord</div>
+    <div class="vrow"><span class="vl">Budget T2/T3</span><span class="vv">80–160 k€</span></div>
+    <div class="vrow"><span class="vl">Loyer marché T2</span><span class="vv g">550–750 €/mois</span></div>
+    <div class="vrow"><span class="vl">Rendement brut T2</span><span class="vv g">7–10 %</span></div>
+    <div class="vrow"><span class="vl">Part locataires</span><span class="vv g">55 %</span></div>
+    <div class="vrow"><span class="vl">Délai relocation</span><span class="vv w">2–5 semaines</span></div>
+    <div class="vrow"><span class="vl">Risque</span><span class="vv w" style="font-size:10px">Chômage élevé · solvabilité</span></div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════ PROCESS ═══════════════ -->
+<section class="tab-content" id="process">
+<div class="stitle">10 étapes — de la décision à la première quittance</div>
+<div class="planning">
+  <div class="plan-step">
+    <div class="pn">01</div><div class="pp">Définir sa stratégie</div><div class="pd">Semaine 1</div>
+    <div class="pno">Choisir : typologie (T2, T3, studio, immeuble), régime fiscal (nu/meublé), horizon, objectif (cash-flow ou patrimonial), zone géographique. Ne pas chercher avant d'avoir répondu à ces 5 questions — elles déterminent tout le reste.</div>
+  </div>
+  <div class="plan-step">
+    <div class="pn">02</div><div class="pp">Cadrer le financement</div><div class="pd">Semaine 1–2</div>
+    <div class="pno">Contacter 2–3 banques ou un courtier pour obtenir une simulation de capacité d'emprunt. Calculer le taux d'endettement actuel + futur avec le bien cible. Préparer le dossier : 3 derniers bulletins de salaire, avis d'imposition, relevés de compte, épargne.</div>
+  </div>
+  <div class="plan-step">
+    <div class="pn">03</div><div class="pp">Sourcing & analyse des offres</div><div class="pd">M1 → M3</div>
+    <div class="pno">Surveiller SeLoger, LeBonCoin, PAP, Bien'ici. Calculer le rendement brut avant toute visite (loyer marché / prix total). Ne visiter que les biens avec un rendement brut ≥ seuil cible. Croiser avec DVF+ les prix de transactions récentes dans le quartier.</div>
+  </div>
+  <div class="plan-step">
+    <div class="pn">04</div><div class="pp">Due diligence avant offre</div><div class="pd">M2 → M3</div>
+    <div class="pno">Vérifier : DPE (F ou G = risque légal), charges copropriété réelles (PV des 3 dernières AG), taxe foncière exacte, travaux votés non réalisés, loyer marché local (ANIL, Clameur), délai de relocation dans le secteur, sinistres Géorisques.</div>
+  </div>
+  <div class="plan-step">
+    <div class="pn">05</div><div class="pp">Offre d'achat et négociation</div><div class="pd">M2 → M3</div>
+    <div class="pno">Formuler l'offre en intégrant les coûts réels (travaux DPE, remise en état). Sur un bien à DPE E/F, exiger une décote de 5–15 % pour compenser le coût de mise aux normes. Conditions suspensives obligatoires : obtention du crédit + diagnostics.</div>
+  </div>
+  <div class="plan-step">
+    <div class="pn">06</div><div class="pp">Compromis de vente</div><div class="pd">M3</div>
+    <div class="pno">Vérifier tous les diagnostics obligatoires (DPE, amiante, plomb, électricité, gaz, ERP). Délai de rétractation 10 jours. Dépôt de garantie 5–10 % du prix. Conditions suspensives crédit (durée, taux, montant minimum).</div>
+  </div>
+  <div class="plan-step">
+    <div class="pn">07</div><div class="pp">Instruction du crédit</div><div class="pd">M3 → M5</div>
+    <div class="pno">Monter le dossier bancaire complet. Comparer les offres (taux, assurance emprunteur, modularité des remboursements). L'assurance emprunteur est négociable séparément (délégation) — économie potentielle de 0,2–0,5 % du capital. Délai moyen : 6–8 semaines.</div>
+  </div>
+  <div class="plan-step">
+    <div class="pn">08</div><div class="pp">Travaux et ameublement (si LMNP)</div><div class="pd">M5 → M6</div>
+    <div class="pno">Si meublé : investir dans un mobilier conforme à la liste légale LMNP (literie, cuisine équipée, rangements, luminaires). Budget mobilier complet T2 : 3 000–6 000 €. Si travaux : faire plusieurs devis, exiger des délais contractuels, conserver toutes les factures (déductibles).</div>
+  </div>
+  <div class="plan-step">
+    <div class="pn">09</div><div class="pp">Acte authentique et prise de possession</div><div class="pd">M5</div>
+    <div class="pno">Signature chez le notaire. Vérifier que l'état des lieux d'entrée (si bien occupé) ou la libération (si vacant) est conforme. Récupérer : règlement de copropriété, carnet d'entretien, clés de toutes les entrées, badges d'accès.</div>
+  </div>
+  <div class="plan-step" style="border-bottom:none">
+    <div class="pn">10</div><div class="pp">Mise en location et déclaration fiscale</div><div class="pd">M5 → M6</div>
+    <div class="pno">Rédiger l'annonce avec photos professionnelles. Sélectionner le locataire : dossier, garant, solvabilité 3× loyer. Rédiger le bail (loi Alur pour nu, bail mobilité ou meublé pour LMNP). Déclarer l'activité LMNP au greffe (P0i) et à l'URSSAF si revenus > 77 700 €.</div>
+  </div>
+  <div class="plan-total">
+    <span class="ptl">Durée totale de la première acquisition</span>
+    <span class="ptv">4–6 mois du premier clic à la première quittance</span>
+  </div>
+</div>
+
+<div class="stitle">Checklist due diligence avant offre</div>
+<table class="dtable">
+  <thead><tr><th>Point de vérification</th><th>Comment vérifier</th><th>Bloquant si négatif</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">DPE C, D ou mieux</td><td>Diagnostics obligatoires · annonce</td><td class="tr">Oui si F ou G — interdiction de louer</td></tr>
+    <tr><td class="mono">Loyer marché ≥ rendement cible</td><td>ANIL Carte des loyers · Clameur · annonces similaires</td><td class="tr">Oui si rendement brut &lt; 5 %</td></tr>
+    <tr><td class="mono">Taxe foncière exacte</td><td>Demander au vendeur (bulletin fiscal)</td><td class="tw">Non bloquant mais impacte le rendement net</td></tr>
+    <tr><td class="mono">Charges copropriété détaillées</td><td>PV des 3 dernières AG + état daté</td><td class="tw">Oui si travaux votés non payés</td></tr>
+    <tr><td class="mono">Taux de vacance locative dans le secteur</td><td>INSEE RP · agences locales</td><td class="tw">Oui si taux de vacance &gt; 10 %</td></tr>
+    <tr><td class="mono">Risques naturels (inondation, RGA)</td><td>Géorisques.gouv.fr avec l'adresse exacte</td><td class="tw">Oui si zone rouge inondable</td></tr>
+    <tr><td class="mono">Prix transactions récentes comparables</td><td>DVF+ Cerema · données.gouv.fr/cadastre</td><td class="tw">Oui si bien surcoté &gt;15 % vs DVF</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ═══════════════ TYPOLOGIES ═══════════════ -->
+<section class="tab-content" id="typologies">
+<div class="stitle">4 typologies recommandées à 125 k€ d'apport</div>
+<div class="typo-grid">
+  <div class="typo-card best">
+    <div class="typo-hdr A"><div class="typo-hdr-name">Studio / T2 en ville universitaire</div><div class="typo-hdr-tag">Bien résidentiel nu ou LMNP · Rotation 1–3 ans · Complexité 1/5</div></div>
+    <div class="typo-body">
+      <div class="trow"><span class="tl">Budget d'achat</span><span class="tv">80–150 k€</span></div>
+      <div class="trow"><span class="tl">Loyer mensuel</span><span class="tv g">450–750 €</span></div>
+      <div class="trow"><span class="tl">Rendement brut</span><span class="tv g">7–11 %</span></div>
+      <div class="trow"><span class="tl">Vacance locative</span><span class="tv g">Très faible</span></div>
+      <div class="trow"><span class="tl">Gestion</span><span class="tv g">Simple</span></div>
+      <div class="trow"><span class="tl">Risque principal</span><span class="tv w">Turnover étudiant</span></div>
+    </div>
+    <div class="typo-foot"><span class="typo-fl">Recommandation</span><span class="typo-fv" style="color:var(--go)">★ Idéal 1re invest.</span></div>
+  </div>
+  <div class="typo-card best">
+    <div class="typo-hdr A"><div class="typo-hdr-name">T2 / T3 en ville intermédiaire</div><div class="typo-hdr-tag">Locataire actif ou famille · Bail 3 ans nu · Complexité 1/5</div></div>
+    <div class="typo-body">
+      <div class="trow"><span class="tl">Budget d'achat</span><span class="tv">100–220 k€</span></div>
+      <div class="trow"><span class="tl">Loyer mensuel</span><span class="tv g">550–900 €</span></div>
+      <div class="trow"><span class="tl">Rendement brut</span><span class="tv g">6–9 %</span></div>
+      <div class="trow"><span class="tl">Vacance locative</span><span class="tv g">Faible (actifs stables)</span></div>
+      <div class="trow"><span class="tl">Gestion</span><span class="tv g">Simple</span></div>
+      <div class="trow"><span class="tl">Risque principal</span><span class="tv w">Impayés (GLI recommandée)</span></div>
+    </div>
+    <div class="typo-foot"><span class="typo-fl">Recommandation</span><span class="typo-fv" style="color:var(--go)">★ Profil patrimonial</span></div>
+  </div>
+  <div class="typo-card">
+    <div class="typo-hdr B"><div class="typo-hdr-name">Immeuble de rapport &lt;300 k€</div><div class="typo-hdr-tag">2–4 lots loués · gestion directe · Complexité 3/5</div></div>
+    <div class="typo-body">
+      <div class="trow"><span class="tl">Budget d'achat</span><span class="tv">150–280 k€</span></div>
+      <div class="trow"><span class="tl">Revenus bruts/an</span><span class="tv g">12 000–25 000 €</span></div>
+      <div class="trow"><span class="tl">Rendement brut</span><span class="tv g">8–12 %</span></div>
+      <div class="trow"><span class="tl">Mutualisation</span><span class="tv g">Vacance diluée sur N lots</span></div>
+      <div class="trow"><span class="tl">Gestion</span><span class="tv w">Plus lourde</span></div>
+      <div class="trow"><span class="tl">Risque principal</span><span class="tv r">Bâti + multi-locataires</span></div>
+    </div>
+    <div class="typo-foot"><span class="typo-fl">Recommandation</span><span class="typo-fv" style="color:var(--warn)">2e investissement</span></div>
+  </div>
+  <div class="typo-card">
+    <div class="typo-hdr"><div class="typo-hdr-name">Location meublée courte durée</div><div class="typo-hdr-tag">Airbnb / tourisme · saisonnalité · Complexité 3/5</div></div>
+    <div class="typo-body">
+      <div class="trow"><span class="tl">Budget d'achat</span><span class="tv">100–300 k€</span></div>
+      <div class="trow"><span class="tl">Revenu potentiel/an</span><span class="tv g">12 000–25 000 €</span></div>
+      <div class="trow"><span class="tl">Rendement brut</span><span class="tv g">8–18 %</span></div>
+      <div class="trow"><span class="tl">Contraintes</span><span class="tv r">Règlement copro · mairie · 120j Paris</span></div>
+      <div class="trow"><span class="tl">Gestion</span><span class="tv r">Très lourde ou frais conciergerie</span></div>
+      <div class="trow"><span class="tl">Risque principal</span><span class="tv r">Réglementation croissante</span></div>
+    </div>
+    <div class="typo-foot"><span class="typo-fl">Recommandation</span><span class="typo-fv" style="color:var(--danger)">Profil averti uniquement</span></div>
+  </div>
+</div>
+
+<div class="stitle">Comparatif régional par typologie</div>
+<table class="dtable">
+  <thead><tr><th>Région</th><th>Typologies adaptées</th><th>Budget typique</th><th>Rendement brut</th><th>Particularité</th></tr></thead>
+  <tbody>
+    <tr><td><b>Grand Est</b><br><span style="font-size:11px;color:var(--ink-3)">10, 51, 52, 57, 67</span></td><td>T2/T3 actifs, studios étudiants</td><td class="mono">80–200 k€</td><td class="mono tg">6–10 %</td><td>Reims, Metz et Troyes cumulent gare TGV + université</td></tr>
+    <tr><td><b>Occitanie</b><br><span style="font-size:11px;color:var(--ink-3)">30, 34, 66</span></td><td>T2/T3, immeubles de rapport</td><td class="mono">100–250 k€</td><td class="mono tg">6–9 %</td><td>Part locataires très élevée, attrait démographique</td></tr>
+    <tr><td><b>Hauts-de-France</b><br><span style="font-size:11px;color:var(--ink-3)">59, 62</span></td><td>Studios, T2, immeubles</td><td class="mono">60–160 k€</td><td class="mono tg">7–11 %</td><td>Rendements élevés mais chômage structurel à gérer avec GLI</td></tr>
+    <tr><td><b>Centre-Val de Loire</b><br><span style="font-size:11px;color:var(--ink-3)">18, 36, 37, 41, 45</span></td><td>T2/T3 familiaux, maisons</td><td class="mono">100–220 k€</td><td class="mono tw">5–7 %</td><td>Orléans et Tours très liquides, marché équilibré</td></tr>
+    <tr><td><b>Nouvelle-Aquitaine</b><br><span style="font-size:11px;color:var(--ink-3)">16, 19, 47, 79, 87</span></td><td>Maisons, T3/T4</td><td class="mono">100–200 k€</td><td class="mono tw">5–7 %</td><td>Bonne qualité de vie, demande locative stable</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ═══════════════ FISCALITÉ ═══════════════ -->
+<section class="tab-content" id="fiscalite">
+<div class="stitle">Les 3 régimes fiscaux — comparaison opérationnelle</div>
+<div class="fisc-grid">
+  <div class="fisc-card">
+    <div class="fisc-hdr">Revenus fonciers — Régime réel</div>
+    <div class="fisc-row"><span class="fl">Type de bien</span><span class="fv">Location nue uniquement</span></div>
+    <div class="fisc-row"><span class="fl">Base imposable</span><span class="fv">Loyers − charges réelles</span></div>
+    <div class="fisc-row"><span class="fl">Charges déductibles</span><span class="fv">Travaux, intérêts crédit, charges, TF, assurances, gestion</span></div>
+    <div class="fisc-row"><span class="fl">Déficit foncier</span><span class="fv tg">Imputable sur revenu global jusqu'à 10 700 €/an</span></div>
+    <div class="fisc-row"><span class="fl">Imposition</span><span class="fv">TMI + PS 17,2 %</span></div>
+    <div class="fisc-row"><span class="fl">Intérêt principal</span><span class="fv tg">Travaux = réduction d'impôt immédiate</span></div>
+    <div class="fisc-foot">Idéal si : travaux importants la 1re année, TMI &lt; 30 %, bien nu sans DPE problématique.</div>
+  </div>
+  <div class="fisc-card">
+    <div class="fisc-hdr">LMNP — Régime réel</div>
+    <div class="fisc-row"><span class="fl">Type de bien</span><span class="fv">Location meublée</span></div>
+    <div class="fisc-row"><span class="fl">Base imposable</span><span class="fv">Loyers − charges + amortissements</span></div>
+    <div class="fisc-row"><span class="fl">Amortissement</span><span class="fv tg">Bien sur 25–30 ans · mobilier sur 5–7 ans</span></div>
+    <div class="fisc-row"><span class="fl">Déficit LMNP</span><span class="fv">Reportable uniquement sur BIC (pas sur revenu global)</span></div>
+    <div class="fisc-row"><span class="fl">Imposition</span><span class="fv">TMI + PS 17,2 % (sur base souvent nulle)</span></div>
+    <div class="fisc-row"><span class="fl">Intérêt principal</span><span class="fv tg">Amortissements effacent souvent toute imposition</span></div>
+    <div class="fisc-foot">Idéal si : bien à fort loyer, TMI ≥ 30 %, revenus locatifs &gt; 23 000 €/an ou &gt; revenus professionnels.</div>
+  </div>
+  <div class="fisc-card">
+    <div class="fisc-hdr">SCI à l'IS</div>
+    <div class="fisc-row"><span class="fl">Type de bien</span><span class="fv">Nu ou meublé (via SCI)</span></div>
+    <div class="fisc-row"><span class="fl">Base imposable</span><span class="fv">Résultat net SCI (loyers − toutes charges − amort.)</span></div>
+    <div class="fisc-row"><span class="fl">IS</span><span class="fv">15 % jusqu'à 42 500 € puis 25 %</span></div>
+    <div class="fisc-row"><span class="fl">Distribution</span><span class="fv">Dividendes : flat tax 30 % ou TMI + PS</span></div>
+    <div class="fisc-row"><span class="fl">Amortissement</span><span class="fv tg">Oui — sur la valeur du bien et travaux</span></div>
+    <div class="fisc-row"><span class="fl">Plus-value cession</span><span class="fv r">Imposée à l'IS (pas d'abattement durée)</span></div>
+    <div class="fisc-foot">Idéal si : plusieurs investisseurs, transmission patrimoniale, fort TMI, bien destiné à être conservé très longtemps sans revente.</div>
+  </div>
+</div>
+
+<div class="stitle">Simulation fiscale comparée — loyers 12 000 €/an · TMI 30 %</div>
+<table class="dtable">
+  <thead><tr><th>Régime</th><th class="r">Revenu brut</th><th class="r">Charges/amort. déductibles</th><th class="r">Base imposable</th><th class="r">Impôt total</th><th class="r">Net après impôt</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Micro-foncier</b> (abattement 30 %)</td>
+      <td class="r mono">12 000 €</td><td class="r mono">3 600 €</td><td class="r mono">8 400 €</td>
+      <td class="r mono tw">3 984 € (47,4 %)</td><td class="r mono">8 016 €</td>
+    </tr>
+    <tr>
+      <td><b>Foncier réel</b> (charges 6 000 €)</td>
+      <td class="r mono">12 000 €</td><td class="r mono">6 000 €</td><td class="r mono">6 000 €</td>
+      <td class="r mono tw">2 832 € (47,2 %)</td><td class="r mono">9 168 €</td>
+    </tr>
+    <tr>
+      <td><b>LMNP réel</b> (charges + amort. 9 500 €)</td>
+      <td class="r mono">12 000 €</td><td class="r mono">9 500 €</td><td class="r mono">2 500 €</td>
+      <td class="r mono tg">1 180 € (47,2 %)</td><td class="r mono tg">10 820 €</td>
+    </tr>
+    <tr>
+      <td><b>SCI à l'IS</b> (charges + amort. 9 500 €)</td>
+      <td class="r mono">12 000 €</td><td class="r mono">9 500 €</td><td class="r mono">2 500 €</td>
+      <td class="r mono tg">375 € (IS 15 %)</td><td class="r mono tg">11 625 € (avant distribution)</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="stitle">DPE et réglementation locative — calendrier critique</div>
+<table class="dtable">
+  <thead><tr><th>DPE</th><th>Statut 2026</th><th>Interdiction location</th><th>Recommandation acquéreur</th></tr></thead>
+  <tbody>
+    <tr><td class="mono tg">A / B / C</td><td class="tg">✓ Louable sans restriction</td><td class="tg">Jamais</td><td>Idéal — pas de contrainte</td></tr>
+    <tr><td class="mono tg">D</td><td class="tg">✓ Louable sans restriction</td><td class="tg">Jamais</td><td>Bon — confort locatif correct</td></tr>
+    <tr><td class="mono tw">E</td><td class="tw">✓ Louable jusqu'en 2034</td><td class="tw">1er janv. 2034</td><td>Acceptable si travaux budgétés avant 2034</td></tr>
+    <tr><td class="mono tr">F</td><td class="tr">✗ Gel des loyers · interdiction relocation depuis 2023</td><td class="tr">Déjà limité · interdit reloc. 2028</td><td>Décote à négocier — travaux urgents</td></tr>
+    <tr><td class="mono tr">G</td><td class="tr">✗ Interdit à la location depuis janv. 2025</td><td class="tr">Depuis 2025</td><td>NO-GO sauf rénovation complète avant achat</td></tr>
+  </tbody>
+</table>
+
+<div class="alert d">
+  <span class="ai">!</span>
+  <div><b>Alerte DPE F/G :</b> depuis le 1er janvier 2025, un logement classé G ne peut plus être mis en location. Un bien classé F ne peut plus être reloué à un nouveau locataire depuis 2023 (gel des loyers). Acheter un bien F ou G sans avoir chiffré les travaux de rénovation énergétique avant signature est une erreur grave. Budget typique de rénovation DPE F → C : 20 000–50 000 € selon la surface et la nature du bâti.</div>
+</div>
+
+<div class="stitle">Charges déductibles selon le régime</div>
+<table class="dtable">
+  <thead><tr><th>Charge</th><th>Foncier réel</th><th>LMNP réel</th><th>SCI IS</th></tr></thead>
+  <tbody>
+    <tr><td>Intérêts d'emprunt</td><td class="tg">✓ Déductibles</td><td class="tg">✓ Déductibles</td><td class="tg">✓ Déductibles</td></tr>
+    <tr><td>Taxe foncière</td><td class="tg">✓</td><td class="tg">✓</td><td class="tg">✓</td></tr>
+    <tr><td>Charges copropriété</td><td class="tg">✓ (hors provisions travaux)</td><td class="tg">✓</td><td class="tg">✓</td></tr>
+    <tr><td>Travaux d'entretien / réparation</td><td class="tg">✓</td><td class="tg">✓</td><td class="tg">✓</td></tr>
+    <tr><td>Assurance PNO / GLI</td><td class="tg">✓</td><td class="tg">✓</td><td class="tg">✓</td></tr>
+    <tr><td>Frais de gestion locative</td><td class="tg">✓</td><td class="tg">✓</td><td class="tg">✓</td></tr>
+    <tr><td>Amortissement du bien</td><td class="tr">✗ Non</td><td class="tg">✓ 25–30 ans</td><td class="tg">✓ 25–30 ans</td></tr>
+    <tr><td>Amortissement mobilier</td><td class="tr">✗ Non</td><td class="tg">✓ 5–7 ans</td><td class="tg">✓ 5–7 ans</td></tr>
+    <tr><td>Frais de notaire à l'achat</td><td class="tr">✗ Non (sauf si travaux)</td><td class="tg">✓ Amortissables</td><td class="tg">✓ Amortissables</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ═══════════════ SIMULATEUR ═══════════════ -->
+<section class="tab-content" id="simulateur">
+<div class="sim-layout">
+
+  <div class="sim-panel">
+    <div class="sim-panel-hdr">
+      <div class="sim-phdr-title">Simulateur Locatif</div>
+      <div class="sim-phdr-sub">Toutes les variables — résultats en temps réel</div>
+    </div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Acquisition</div>
+      <div class="sim-field"><span class="sim-label">Prix d'achat net vendeur</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-prix" value="200000" oninput="calc()"><span class="sim-unit">€</span></div></div>
+      <div class="sim-field"><span class="sim-label">Frais de notaire</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-notaire" value="7.5" step="0.5" oninput="calc()"><span class="sim-unit">%</span></div></div>
+      <div class="sim-field"><span class="sim-label">Budget travaux</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-travaux" value="15000" oninput="calc()"><span class="sim-unit">€</span></div></div>
+    </div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Financement</div>
+      <div class="sim-field"><span class="sim-label">Apport injecté</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-apport" value="80000" oninput="calc()"><span class="sim-unit">€</span></div></div>
+      <div class="sim-field"><span class="sim-label">Taux crédit</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-taux" value="3.4" step="0.05" oninput="calc()"><span class="sim-unit">%</span></div></div>
+      <div class="sim-field"><span class="sim-label">Durée crédit</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-duree" value="20" oninput="calc()"><span class="sim-unit">ans</span></div></div>
+    </div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Revenus locatifs</div>
+      <div class="sim-field"><span class="sim-label">Loyer mensuel HC</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-loyer" value="850" oninput="calc()"><span class="sim-unit">€</span></div></div>
+      <div class="sim-field"><span class="sim-label">Vacance locative</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-vacance" value="1" step="0.5" max="12" oninput="calc()"><span class="sim-unit">mois/an</span></div></div>
+    </div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Charges annuelles non récupérables</div>
+      <div class="sim-field"><span class="sim-label">Taxe foncière</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-tf" value="1200" oninput="calc()"><span class="sim-unit">€</span></div></div>
+      <div class="sim-field"><span class="sim-label">Charges copropriété NR</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-copro" value="600" oninput="calc()"><span class="sim-unit">€</span></div></div>
+      <div class="sim-field"><span class="sim-label">Assurance PNO</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-assur" value="180" oninput="calc()"><span class="sim-unit">€</span></div></div>
+      <div class="sim-field"><span class="sim-label">Entretien (% valeur)</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-entretien" value="0.5" step="0.1" oninput="calc()"><span class="sim-unit">%</span></div></div>
+      <div class="sim-field"><span class="sim-label">Gestion locative</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-gestion" value="0" step="0.5" max="15" oninput="calc()"><span class="sim-unit">%</span></div></div>
+    </div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Fiscalité</div>
+      <div class="sim-field"><span class="sim-label">Régime fiscal</span>
+        <select class="sim-select" id="s-regime" onchange="calc()">
+          <option value="micro">Micro-foncier (30 %)</option>
+          <option value="reel">Foncier réel</option>
+          <option value="lmnp">LMNP réel (amort.)</option>
+          <option value="sci">SCI à l'IS</option>
+        </select>
+      </div>
+      <div class="sim-field"><span class="sim-label">Tranche marginale (TMI)</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-tmi" value="30" step="1" oninput="calc()"><span class="sim-unit">%</span></div></div>
+      <div class="sim-field"><span class="sim-label">Cible rendement net</span><div class="sim-input-wrap"><input class="sim-input" type="number" id="s-cible" value="5" step="0.5" oninput="calc()"><span class="sim-unit">%</span></div></div>
+    </div>
+  </div>
+
+  <div class="res-panel" id="res-panel"></div>
+</div>
+</section>
+
+<footer class="site-footer">
+  <span>Guide Investissement Locatif · 125 k€ d'apport</span>
+  <span>Juillet 2026 · Sources : DVF+ Cerema · ANIL · INSEE · Clameur · BdF</span>
+  <span>Données indicatives — consulter un CGP et un notaire</span>
+</footer>
+
+<script>
+/* TABS */
+function showTab(id){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(id==='bilan') setTimeout(initBilanSlider,50);
+  if(id==='simulateur') setTimeout(calc,50);
+}
+
+/* BILAN SLIDER */
+function initBilanSlider(){
+  const sl = document.getElementById('loyer-slider');
+  if(!sl||sl._init) return; sl._init=true;
+  function upd(){
+    const l=parseInt(sl.value);
+    document.getElementById('loyer-label').textContent=l+' €';
+    const coutTotal=230000, apport=80000, capital=150000;
+    const mensCredit=capital*(0.034/12)*Math.pow(1+0.034/12,240)/(Math.pow(1+0.034/12,240)-1);
+    const loyerAn=l*(12-1); // 1 mois vacance
+    const chargesNR=2980;
+    const rendBrut=(l*12/coutTotal*100);
+    const rendNet=((loyerAn-chargesNR)/coutTotal*100);
+    const cf=((loyerAn-chargesNR)/12-mensCredit);
+    document.getElementById('lb-an').textContent=Math.round(l*12).toLocaleString('fr-FR')+' €';
+    const rb=document.getElementById('r-brut');
+    rb.textContent=rendBrut.toFixed(1)+' %';
+    rb.style.color=rendBrut>=7?'var(--go)':rendBrut>=5?'var(--warn)':'var(--danger)';
+    const rn=document.getElementById('r-net');
+    rn.textContent=rendNet.toFixed(1)+' %';
+    rn.style.color=rendNet>=4?'var(--go)':rendNet>=2.5?'var(--warn)':'var(--danger)';
+    const cfEl=document.getElementById('cf-mois');
+    cfEl.textContent=(cf>=0?'+':'')+Math.round(cf).toLocaleString('fr-FR')+' €/mois';
+    cfEl.style.color=cf>=0?'var(--go)':cf>-200?'var(--warn)':'var(--danger)';
+    const pct=Math.min(100,Math.max(2,rendBrut/12*100));
+    const bar=document.getElementById('rendement-bar');
+    bar.style.width=pct+'%';
+    bar.style.background=rendBrut>=7?'var(--go)':rendBrut>=5?'var(--warn)':'var(--danger)';
+    document.getElementById('rendement-label').textContent=rendBrut.toFixed(1)+' %';
+  }
+  sl.addEventListener('input',upd); upd();
+}
+
+/* SIMULATEUR */
+function fmtE(n){return(n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('fr-FR')+' €';}
+function fmtP(n){return(n>=0?'+':'')+n.toFixed(1)+' %';}
+function gv(id){return parseFloat(document.getElementById(id).value)||0;}
+function gs(id){return document.getElementById(id).value;}
+
+function calcMens(cap,taux,ans){
+  const tm=taux/100/12,n=ans*12;
+  if(tm===0)return cap/n;
+  return cap*(tm*Math.pow(1+tm,n))/(Math.pow(1+tm,n)-1);
+}
+function calcIS(base){
+  if(base<=0)return 0;
+  return Math.min(base,42500)*0.15+Math.max(0,base-42500)*0.25;
+}
+
+function calcImpot(revNet,regime,tmi,prix,travaux,notaire,loyer){
+  const ps=0.172;
+  const tmiD=tmi/100;
+  if(regime==='micro'){
+    const base=revNet*0.7;
+    return base*(tmiD+ps);
+  }else if(regime==='reel'){
+    const base=Math.max(0,revNet);
+    return base*(tmiD+ps);
+  }else if(regime==='lmnp'){
+    const amortBien=(prix+prix*notaire/100)/(27*12)*12;
+    const amortMob=Math.min(travaux,5000)/6;
+    const base=Math.max(0,revNet-amortBien-amortMob);
+    return base*(tmiD+ps);
+  }else{ // SCI IS
+    const amort=(prix+prix*notaire/100+travaux)/27;
+    const base=Math.max(0,revNet-amort);
+    return calcIS(base);
+  }
+}
+
+function calc(){
+  const prix=gv('s-prix'), notPct=gv('s-notaire'), travaux=gv('s-travaux');
+  const apport=gv('s-apport'), taux=gv('s-taux'), duree=gv('s-duree');
+  const loyer=gv('s-loyer'), vacance=gv('s-vacance');
+  const tf=gv('s-tf'), copro=gv('s-copro'), assur=gv('s-assur');
+  const entretienPct=gv('s-entretien'), gestionPct=gv('s-gestion');
+  const tmi=gv('s-tmi'), cible=gv('s-cible');
+  const regime=gs('s-regime');
+
+  const notaire=prix*notPct/100;
+  const coutTotal=prix+notaire+travaux;
+  const capital=Math.max(0,coutTotal-apport);
+  const mens=calcMens(capital,taux,duree);
+
+  const loyerAn=loyer*(12-vacance);
+  const entretien=prix*entretienPct/100;
+  const gestion=loyerAn*gestionPct/100;
+  const chargesNR=tf+copro+assur+entretien+gestion;
+  const revNet=loyerAn-chargesNR;
+  const rendBrut=coutTotal>0?(loyer*12/coutTotal*100):0;
+  const rendNet=coutTotal>0?(revNet/coutTotal*100):0;
+  const impot=calcImpot(revNet,regime,tmi,prix,travaux,notPct,loyer);
+  const revApresImpot=revNet-impot;
+  const cfMens=revNet/12-mens;
+  const cfMensApresImpot=revApresImpot/12-mens;
+  const rfp=apport>0?(revApresImpot/apport*100):0;
+
+  // Sensibilité
+  function cfAvec(loyerMult,vacAdd,tauxAdd){
+    const la=loyer*loyerMult*(12-(vacance+vacAdd));
+    const cn=tf+copro+assur+prix*entretienPct/100+la*(gestionPct/100);
+    const rn=la-cn;
+    const m=calcMens(capital,taux+tauxAdd,duree);
+    const imp=calcImpot(rn,regime,tmi,prix,travaux,notPct,loyer*loyerMult);
+    return (rn-imp)/12-m;
+  }
+  const s1=cfAvec(0.95,0,0), s2=cfAvec(0.9,0,0);
+  const s3=cfAvec(1,1,0), s4=cfAvec(1,2,0);
+  const s5=cfAvec(1,0,0.5), s6=cfAvec(1,0,1);
+
+  // Verdict
+  let vClass,vTitle,vSub;
+  if(rendNet>=cible&&cfMens>=-50){
+    vClass='go';vTitle='GO';vSub=`Rendement net ${rendNet.toFixed(1)} % ≥ cible ${cible} % · cash-flow maîtrisé`;
+  }else if(rendNet>=cible*0.7&&cfMens>=-500){
+    vClass='cond';vTitle='GO conditionnel';vSub=`Rendement ${rendNet.toFixed(1)} % ou cash-flow ${fmtE(cfMens)}/mois à optimiser`;
+  }else{
+    vClass='nogo';vTitle='NO-GO';vSub=`Rendement insuffisant (${rendNet.toFixed(1)} %) ou effort mensuel trop élevé`;
+  }
+
+  const alertes=[];
+  if(cfMens<-500) alertes.push({t:'d',m:`<b>Effort mensuel élevé ${fmtE(cfMens)}/mois</b> — augmenter l'apport ou chercher un loyer plus élevé.`});
+  if(rendBrut<5) alertes.push({t:'d',m:'<b>Rendement brut < 5 %</b> — en dessous du seuil de viabilité locatif.'});
+  if(capital>apport*4) alertes.push({t:'w',m:'<b>Levier fort :</b> capital emprunté &gt; 4× l\'apport — vérifier le taux d\'endettement.'});
+  if(rfp>25) alertes.push({t:'g',m:`<b>Excellent rendement sur fonds propres : ${rfp.toFixed(1)} %</b>`});
+
+  const panel=document.getElementById('res-panel');
+  const cc=(n,seuil)=>n>=seuil?'g':n>=-200?'w':'r';
+
+  panel.innerHTML=`
+    <div class="verdict-bar ${vClass}">
+      <div class="verdict-title">${vTitle}</div>
+      <div class="verdict-sub">${vSub}</div>
+    </div>
+    <div class="kpi4">
+      <div class="kpi4-cell"><div class="kpi4-lbl">Rendement brut</div><div class="kpi4-val ${rendBrut>=7?'g':rendBrut>=5?'w':'r'}">${rendBrut.toFixed(1)} %</div><div class="kpi4-sub">Loyers HC / coût total</div></div>
+      <div class="kpi4-cell"><div class="kpi4-lbl">Rendement net</div><div class="kpi4-val ${rendNet>=cible?'g':rendNet>=cible*0.7?'w':'r'}">${rendNet.toFixed(1)} %</div><div class="kpi4-sub">Après charges / avant impôt</div></div>
+      <div class="kpi4-cell"><div class="kpi4-lbl">Cash-flow mensuel</div><div class="kpi4-val ${cfMens>=0?'g':cfMens>=-300?'w':'r'}">${cfMens>=0?'+':''}${Math.round(cfMens).toLocaleString('fr-FR')} €</div><div class="kpi4-sub">Avant impôt sur les revenus</div></div>
+      <div class="kpi4-cell"><div class="kpi4-lbl">RFP (rendement fonds propres)</div><div class="kpi4-val ${rfp>=15?'g':rfp>=8?'w':'r'}">${rfp.toFixed(1)} %</div><div class="kpi4-sub">Revenu net IS / apport</div></div>
+    </div>
+    <div class="bilan-res">
+      <div class="br grp"><span>Acquisition</span><span></span></div>
+      <div class="br"><span class="br-lbl">Prix d'achat</span><span class="br-val">${fmtE(prix)}</span></div>
+      <div class="br"><span class="br-lbl">Frais de notaire (${notPct} %)</span><span class="br-val r">${fmtE(notaire)}</span></div>
+      ${travaux>0?`<div class="br"><span class="br-lbl">Travaux</span><span class="br-val r">${fmtE(travaux)}</span></div>`:''}
+      <div class="br"><span class="br-lbl">Coût total projet</span><span class="br-val">${fmtE(coutTotal)}</span></div>
+      <div class="br grp"><span>Financement</span><span></span></div>
+      <div class="br"><span class="br-lbl">Capital emprunté (${duree} ans · ${taux} %)</span><span class="br-val">${fmtE(capital)}</span></div>
+      <div class="br"><span class="br-lbl">Mensualité crédit</span><span class="br-val r">${fmtE(mens)}/mois</span></div>
+      <div class="br grp"><span>Compte d'exploitation annuel</span><span></span></div>
+      <div class="br"><span class="br-lbl">Loyers HC (${12-vacance} mois)</span><span class="br-val g">${fmtE(loyerAn)}</span></div>
+      <div class="br"><span class="br-lbl">Taxe foncière</span><span class="br-val r">${fmtE(-tf)}</span></div>
+      <div class="br"><span class="br-lbl">Charges copropriété NR</span><span class="br-val r">${fmtE(-copro)}</span></div>
+      <div class="br"><span class="br-lbl">Assurance PNO</span><span class="br-val r">${fmtE(-assur)}</span></div>
+      <div class="br"><span class="br-lbl">Entretien (${entretienPct} %)</span><span class="br-val r">${fmtE(-entretien)}</span></div>
+      ${gestion>0?`<div class="br"><span class="br-lbl">Gestion locative (${gestionPct} %)</span><span class="br-val r">${fmtE(-gestion)}</span></div>`:''}
+      <div class="br"><span class="br-lbl">Revenu net exploitation</span><span class="br-val ${revNet>=0?'g':'r'}">${fmtE(revNet)}/an</span></div>
+      <div class="br"><span class="br-lbl">Impôt estimé (${regime==='micro'?'Micro':regime==='reel'?'Foncier réel':regime==='lmnp'?'LMNP réel':'SCI IS'})</span><span class="br-val r">${fmtE(-impot)}</span></div>
+      <div class="br total"><span class="br-lbl">Revenu net après impôt</span><span class="br-val">${fmtE(revApresImpot)}/an · ${fmtE(Math.round(revApresImpot/12))}/mois</span></div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:14px 16px">
+      <div style="font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px">Analyse de sensibilité — impact sur le cash-flow mensuel</div>
+      <div class="sensi-grid">
+        <div class="sensi-card"><div class="sensi-scenario">Loyer −5 %</div><div class="sensi-val" style="color:${s1>=0?'var(--go)':'var(--danger)'}">${fmtE(s1)}</div><div class="sensi-delta" style="color:${s1-cfMensApresImpot<0?'var(--danger)':'var(--go)'}">${fmtP((s1-cfMensApresImpot))} €</div></div>
+        <div class="sensi-card"><div class="sensi-scenario">Loyer −10 %</div><div class="sensi-val" style="color:${s2>=0?'var(--go)':'var(--danger)'}">${fmtE(s2)}</div><div class="sensi-delta" style="color:${s2-cfMensApresImpot<0?'var(--danger)':'var(--go)'}">${fmtP((s2-cfMensApresImpot))} €</div></div>
+        <div class="sensi-card"><div class="sensi-scenario">Vacance +1 mois</div><div class="sensi-val" style="color:${s3>=0?'var(--go)':'var(--danger)'}">${fmtE(s3)}</div><div class="sensi-delta" style="color:${s3-cfMensApresImpot<0?'var(--danger)':'var(--go)'}">${fmtP((s3-cfMensApresImpot))} €</div></div>
+        <div class="sensi-card"><div class="sensi-scenario">Vacance +2 mois</div><div class="sensi-val" style="color:${s4>=0?'var(--go)':'var(--danger)'}">${fmtE(s4)}</div><div class="sensi-delta" style="color:${s4-cfMensApresImpot<0?'var(--danger)':'var(--go)'}">${fmtP((s4-cfMensApresImpot))} €</div></div>
+        <div class="sensi-card"><div class="sensi-scenario">Taux crédit +0,5 %</div><div class="sensi-val" style="color:${s5>=0?'var(--go)':'var(--danger)'}">${fmtE(s5)}</div><div class="sensi-delta" style="color:${s5-cfMensApresImpot<0?'var(--danger)':'var(--go)'}">${fmtP((s5-cfMensApresImpot))} €</div></div>
+        <div class="sensi-card"><div class="sensi-scenario">Taux crédit +1 %</div><div class="sensi-val" style="color:${s6>=0?'var(--go)':'var(--danger)'}">${fmtE(s6)}</div><div class="sensi-delta" style="color:${s6-cfMensApresImpot<0?'var(--danger)':'var(--go)'}">${fmtP((s6-cfMensApresImpot))} €</div></div>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:var(--card);border-radius:3px;font-family:var(--font-m);font-size:11px;color:var(--ink-2)">
+        Mensualité crédit : <b>${fmtE(mens)}/mois</b> · Capital restant dû après 5 ans : <b>${fmtE(capital-Array.from({length:60},(_,i)=>calcMens(capital,taux,duree)-capital*(taux/100/12)*Math.pow(1+taux/100/12,i)).reduce((a,b)=>a+b,0))}</b> · Réserve après achat : <b style="color:var(--go)">${fmtE(125000-apport)}</b>
+      </div>
+    </div>
+    ${alertes.map(a=>`<div class="res-alert ${a.t}"><span>●</span><span>${a.m}</span></div>`).join('')}
+  `;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{ initBilanSlider(); });
+</script>
+</body>
+</html>

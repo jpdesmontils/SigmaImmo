@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide MDB — Division Parcellaire · 100 k€ d'apport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f3ee;
+  --surface:#ffffff;
+  --card:#edeae3;
+  --card-hi:#e4e1d8;
+  --border:#d0ccc3;
+  --border-hi:#a8a49b;
+  --ink:#16150f;
+  --ink-2:#5a5850;
+  --ink-3:#9a9890;
+  --go:#145a2e;
+  --go-bg:#d6f0df;
+  --go-border:#7ec99a;
+  --warn:#7a4108;
+  --warn-bg:#faefd5;
+  --warn-border:#e0a84a;
+  --danger:#831515;
+  --danger-bg:#fce8e8;
+  --danger-border:#d97373;
+  --accent:#16150f;
+  --font-d:'Space Grotesk',sans-serif;
+  --font-b:'Inter',sans-serif;
+  --font-m:'JetBrains Mono',monospace;
+}
+
+body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* ── HEADER ── */
+.site-header{background:var(--ink);color:#f5f3ee;padding:20px 32px;display:flex;justify-content:space-between;align-items:center}
+.site-logo{font-family:var(--font-d);font-size:15px;font-weight:600;letter-spacing:.02em}
+.site-logo span{font-weight:300;opacity:.6}
+.site-tag{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;opacity:.5}
+
+/* ── HERO ── */
+.hero{padding:40px 32px 32px;border-bottom:1px solid var(--border);background:var(--surface)}
+.hero-eyebrow{font-family:var(--font-m);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px}
+.hero-title{font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--ink);line-height:1.1;margin-bottom:10px}
+.hero-title em{font-style:normal;font-weight:300}
+.hero-sub{font-size:14px;color:var(--ink-2);max-width:680px;line-height:1.7;margin-bottom:24px}
+.hero-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.hkpi{background:var(--bg);padding:14px 16px}
+.hkpi-l{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+.hkpi-v{font-family:var(--font-m);font-size:20px;font-weight:700;color:var(--ink);line-height:1}
+.hkpi-v.g{color:var(--go)}.hkpi-v.w{color:var(--warn)}
+.hkpi-s{font-size:11px;color:var(--ink-3);margin-top:3px}
+
+/* ── TABS ── */
+.tabs-nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto;gap:0}
+.tab-btn{font-family:var(--font-b);font-size:13px;font-weight:500;color:var(--ink-3);padding:14px 20px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{color:var(--ink);border-bottom-color:var(--ink)}
+
+/* ── CONTENT ── */
+.tab-content{display:none;padding:32px;max-width:960px;margin:0 auto}
+.tab-content.active{display:block}
+
+/* ── SECTION TITLES ── */
+.stitle{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:18px;margin-top:32px}
+.stitle:first-child{margin-top:0}
+
+/* ── NARRATIVE ── */
+.narrative{background:var(--card);border-left:3px solid var(--ink);padding:14px 18px;font-size:13px;color:var(--ink-2);line-height:1.75;margin-bottom:24px}
+
+/* ── ALERTS ── */
+.alert{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border-radius:3px;font-size:12px;line-height:1.65;border:1px solid;margin-bottom:10px}
+.alert.g{background:var(--go-bg);border-color:var(--go-border);color:var(--go)}
+.alert.w{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn)}
+.alert.d{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger)}
+.alert-icon{flex-shrink:0;font-size:14px;margin-top:1px}
+.alert b{font-weight:600}
+
+/* ── ENVELOPPE GRID ── */
+.env-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:16px}
+.env-cell{background:var(--surface);padding:16px 18px}
+.env-label{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.env-val{font-family:var(--font-m);font-size:20px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:3px}
+.env-val.g{color:var(--go)}.env-val.w{color:var(--warn)}.env-val.r{color:var(--danger)}
+.env-sub{font-size:11px;color:var(--ink-3)}
+
+/* ── BILAN ── */
+.bilan{border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:16px}
+.bilan-row{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;border-bottom:1px solid var(--border);font-size:12px;gap:12px}
+.bilan-row:last-child{border-bottom:none}
+.bilan-row.separator{background:var(--card-hi);border-top:1px solid var(--border-hi)}
+.bilan-row.total{background:var(--ink);color:#f5f3ee}
+.bl{color:var(--ink-2)}
+.bilan-row.total .bl{color:rgba(245,243,238,.7)}
+.bv{font-family:var(--font-m);font-weight:500;color:var(--ink);white-space:nowrap}
+.bv.g{color:var(--go)}.bv.r{color:var(--danger)}.bv.w{color:var(--warn)}
+.bilan-row.total .bv{color:#f5f3ee;font-size:14px;font-weight:700}
+
+/* Barre marge animée (signature) */
+.marge-bar-wrap{margin:16px 0;background:var(--card);border-radius:3px;overflow:hidden;height:32px;position:relative}
+.marge-bar-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;justify-content:flex-end;padding-right:10px;background:var(--go)}
+.marge-bar-label{font-family:var(--font-m);font-size:11px;font-weight:700;color:#fff}
+.marge-bar-axis{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:9px;color:var(--ink-3);margin-top:4px}
+
+/* ── DATA TABLE ── */
+.dtable{width:100%;border-collapse:collapse;border:1px solid var(--border);margin-bottom:16px;border-radius:4px;overflow:hidden}
+.dtable th{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding:8px 12px;background:var(--card-hi);border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:left}
+.dtable th.r{text-align:right}
+.dtable th:last-child{border-right:none}
+.dtable td{padding:9px 12px;font-size:12px;color:var(--ink-2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable td:last-child{border-right:none}
+.dtable tr:last-child td{border-bottom:none}
+.dtable tr:hover td{background:var(--card)}
+.dtable td.r{text-align:right}
+.mono{font-family:var(--font-m);color:var(--ink)}
+.tg{color:var(--go)!important;font-weight:500}
+.tw{color:var(--warn)!important;font-weight:500}
+.tr{color:var(--danger)!important;font-weight:500}
+
+/* ── DEPT CHIPS ── */
+.dept-num{display:inline-block;font-family:var(--font-m);font-size:9px;font-weight:700;background:var(--ink);color:#f5f3ee;padding:2px 6px;border-radius:2px;margin-right:4px}
+.dept-name{font-weight:500;color:var(--ink)}
+.dept-sub{font-size:10px;color:var(--ink-3)}
+.star{display:inline-block;font-family:var(--font-m);font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:4px;background:var(--go-bg);color:var(--go)}
+.midbadge{display:inline-block;font-family:var(--font-m);font-size:9px;padding:1px 7px;border-radius:20px;margin-left:4px;background:var(--warn-bg);color:var(--warn)}
+
+/* ── VILLES GRID ── */
+.villes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.ville-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:12px 14px}
+.ville-card.top{border-color:var(--go);border-width:1.5px}
+.ville-name{font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.ville-dept{font-family:var(--font-m);font-size:9px;color:var(--ink-3);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase}
+.vrow{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px solid var(--border)}
+.vrow:last-child{border-bottom:none}
+.vl{color:var(--ink-2)}
+.vv{font-weight:500;color:var(--ink)}
+.vv.g{color:var(--go)}.vv.w{color:var(--warn)}
+
+/* ── PLANNING ── */
+.planning{border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:16px}
+.plan-step{display:grid;grid-template-columns:32px 180px 88px 1fr;align-items:start;border-bottom:1px solid var(--border);background:var(--surface)}
+.plan-step:last-of-type{border-bottom:none}
+.plan-step:hover{background:var(--card)}
+.pn{font-family:var(--font-m);font-size:10px;font-weight:700;color:var(--ink-3);padding:11px 0 11px 14px}
+.pp{font-size:12px;font-weight:500;color:var(--ink);padding:11px 10px;line-height:1.4}
+.pd{font-family:var(--font-m);font-size:11px;color:var(--warn);padding:11px 8px;font-weight:600;white-space:nowrap}
+.pno{font-size:11px;color:var(--ink-2);padding:11px 14px 11px 0;line-height:1.55}
+.plan-total{background:var(--ink);display:flex;justify-content:space-between;padding:10px 16px}
+.ptl{font-family:var(--font-m);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,243,238,.5)}
+.ptv{font-family:var(--font-m);font-size:12px;font-weight:700;color:#f5f3ee}
+
+/* ── TYPO COMPARAISON ── */
+.typo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.typo-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.typo-card.best{border-color:var(--go);border-width:1.5px}
+.typo-hdr{padding:11px 14px;border-bottom:1px solid var(--border);background:var(--card)}
+.typo-hdr.A{background:rgba(20,90,46,.06)}
+.typo-hdr.B{background:rgba(122,65,8,.06)}
+.typo-hdr-name{font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.typo-hdr-tag{font-size:10px;color:var(--ink-3)}
+.typo-body{padding:11px 14px}
+.trow{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border)}
+.trow:last-child{border-bottom:none}
+.tl{color:var(--ink-2)}.tv{font-weight:500;color:var(--ink)}
+.tv.g{color:var(--go)}.tv.w{color:var(--warn)}.tv.r{color:var(--danger)}
+.typo-foot{background:var(--card);display:flex;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border)}
+.typo-fl{font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.typo-fv{font-family:var(--font-m);font-size:14px;font-weight:700}
+
+/* ── REGLES TVA ── */
+.tva-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.tva-card{padding:14px 16px;border-radius:4px;border:1px solid}
+.tva-card.good{background:var(--go-bg);border-color:var(--go-border)}
+.tva-card.bad{background:var(--danger-bg);border-color:var(--danger-border)}
+.tva-title{font-weight:600;font-size:13px;margin-bottom:6px}
+.tva-card.good .tva-title{color:var(--go)}
+.tva-card.bad .tva-title{color:var(--danger)}
+.tva-body{font-size:12px;line-height:1.65}
+.tva-card.good .tva-body{color:var(--go)}
+.tva-card.bad .tva-body{color:var(--danger)}
+
+/* ── SIMULATEUR ── */
+.sim-layout{display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start}
+@media(max-width:820px){.sim-layout{grid-template-columns:1fr}}
+.sim-panel{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;position:sticky;top:16px}
+.sim-panel-hdr{background:var(--ink);color:#f5f3ee;padding:12px 16px;font-family:var(--font-d);font-size:15px;font-weight:600}
+.sim-panel-hdr small{display:block;font-family:var(--font-b);font-size:11px;font-weight:400;opacity:.55;margin-top:1px}
+.sim-group{padding:14px 16px;border-bottom:1px solid var(--border)}
+.sim-group:last-child{border-bottom:none}
+.sim-group-title{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.sim-field{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+.sim-field:last-child{margin-bottom:0}
+.sim-label{font-size:12px;color:var(--ink-2);flex:1;min-width:0}
+.sim-input-wrap{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.sim-input{font-family:var(--font-m);font-size:12px;font-weight:500;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:5px 8px;width:100px;text-align:right}
+.sim-input:focus{outline:none;border-color:var(--ink)}
+.sim-unit{font-family:var(--font-m);font-size:10px;color:var(--ink-3);width:24px;flex-shrink:0}
+.sim-select{font-family:var(--font-m);font-size:11px;color:var(--ink);background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:5px 8px;width:130px}
+.sim-select:focus{outline:none;border-color:var(--ink)}
+.sim-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.sim-toggle-btn{font-family:var(--font-m);font-size:10px;padding:5px 10px;border:none;background:var(--bg);color:var(--ink-3);cursor:pointer;border-right:1px solid var(--border)}
+.sim-toggle-btn:last-child{border-right:none}
+.sim-toggle-btn.on{background:var(--ink);color:#f5f3ee}
+
+/* Résultats */
+.res-panel{display:flex;flex-direction:column;gap:12px}
+.verdict-bar{border-radius:4px;padding:16px 20px;border:1px solid}
+.verdict-bar.go{background:var(--go-bg);border-color:var(--go-border)}
+.verdict-bar.cond{background:var(--warn-bg);border-color:var(--warn-border)}
+.verdict-bar.nogo{background:var(--danger-bg);border-color:var(--danger-border)}
+.verdict-title{font-family:var(--font-d);font-size:20px;font-weight:700;margin-bottom:4px}
+.verdict-bar.go .verdict-title{color:var(--go)}
+.verdict-bar.cond .verdict-title{color:var(--warn)}
+.verdict-bar.nogo .verdict-title{color:var(--danger)}
+.verdict-sub{font-size:12px;line-height:1.6}
+.verdict-bar.go .verdict-sub{color:var(--go)}
+.verdict-bar.cond .verdict-sub{color:var(--warn)}
+.verdict-bar.nogo .verdict-sub{color:var(--danger)}
+
+.kpi4{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.kpi4-cell{background:var(--surface);padding:12px 14px}
+.kpi4-lbl{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.kpi4-val{font-family:var(--font-m);font-size:18px;font-weight:700;color:var(--ink);line-height:1}
+.kpi4-val.g{color:var(--go)}.kpi4-val.w{color:var(--warn)}.kpi4-val.r{color:var(--danger)}
+.kpi4-sub{font-size:11px;color:var(--ink-3);margin-top:3px}
+
+.bilan-res{border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.br{display:grid;grid-template-columns:1fr auto;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);font-size:12px}
+.br:last-child{border-bottom:none}
+.br.grp{background:var(--card-hi);font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-top:10px}
+.br.sub{background:var(--card)}
+.br.total{background:var(--ink)}
+.br-lbl{color:var(--ink-2)}.br.total .br-lbl{color:rgba(245,243,238,.65)}
+.br-val{font-family:var(--font-m);font-weight:500;color:var(--ink);text-align:right}
+.br-val.g{color:var(--go)}.br-val.r{color:var(--danger)}.br-val.w{color:var(--warn)}
+.br.total .br-val{color:#f5f3ee;font-size:14px;font-weight:700}
+
+/* PMA gauge */
+.pma-gauge{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px 16px}
+.pma-gauge-title{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.pma-nums{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+.pma-track{height:10px;background:var(--card-hi);border-radius:5px;overflow:hidden;position:relative;margin-bottom:6px}
+.pma-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.pma-legend{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:10px;color:var(--ink-3)}
+.pma-ok{color:var(--go);font-weight:700}
+.pma-ko{color:var(--danger);font-weight:700}
+
+/* Sensibilité */
+.sensi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.sensi-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 12px}
+.sensi-scenario{font-family:var(--font-m);font-size:10px;color:var(--ink-3);margin-bottom:4px;letter-spacing:.04em}
+.sensi-val{font-family:var(--font-m);font-size:15px;font-weight:700}
+.sensi-delta{font-size:11px;color:var(--ink-3);margin-top:2px}
+
+/* Alertes résultats */
+.res-alert{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:3px;font-size:11px;line-height:1.6;border:1px solid;margin-top:6px}
+.res-alert.w{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn)}
+.res-alert.d{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger)}
+.res-alert.g{background:var(--go-bg);border-color:var(--go-border);color:var(--go)}
+.res-alert b{font-weight:600}
+
+/* ── FOOTER ── */
+.site-footer{margin-top:60px;border-top:1px solid var(--border);padding:20px 32px;display:flex;justify-content:space-between;font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+
+@media(max-width:720px){
+  .hero{padding:24px 16px 20px}
+  .tabs-nav{padding:0 16px}
+  .tab-content{padding:20px 16px}
+  .villes-grid{grid-template-columns:1fr 1fr}
+  .typo-grid{grid-template-columns:1fr}
+  .tva-grid{grid-template-columns:1fr}
+  .plan-step{grid-template-columns:28px 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="site-header">
+  <div class="site-logo">Guide MDB <span>· Division Parcellaire</span></div>
+  <div class="site-tag">Analyse · Juillet 2026</div>
+</header>
+
+<!-- ══ HERO ══ -->
+<div class="hero">
+  <div class="hero-eyebrow">Stratégie Marchand de Biens · 100 k€ d'apport</div>
+  <h1 class="hero-title">La division parcellaire,<br><em>première opération idéale</em></h1>
+  <p class="hero-sub">Guide complet pour acheter une maison avec grand terrain, détacher une parcelle constructible et la revendre — sans travaux, en 4 à 8 mois, avec une marge nette de 15 à 35 %.</p>
+  <div class="hero-kpis">
+    <div class="hkpi">
+      <div class="hkpi-l">Cash apport</div>
+      <div class="hkpi-v">100 k€</div>
+      <div class="hkpi-s">Fonds propres SAS</div>
+    </div>
+    <div class="hkpi">
+      <div class="hkpi-l">Budget achat total</div>
+      <div class="hkpi-v g">280–320 k€</div>
+      <div class="hkpi-s">Cash + prêt MDB</div>
+    </div>
+    <div class="hkpi">
+      <div class="hkpi-l">Durée opération</div>
+      <div class="hkpi-v g">4–8 mois</div>
+      <div class="hkpi-s">Zéro travaux</div>
+    </div>
+    <div class="hkpi">
+      <div class="hkpi-l">Marge nette cible</div>
+      <div class="hkpi-v g">15–35 %</div>
+      <div class="hkpi-s">Après IS</div>
+    </div>
+    <div class="hkpi">
+      <div class="hkpi-l">Complexité</div>
+      <div class="hkpi-v">1–2 / 5</div>
+      <div class="hkpi-s">La plus simple des op. MDB</div>
+    </div>
+    <div class="hkpi">
+      <div class="hkpi-l">Frais fixes</div>
+      <div class="hkpi-v w">6–12 k€</div>
+      <div class="hkpi-s">Géomètre + notaire</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TABS NAV ══ -->
+<nav class="tabs-nav" role="tablist">
+  <button class="tab-btn active" onclick="showTab('cadrage')" role="tab" aria-selected="true">Cadrage financier</button>
+  <button class="tab-btn" onclick="showTab('bilan')" role="tab">Bilan type</button>
+  <button class="tab-btn" onclick="showTab('departements')" role="tab">Départements</button>
+  <button class="tab-btn" onclick="showTab('villes')" role="tab">Villes cibles</button>
+  <button class="tab-btn" onclick="showTab('process')" role="tab">Process opérationnel</button>
+  <button class="tab-btn" onclick="showTab('typologies')" role="tab">Typologies MDB</button>
+  <button class="tab-btn" onclick="showTab('tva')" role="tab">Fiscalité & TVA</button>
+  <button class="tab-btn" onclick="showTab('simulateur')" role="tab" style="color:var(--go);font-weight:600">Simulateur ↗</button>
+</nav>
+
+<!-- ══════════════════════════════════════
+     ONGLET 1 — CADRAGE FINANCIER
+══════════════════════════════════════ -->
+<section class="tab-content active" id="cadrage">
+
+  <div class="stitle">Enveloppe financière réelle — 100 k€ cash + prêt MDB</div>
+
+  <div class="narrative">
+    Les banques spécialisées MDB (CIC, BNP Real Estate, Caisse d'Épargne pro) prêtent sur le projet, pas sur les revenus personnels. Pour une <strong>première opération sans track record</strong>, le ratio fonds propres attendu est souvent de <strong>30 à 40 %</strong> plutôt que 30 %. Sur 100 k€ de cash, il faut garder 25–30 k€ de réserve hors prix d'acquisition — ce qui ramène l'apport réel à 70–75 k€ et le prêt MDB à 200–230 k€ maximum.
+  </div>
+
+  <div class="env-grid">
+    <div class="env-cell">
+      <div class="env-label">Cash disponible</div>
+      <div class="env-val">100 k€</div>
+      <div class="env-sub">Fonds propres opération</div>
+    </div>
+    <div class="env-cell">
+      <div class="env-label">Réserve à conserver</div>
+      <div class="env-val w">25–30 k€</div>
+      <div class="env-sub">Imprévus, frais courants SAS</div>
+    </div>
+    <div class="env-cell">
+      <div class="env-label">Apport réel en opération</div>
+      <div class="env-val">70–75 k€</div>
+      <div class="env-sub">Cash injecté dans l'achat</div>
+    </div>
+    <div class="env-cell">
+      <div class="env-label">Prêt MDB (65–70 % LTV)</div>
+      <div class="env-val w">200–230 k€</div>
+      <div class="env-sub">Taux ~5 % · durée opération</div>
+    </div>
+    <div class="env-cell">
+      <div class="env-label">Prix acquisition max</div>
+      <div class="env-val g">240–270 k€</div>
+      <div class="env-sub">Maison + terrain ensemble</div>
+    </div>
+    <div class="env-cell">
+      <div class="env-label">VSB cible minimale</div>
+      <div class="env-val g">360–420 k€</div>
+      <div class="env-sub">Pour atteindre 18 %+ net IS</div>
+    </div>
+  </div>
+
+  <div class="alert d">
+    <span class="alert-icon">!</span>
+    <div><b>Structure juridique obligatoire avant tout achat :</b> les droits de mutation MDB à 0,715 % (vs 5,8 % en nom propre) nécessitent une personne morale avec objet social "achat-revente immobilier". Sur une acquisition à 200 k€, l'écart est de <b>10 000 € de droits en moins</b>. Créer la SAS ou SARL est l'étape zéro — avant même de chercher le premier bien.</div>
+  </div>
+
+  <div class="alert w">
+    <span class="alert-icon">⚠</span>
+    <div><b>Prêt MDB ≠ prêt immobilier classique :</b> les banques MDB exigent un dossier formalisé (business plan + bilan promoteur + garanties). En première opération sans track record, certains établissements plafonnent à 60 % de LTV — ce qui réduit le levier à 150 k€ environ. La solution : trouver un co-investisseur MDB expérimenté au capital de la SAS, ou passer par un courtier spécialisé (Cafpi Pro, Haussmann Patrimoine).</div>
+  </div>
+
+  <div class="stitle">Comparaison : LTV 60 % vs LTV 70 % sur l'enveloppe totale</div>
+  <table class="dtable">
+    <thead>
+      <tr>
+        <th>Paramètre</th>
+        <th class="r">LTV 60 % — 1re op. sans track record</th>
+        <th class="r">LTV 70 % — avec co-investisseur ou courtier</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Apport injecté</td><td class="r mono">75 000 €</td><td class="r mono">75 000 €</td></tr>
+      <tr><td>Prêt MDB</td><td class="r mono">112 500 €</td><td class="r mono">175 000 €</td></tr>
+      <tr><td>Budget acquisition max</td><td class="r mono tw">187 500 €</td><td class="r mono tg">250 000 €</td></tr>
+      <tr><td>Frais portage 6 mois (5 %)</td><td class="r mono">2 813 €</td><td class="r mono">4 375 €</td></tr>
+      <tr><td>Types de biens accessibles</td><td class="r" style="color:var(--ink-2)">Petites maisons rurales 80–180 k€</td><td class="r" style="color:var(--ink-2)">Maisons centre-bourg 130–230 k€</td></tr>
+      <tr><td>Régions cibles</td><td class="r" style="color:var(--ink-2)">02, 08, 52, 55 (prix très bas)</td><td class="r" style="color:var(--ink-2)">60, 51, 10, 45, 30 (spreads meilleurs)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="stitle">Banques et courtiers MDB à contacter</div>
+  <table class="dtable">
+    <thead>
+      <tr><th>Établissement / intermédiaire</th><th>Profil</th><th class="r">LTV 1re op.</th><th>Spécificité</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">CIC Banque</td><td>Banque classique spécialisée MDB</td><td class="r mono">60–70 %</td><td>Réseau agences pro, bon interlocuteur pour PME immobilières</td></tr>
+      <tr><td class="mono">BNP Real Estate</td><td>Pôle financement opérations</td><td class="r mono">65–75 %</td><td>Exige plus de track record mais conditions compétitives</td></tr>
+      <tr><td class="mono">Caisse d'Épargne Île-de-France</td><td>Banque régionale pro</td><td class="r mono">60–65 %</td><td>Réactif sur petites opérations &lt;300 k€</td></tr>
+      <tr><td class="mono">Cafpi Pro / Haussmann</td><td>Courtiers spécialisés MDB</td><td class="r mono">65–75 %</td><td>Comparent plusieurs banques — recommandé pour 1re op.</td></tr>
+      <tr><td class="mono">Crowdfunding immobilier</td><td>Complément ou alternative prêt MDB</td><td class="r mono">Variable</td><td>Homunity, Anaxago — taux 8–11 % mais rapide à obtenir</td></tr>
+    </tbody>
+  </table>
+
+</section>
+
+<!-- ══════════════════════════════════════
+     ONGLET 2 — BILAN TYPE
+══════════════════════════════════════ -->
+<section class="tab-content" id="bilan">
+
+  <div class="stitle">Logique de l'opération</div>
+  <div class="narrative">
+    Un marché sous-évalue systématiquement les grands terrains attachés à une maison : l'acheteur achète "une maison avec un grand jardin" et valorise le bâti, pas le foncier. Le MDB identifie cette asymétrie, détache la parcelle excédentaire, et la revend séparément à un constructeur ou un particulier qui veut construire — à un prix par m² bien supérieur à ce qu'il représente dans le prix global initial.
+  </div>
+
+  <div class="stitle">Bilan type — maison 180 k€ avec 2 000 m² de terrain (parcelle détachée : 800 m²)</div>
+
+  <div class="bilan">
+    <div class="bilan-row separator"><span class="bl" style="font-family:var(--font-m);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Charges</span><span></span></div>
+    <div class="bilan-row"><span class="bl">Achat maison + 2 000 m² terrain</span><span class="bv">180 000 €</span></div>
+    <div class="bilan-row"><span class="bl">Droits mutation MDB (0,715 % — régime SAS)</span><span class="bv r">− 1 287 €</span></div>
+    <div class="bilan-row"><span class="bl">Géomètre bornage + déclaration préalable</span><span class="bv r">− 3 500 €</span></div>
+    <div class="bilan-row"><span class="bl">Frais notaire acte division + revente terrain</span><span class="bv r">− 4 200 €</span></div>
+    <div class="bilan-row"><span class="bl">Frais financiers portage (5 % · 6 mois · 70 % coût)</span><span class="bv r">− 4 200 €</span></div>
+    <div class="bilan-row separator"><span class="bl" style="font-family:var(--font-m);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Recettes</span><span></span></div>
+    <div class="bilan-row"><span class="bl">Revente terrain détaché 800 m² × 70 €/m²</span><span class="bv g">+ 56 000 €</span></div>
+    <div class="bilan-row"><span class="bl">Revente maison sur 1 200 m² restants (légère décote)</span><span class="bv g">+ 162 000 €</span></div>
+    <div class="bilan-row total"><span class="bl">VSB totale</span><span class="bv">218 000 €</span></div>
+    <div class="bilan-row"><span class="bl">Marge brute avant IS</span><span class="bv g">+ 24 813 € — 11,4 %</span></div>
+    <div class="bilan-row"><span class="bl">IS estimé (15 % sur 42 500 € puis 25 %)</span><span class="bv r">− 6 203 €</span></div>
+    <div class="bilan-row total"><span class="bl">Marge nette après IS</span><span class="bv">+ 18 610 € — 8,5 % VSB</span></div>
+  </div>
+
+  <div class="alert w">
+    <span class="alert-icon">⚠</span>
+    <div><b>Ce bilan standard montre pourquoi le choix du département est décisif :</b> à 70 €/m² de terrain (Aisne, Ardennes), la marge nette est de 8,5 %. À 120 €/m² (Oise, Gard), la VSB du terrain passe à 96 000 € et la marge nette s'envole à 22 %. Avec le <em>même achat</em> et les <em>mêmes frais</em>.</div>
+  </div>
+
+  <!-- Barre marge animée = signature visuelle -->
+  <div class="stitle">Sensibilité de la marge nette selon le prix de revente du terrain</div>
+  <div style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);margin-bottom:8px">
+      <span>Prix terrain revente : <span id="terrain-price-label" style="font-family:var(--font-m);font-weight:700;color:var(--ink)">70 €/m²</span></span>
+      <span>Terrain 800 m² · achat ensemble 180 k€</span>
+    </div>
+    <input type="range" min="40" max="180" value="70" step="5" id="terrain-slider" style="width:100%;margin-bottom:12px">
+    <div class="marge-bar-wrap">
+      <div class="marge-bar-fill" id="marge-bar" style="width:0%">
+        <span class="marge-bar-label" id="marge-bar-pct">—</span>
+      </div>
+    </div>
+    <div class="marge-bar-axis"><span>0 %</span><span>10 %</span><span>20 %</span><span>30 %</span><span>40 %+</span></div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden">
+      <div style="background:var(--surface);padding:10px 12px">
+        <div style="font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px">VSB terrain</div>
+        <div style="font-family:var(--font-m);font-size:16px;font-weight:700;color:var(--go)" id="vsb-terrain">—</div>
+      </div>
+      <div style="background:var(--surface);padding:10px 12px">
+        <div style="font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px">VSB totale</div>
+        <div style="font-family:var(--font-m);font-size:16px;font-weight:700;color:var(--ink)" id="vsb-total">—</div>
+      </div>
+      <div style="background:var(--surface);padding:10px 12px">
+        <div style="font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px">Marge brute</div>
+        <div style="font-family:var(--font-m);font-size:16px;font-weight:700;color:var(--ink)" id="marge-brute">—</div>
+      </div>
+      <div style="background:var(--surface);padding:10px 12px">
+        <div style="font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px">Marge nette IS</div>
+        <div style="font-family:var(--font-m);font-size:16px;font-weight:700;" id="marge-nette">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">Leviers pour améliorer la marge</div>
+  <table class="dtable">
+    <thead><tr><th>Levier</th><th>Action</th><th class="r">Impact marge estimé</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Prix terrain/m²</td><td>Cibler zones où terrain se revend &gt;100 €/m² (60, 51, 45, 30)</td><td class="r tg">+8 à +15 pts</td></tr>
+      <tr><td class="mono">Négociation achat</td><td>Obtenir −5 à −10 % sur le prix affiché (vendeur pressé, bien illiquide)</td><td class="r tg">+4 à +8 pts</td></tr>
+      <tr><td class="mono">Vendre terrain avant achat</td><td>Trouver l'acheteur terrain avant de signer — réduit le portage</td><td class="r tg">+1 à +3 pts</td></tr>
+      <tr><td class="mono">Revente maison sans agence</td><td>PAP sur la maison restante économise 3–5 % d'honoraires</td><td class="r tg">+1 à +2 pts</td></tr>
+      <tr><td class="mono">Diviser en 2 terrains</td><td>Sur &gt;2 000 m², détacher 2 parcelles au lieu d'une</td><td class="r tg">+10 à +20 pts</td></tr>
+      <tr><td class="mono">Durée de portage</td><td>Chaque mois supplémentaire coûte ~750 € sur 180 k€ emprunté</td><td class="r tr">−0,5 pt/mois</td></tr>
+    </tbody>
+  </table>
+
+</section>
+
+<!-- ══════════════════════════════════════
+     ONGLET 3 — DÉPARTEMENTS
+══════════════════════════════════════ -->
+<section class="tab-content" id="departements">
+
+  <div class="stitle">Classement par spread achat / revente terrain — données DVF 2024–2025</div>
+  <div class="narrative">
+    Le spread est la différence entre le prix d'achat du terrain dans le prix global de la maison (très bas car non valorisé) et le prix de revente du terrain détaché (au prix marché terrain constructible). C'est cette asymétrie qui crée la marge MDB — et elle varie du simple au triple selon le département.
+  </div>
+
+  <table class="dtable">
+    <thead>
+      <tr>
+        <th>Département</th>
+        <th class="r">Prix terrain inclus/m² (estimé)</th>
+        <th class="r">Prix revente terrain/m²</th>
+        <th class="r">Spread brut/m²</th>
+        <th class="r">Budget maison cible</th>
+        <th>Liquidité terrain</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="dept-num">60</span><span class="dept-name">Oise</span><br><span class="dept-sub">Compiègne · Creil · Senlis · Beauvais</span></td>
+        <td class="r mono">30–50 €/m²</td>
+        <td class="r mono tg">100–180 €/m²</td>
+        <td class="r"><span class="tg">+70–130 €/m²</span><span class="star">★ Top</span></td>
+        <td class="r mono">130–230 k€</td>
+        <td class="tg">Bonne (proximité IDF)</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">51</span><span class="dept-name">Marne</span><br><span class="dept-sub">Reims · Épernay · Châlons-en-Champagne</span></td>
+        <td class="r mono">35–55 €/m²</td>
+        <td class="r mono tg">100–160 €/m²</td>
+        <td class="r"><span class="tg">+60–110 €/m²</span><span class="star">★ Top</span></td>
+        <td class="r mono">120–210 k€</td>
+        <td class="tw">Modérée (Reims seul)</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">10</span><span class="dept-name">Aube</span><br><span class="dept-sub">Troyes · Romilly · Bar-sur-Aube</span></td>
+        <td class="r mono">30–50 €/m²</td>
+        <td class="r mono tg">90–140 €/m²</td>
+        <td class="r"><span class="tg">+55–100 €/m²</span><span class="star">★ Top</span></td>
+        <td class="r mono">100–190 k€</td>
+        <td class="tg">Bonne (Troyes actif)</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">45</span><span class="dept-name">Loiret</span><br><span class="dept-sub">Orléans couronne · Pithiviers · Gien</span></td>
+        <td class="r mono">40–65 €/m²</td>
+        <td class="r mono tg">110–180 €/m²</td>
+        <td class="r"><span class="tg">+55–120 €/m²</span><span class="star">★ Top</span></td>
+        <td class="r mono">130–230 k€</td>
+        <td class="tg">Bonne (Orléans)</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">30</span><span class="dept-name">Gard</span><br><span class="dept-sub">Nîmes · Alès · Le Vigan · Uzès</span></td>
+        <td class="r mono">40–70 €/m²</td>
+        <td class="r mono tg">130–210 €/m²</td>
+        <td class="r"><span class="tg">+70–150 €/m²</span><span class="star">★ Top</span></td>
+        <td class="r mono">140–240 k€</td>
+        <td class="tw">Modérée (saisonnalité)</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">02</span><span class="dept-name">Aisne</span><br><span class="dept-sub">Laon · Soissons · Saint-Quentin · Château-Thierry</span></td>
+        <td class="r mono">20–35 €/m²</td>
+        <td class="r mono">70–110 €/m²</td>
+        <td class="r"><span class="tw">+45–80 €/m²</span><span class="midbadge">Bon</span></td>
+        <td class="r mono">80–160 k€</td>
+        <td class="tr">Faible — 6–12 mois</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">12</span><span class="dept-name">Aveyron</span><br><span class="dept-sub">Rodez · Millau · Villefranche-de-Rouergue</span></td>
+        <td class="r mono">25–45 €/m²</td>
+        <td class="r mono">80–130 €/m²</td>
+        <td class="r"><span class="tw">+50–90 €/m²</span><span class="midbadge">Bon</span></td>
+        <td class="r mono">90–180 k€</td>
+        <td class="tw">Faible à modérée</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">47</span><span class="dept-name">Lot-et-Garonne</span><br><span class="dept-sub">Agen · Marmande · Villeneuve-sur-Lot</span></td>
+        <td class="r mono">25–45 €/m²</td>
+        <td class="r mono">85–130 €/m²</td>
+        <td class="r"><span class="tw">+50–90 €/m²</span><span class="midbadge">Bon</span></td>
+        <td class="r mono">100–190 k€</td>
+        <td class="tw">Modérée (Agen)</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">61</span><span class="dept-name">Orne</span><br><span class="dept-sub">Alençon · Argentan · Flers · L'Aigle</span></td>
+        <td class="r mono">25–40 €/m²</td>
+        <td class="r mono">75–120 €/m²</td>
+        <td class="r"><span class="tw">+45–80 €/m²</span><span class="midbadge">Bon</span></td>
+        <td class="r mono">90–170 k€</td>
+        <td class="tw">Modérée</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">08</span><span class="dept-name">Ardennes</span><br><span class="dept-sub">Charleville-Mézières · Rethel · Sedan</span></td>
+        <td class="r mono">15–30 €/m²</td>
+        <td class="r mono">60–100 €/m²</td>
+        <td class="r"><span class="tw">+40–75 €/m²</span></td>
+        <td class="r mono">70–140 k€</td>
+        <td class="tr">Très faible — 8–18 mois</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">52</span><span class="dept-name">Haute-Marne</span><br><span class="dept-sub">Chaumont · Saint-Dizier · Langres</span></td>
+        <td class="r mono">10–25 €/m²</td>
+        <td class="r mono">50–85 €/m²</td>
+        <td class="r"><span class="tw">+35–65 €/m²</span></td>
+        <td class="r mono">60–120 k€</td>
+        <td class="tr">Très faible — 8–18 mois</td>
+      </tr>
+      <tr>
+        <td><span class="dept-num">55</span><span class="dept-name">Meuse</span><br><span class="dept-sub">Bar-le-Duc · Verdun · Commercy</span></td>
+        <td class="r mono">12–28 €/m²</td>
+        <td class="r mono">55–90 €/m²</td>
+        <td class="r"><span class="tw">+35–65 €/m²</span></td>
+        <td class="r mono">70–130 k€</td>
+        <td class="tr">Très faible</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert g">
+    <span class="alert-icon">✓</span>
+    <div><b>Règle de sélection :</b> cibler les départements où le spread dépasse 60 €/m² ET où la liquidité est au moins modérée. Le 60, le 51, le 10, le 45 et le 30 offrent ce double critère. Les 08, 52, 55 ont des spreads intéressants mais une liquidité terrain très faible — acceptable seulement si on a un acheteur identifié avant l'achat.</div>
+  </div>
+
+  <div class="stitle">Source des données</div>
+  <p style="font-size:12px;color:var(--ink-2);line-height:1.7">Prix achat terrain estimés à partir des transactions DVF+ Cerema 2023–2025 sur les ventes de maisons avec grande parcelle, croisées avec les bases notariales régionales. Prix revente terrain constructible issus des annonces SeLoger/PAP et transactions DVF sur terrains seuls. Sources : <a href="https://datafoncier.cerema.fr" target="_blank" style="color:var(--ink)">DVF+ Cerema</a> · <a href="https://construireenfrance.fr/outils/prix-m2-terrain" target="_blank" style="color:var(--ink)">ConstruireEnFrance</a> · Notaires de France données régionales 2024.</p>
+
+</section>
+
+<!-- ══════════════════════════════════════
+     ONGLET 4 — VILLES CIBLES
+══════════════════════════════════════ -->
+<section class="tab-content" id="villes">
+
+  <div class="stitle">Top 9 villes opérationnelles — profil complet</div>
+  <div class="narrative">
+    Les villes sélectionnées combinent trois critères : prix d'achat maison + terrain dans l'enveloppe 100–250 k€, prix revente terrain constructible &gt;90 €/m², et délai de vente terrain &lt;8 mois. Les villes marquées ★ sont recommandées pour une première opération.
+  </div>
+
+  <div class="villes-grid">
+    <div class="ville-card top">
+      <div class="ville-name">Compiègne (couronne)</div>
+      <div class="ville-dept">60 — Oise · ★ Recommandé 1re op.</div>
+      <div class="vrow"><span class="vl">Budget maison + terrain</span><span class="vv">150–230 k€</span></div>
+      <div class="vrow"><span class="vl">Terrain détachable</span><span class="vv">500–1 000 m²</span></div>
+      <div class="vrow"><span class="vl">Prix revente terrain</span><span class="vv g">110–160 €/m²</span></div>
+      <div class="vrow"><span class="vl">Délai vente terrain</span><span class="vv g">2–5 mois</span></div>
+      <div class="vrow"><span class="vl">Marge nette estimée</span><span class="vv g">22–35 %</span></div>
+      <div class="vrow"><span class="vl">Gare TER</span><span class="vv g">Oui — Paris-Nord 1h</span></div>
+    </div>
+    <div class="ville-card top">
+      <div class="ville-name">Senlis / Creil couronne</div>
+      <div class="ville-dept">60 — Oise · ★ Recommandé 1re op.</div>
+      <div class="vrow"><span class="vl">Budget maison + terrain</span><span class="vv">160–250 k€</span></div>
+      <div class="vrow"><span class="vl">Terrain détachable</span><span class="vv">500–900 m²</span></div>
+      <div class="vrow"><span class="vl">Prix revente terrain</span><span class="vv g">120–180 €/m²</span></div>
+      <div class="vrow"><span class="vl">Délai vente terrain</span><span class="vv g">1–4 mois</span></div>
+      <div class="vrow"><span class="vl">Marge nette estimée</span><span class="vv g">24–38 %</span></div>
+      <div class="vrow"><span class="vl">Gare RER D / TER</span><span class="vv g">Oui — Paris 40 min</span></div>
+    </div>
+    <div class="ville-card top">
+      <div class="ville-name">Troyes périphérie</div>
+      <div class="ville-dept">10 — Aube · ★ Recommandé 1re op.</div>
+      <div class="vrow"><span class="vl">Budget maison + terrain</span><span class="vv">120–190 k€</span></div>
+      <div class="vrow"><span class="vl">Terrain détachable</span><span class="vv">600–1 200 m²</span></div>
+      <div class="vrow"><span class="vl">Prix revente terrain</span><span class="vv g">90–135 €/m²</span></div>
+      <div class="vrow"><span class="vl">Délai vente terrain</span><span class="vv g">3–6 mois</span></div>
+      <div class="vrow"><span class="vl">Marge nette estimée</span><span class="vv g">20–32 %</span></div>
+      <div class="vrow"><span class="vl">Gare TGV</span><span class="vv g">Oui — Paris-Est 1h30</span></div>
+    </div>
+    <div class="ville-card top">
+      <div class="ville-name">Reims couronne &lt;20 km</div>
+      <div class="ville-dept">51 — Marne · ★ Recommandé 1re op.</div>
+      <div class="vrow"><span class="vl">Budget maison + terrain</span><span class="vv">140–220 k€</span></div>
+      <div class="vrow"><span class="vl">Terrain détachable</span><span class="vv">600–1 200 m²</span></div>
+      <div class="vrow"><span class="vl">Prix revente terrain</span><span class="vv g">100–155 €/m²</span></div>
+      <div class="vrow"><span class="vl">Délai vente terrain</span><span class="vv g">3–6 mois</span></div>
+      <div class="vrow"><span class="vl">Marge nette estimée</span><span class="vv g">20–30 %</span></div>
+      <div class="vrow"><span class="vl">Gare TGV</span><span class="vv g">Oui — Paris-Est 45 min</span></div>
+    </div>
+    <div class="ville-card top">
+      <div class="ville-name">Nîmes périphérie</div>
+      <div class="ville-dept">30 — Gard · ★ Recommandé</div>
+      <div class="vrow"><span class="vl">Budget maison + terrain</span><span class="vv">150–240 k€</span></div>
+      <div class="vrow"><span class="vl">Terrain détachable</span><span class="vv">500–1 000 m²</span></div>
+      <div class="vrow"><span class="vl">Prix revente terrain</span><span class="vv g">130–210 €/m²</span></div>
+      <div class="vrow"><span class="vl">Délai vente terrain</span><span class="vv g">3–7 mois</span></div>
+      <div class="vrow"><span class="vl">Marge nette estimée</span><span class="vv g">24–40 %</span></div>
+      <div class="vrow"><span class="vl">Gare TGV</span><span class="vv g">Oui — Paris-Lyon 2h45</span></div>
+    </div>
+    <div class="ville-card">
+      <div class="ville-name">Orléans couronne &lt;25 km</div>
+      <div class="ville-dept">45 — Loiret</div>
+      <div class="vrow"><span class="vl">Budget maison + terrain</span><span class="vv">130–220 k€</span></div>
+      <div class="vrow"><span class="vl">Terrain détachable</span><span class="vv">600–1 200 m²</span></div>
+      <div class="vrow"><span class="vl">Prix revente terrain</span><span class="vv g">110–175 €/m²</span></div>
+      <div class="vrow"><span class="vl">Délai vente terrain</span><span class="vv g">3–7 mois</span></div>
+      <div class="vrow"><span class="vl">Marge nette estimée</span><span class="vv g">20–32 %</span></div>
+      <div class="vrow"><span class="vl">Gare TER</span><span class="vv g">Oui — Paris-Austerlitz 1h</span></div>
+    </div>
+    <div class="ville-card">
+      <div class="ville-name">Agen périphérie</div>
+      <div class="ville-dept">47 — Lot-et-Garonne</div>
+      <div class="vrow"><span class="vl">Budget maison + terrain</span><span class="vv">110–180 k€</span></div>
+      <div class="vrow"><span class="vl">Terrain détachable</span><span class="vv">600–1 500 m²</span></div>
+      <div class="vrow"><span class="vl">Prix revente terrain</span><span class="vv g">80–125 €/m²</span></div>
+      <div class="vrow"><span class="vl">Délai vente terrain</span><span class="vv w">4–8 mois</span></div>
+      <div class="vrow"><span class="vl">Marge nette estimée</span><span class="vv g">20–32 %</span></div>
+      <div class="vrow"><span class="vl">Gare TGV</span><span class="vv g">Oui — Paris-Montparnasse 2h40</span></div>
+    </div>
+    <div class="ville-card">
+      <div class="ville-name">Alençon / L'Aigle</div>
+      <div class="ville-dept">61 — Orne</div>
+      <div class="vrow"><span class="vl">Budget maison + terrain</span><span class="vv">90–160 k€</span></div>
+      <div class="vrow"><span class="vl">Terrain détachable</span><span class="vv">700–1 500 m²</span></div>
+      <div class="vrow"><span class="vl">Prix revente terrain</span><span class="vv g">75–115 €/m²</span></div>
+      <div class="vrow"><span class="vl">Délai vente terrain</span><span class="vv w">4–9 mois</span></div>
+      <div class="vrow"><span class="vl">Marge nette estimée</span><span class="vv g">18–28 %</span></div>
+      <div class="vrow"><span class="vl">Gare TER</span><span class="vv w">Oui — Paris-Montparnasse 1h45</span></div>
+    </div>
+    <div class="ville-card">
+      <div class="ville-name">Rodez périphérie</div>
+      <div class="ville-dept">12 — Aveyron</div>
+      <div class="vrow"><span class="vl">Budget maison + terrain</span><span class="vv">90–175 k€</span></div>
+      <div class="vrow"><span class="vl">Terrain détachable</span><span class="vv">700–2 000 m²</span></div>
+      <div class="vrow"><span class="vl">Prix revente terrain</span><span class="vv g">80–125 €/m²</span></div>
+      <div class="vrow"><span class="vl">Délai vente terrain</span><span class="vv w">4–9 mois</span></div>
+      <div class="vrow"><span class="vl">Marge nette estimée</span><span class="vv g">22–35 %</span></div>
+      <div class="vrow"><span class="vl">Accès</span><span class="vv w">A75 · aéroport Rodez</span></div>
+    </div>
+  </div>
+
+  <div class="stitle">Mots-clés de sourcing — SeLoger, LBC, PAP</div>
+  <div class="alert g">
+    <span class="alert-icon">✓</span>
+    <div><b>Filtres à activer systématiquement :</b> "maison" + "terrain" ≥ 1 000 m² + prix global &lt; seuil cible. Mots-clés dans l'annonce à chercher : "grand jardin", "terrain arboré", "terrain de X m²", "possibilité de construire", "fond de jardin", "parcelle de X ares". Exclure les annonces avec "permis de construire déposé" — le vendeur a déjà valorisé le foncier. Sur DVF+ Cerema, vérifier que le prix payé est inférieur à la valeur maison seule pour confirmer que le terrain est sous-valorisé.</div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════════════════
+     ONGLET 5 — PROCESS OPÉRATIONNEL
+══════════════════════════════════════ -->
+<section class="tab-content" id="process">
+
+  <div class="stitle">6 étapes — de l'identification à la clôture</div>
+  <div class="planning">
+    <div class="plan-step">
+      <div class="pn">01</div>
+      <div class="pp">Sourcing & analyse DVF</div>
+      <div class="pd">M0 → M1</div>
+      <div class="pno">Identifier sur SeLoger / LBC / PAP les maisons avec grand terrain ("grand jardin", "terrain arboré", "fond de jardin"). Croiser avec DVF+ Cerema pour vérifier que le prix global ne valorise pas le foncier. Calculer le PMA avant toute visite — jamais de visite sans bilan promoteur préalable.</div>
+    </div>
+    <div class="plan-step">
+      <div class="pn">02</div>
+      <div class="pp">Vérification PLU + CUb</div>
+      <div class="pd">M0 → M1</div>
+      <div class="pno">Consulter le Géoportail de l'Urbanisme pour le zonage (zone U ou AU = constructible). Demander un CUb (certificat d'urbanisme opérationnel) en mairie — il bloque le PLU pendant 18 mois et confirme la constructibilité réelle de la parcelle à détacher, les règles de prospect, CES et accès voirie.</div>
+    </div>
+    <div class="plan-step">
+      <div class="pn">03</div>
+      <div class="pp">Compromis + géomètre <em>avant</em> l'acte</div>
+      <div class="pd">M1 → M2</div>
+      <div class="pno">Signer le compromis avec condition suspensive CUb positif. Mandater le géomètre <strong>immédiatement</strong> pour réaliser le bornage et déposer la DPD <strong>avant l'acte notarié d'achat</strong> — cette chronologie conditionne le régime TVA sur marge (voir onglet Fiscalité). C'est la règle technique la plus importante de toute l'opération.</div>
+    </div>
+    <div class="plan-step">
+      <div class="pn">04</div>
+      <div class="pp">DPD mairie (déclaration préalable de division)</div>
+      <div class="pd">M2 → M3</div>
+      <div class="pno">Dépôt de la DPD en mairie. Instruction : 1 mois standard (2 mois si secteur ABF — Architectes des Bâtiments de France). Pendant ce délai : préparer les supports de commercialisation du terrain, contacter constructeurs locaux (Maison Familiale, Phénix, Groupe Maisons France Confort) et agents immobiliers pour trouver l'acheteur avant l'acte.</div>
+    </div>
+    <div class="plan-step">
+      <div class="pn">05</div>
+      <div class="pp">Acte d'achat + vente terrain</div>
+      <div class="pd">M3 → M5</div>
+      <div class="pno">Acte notarié d'achat de l'ensemble après obtention de la DPD. Immédiatement après : revente du terrain détaché par acte séparé (ou simultané si acheteur déjà identifié — optimal). Si l'acheteur terrain est trouvé en avance, les deux actes peuvent être signés le même jour chez le notaire, réduisant à zéro le portage du terrain.</div>
+    </div>
+    <div class="plan-step" style="border-bottom:none">
+      <div class="pn">06</div>
+      <div class="pp">Revente maison + clôture SAS</div>
+      <div class="pd">M5 → M8</div>
+      <div class="pno">Mise en vente de la maison restante (sur terrain réduit). La maison peut se vendre légèrement moins cher qu'à l'achat — c'est normal, la valeur a été extraite via le terrain. Clôture comptable de la SAS, déclaration IS, bilan de l'opération. Si marge &gt;15 % net, répliquer sur l'opération suivante avec un ticket plus élevé.</div>
+    </div>
+    <div class="plan-total">
+      <span class="ptl">Durée totale</span>
+      <span class="ptv">4–8 mois · Frais fixes 6–12 k€ · Zéro travaux</span>
+    </div>
+  </div>
+
+  <div class="stitle">Due diligence avant compromis — checklist</div>
+  <table class="dtable">
+    <thead><tr><th>Point de vérification</th><th>Comment vérifier</th><th>Bloquant si négatif</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Zonage PLU constructible (zone U ou AU)</td><td>Géoportail de l'urbanisme · mairie</td><td class="tr">Oui — opération nulle</td></tr>
+      <tr><td class="mono">CUb positif (certificat d'urbanisme opérationnel)</td><td>Dépôt mairie avant compromis · délai 2 mois</td><td class="tr">Oui — condition suspensive</td></tr>
+      <tr><td class="mono">Accès voirie à la parcelle détachée</td><td>Plan cadastral + visite terrain</td><td class="tr">Oui si pas de servitude de passage possible</td></tr>
+      <tr><td class="mono">Viabilisation possible (eau, électricité, assainissement)</td><td>Mairie · SPANC pour assainissement individuel</td><td class="tw">Oui — coût viabilisation peut s'ajouter</td></tr>
+      <tr><td class="mono">Pas de servitude bloquante (PPRI, Natura 2000, lignes HT)</td><td>Géorisques · plan de zonage PLU</td><td class="tr">Oui si servitude empêche la construction</td></tr>
+      <tr><td class="mono">Prospection acheteur terrain démarrée</td><td>Contacts constructeurs locaux · annonces PAP</td><td class="tw">Non bloquant mais allonge le portage</td></tr>
+      <tr><td class="mono">Prix DVF compatibles avec la VSB projetée</td><td>DVF+ Cerema sur la commune et rayon 5 km</td><td class="tw">Non bloquant mais revoir le PMA si écart &gt;20 %</td></tr>
+    </tbody>
+  </table>
+
+</section>
+
+<!-- ══════════════════════════════════════
+     ONGLET 6 — TYPOLOGIES MDB
+══════════════════════════════════════ -->
+<section class="tab-content" id="typologies">
+
+  <div class="stitle">4 typologies accessibles à 100 k€ d'apport</div>
+  <div class="narrative">
+    La division parcellaire est la porte d'entrée idéale, mais ce n'est pas la seule opération réalisable à ce niveau d'apport. Voici la comparaison honnête des 4 typologies envisageables, classées par rapport risque / marge.
+  </div>
+
+  <div class="typo-grid">
+    <div class="typo-card best">
+      <div class="typo-hdr A">
+        <div class="typo-hdr-name">Division parcellaire pure</div>
+        <div class="typo-hdr-tag">Terrain + détachement + revente lot — sans travaux · Complexité 1–2/5</div>
+      </div>
+      <div class="typo-body">
+        <div class="trow"><span class="tl">Prix acquisition</span><span class="tv">80–220 k€</span></div>
+        <div class="trow"><span class="tl">Durée opération</span><span class="tv g">4–8 mois</span></div>
+        <div class="trow"><span class="tl">Travaux</span><span class="tv g">0 €</span></div>
+        <div class="trow"><span class="tl">Marge nette cible</span><span class="tv g">15–35 %</span></div>
+        <div class="trow"><span class="tl">Actes requis</span><span class="tv">Géomètre + DPD</span></div>
+        <div class="trow"><span class="tl">Risque principal</span><span class="tv w">PLU non constructible</span></div>
+      </div>
+      <div class="typo-foot">
+        <span class="typo-fl">Recommandation</span>
+        <span class="typo-fv" style="color:var(--go)">★ Idéal 1re op.</span>
+      </div>
+    </div>
+
+    <div class="typo-card best">
+      <div class="typo-hdr A">
+        <div class="typo-hdr-name">Immeuble de rapport &lt;280 k€</div>
+        <div class="typo-hdr-tag">2–4 lots loués · réhab légère · revente en bloc ou divisé · Complexité 2–3/5</div>
+      </div>
+      <div class="typo-body">
+        <div class="trow"><span class="tl">Prix acquisition</span><span class="tv">150–260 k€</span></div>
+        <div class="trow"><span class="tl">Durée opération</span><span class="tv">12–20 mois</span></div>
+        <div class="trow"><span class="tl">Travaux</span><span class="tv w">50–120 k€</span></div>
+        <div class="trow"><span class="tl">Marge nette cible</span><span class="tv g">15–25 %</span></div>
+        <div class="trow"><span class="tl">Actes requis</span><span class="tv">DP travaux · état descriptif</span></div>
+        <div class="trow"><span class="tl">Risque principal</span><span class="tv w">Dérive travaux</span></div>
+      </div>
+      <div class="typo-foot">
+        <span class="typo-fl">Recommandation</span>
+        <span class="typo-fv" style="color:var(--go)">Go — 2e op.</span>
+      </div>
+    </div>
+
+    <div class="typo-card">
+      <div class="typo-hdr B">
+        <div class="typo-hdr-name">Maison ancienne à diviser</div>
+        <div class="typo-hdr-tag">T5/T6 → 2–3 appartements · DP travaux · sans PC · Complexité 2–3/5</div>
+      </div>
+      <div class="typo-body">
+        <div class="trow"><span class="tl">Prix acquisition</span><span class="tv">120–220 k€</span></div>
+        <div class="trow"><span class="tl">Durée opération</span><span class="tv">14–22 mois</span></div>
+        <div class="trow"><span class="tl">Travaux</span><span class="tv r">80–150 k€</span></div>
+        <div class="trow"><span class="tl">Marge nette cible</span><span class="tv w">12–22 %</span></div>
+        <div class="trow"><span class="tl">Actes requis</span><span class="tv">DP travaux + état descriptif division</span></div>
+        <div class="trow"><span class="tl">Risque principal</span><span class="tv r">Bâti + dérive coûts</span></div>
+      </div>
+      <div class="typo-foot">
+        <span class="typo-fl">Recommandation</span>
+        <span class="typo-fv" style="color:var(--warn)">Conditionnel 2e op.</span>
+      </div>
+    </div>
+
+    <div class="typo-card">
+      <div class="typo-hdr" style="background:var(--card)">
+        <div class="typo-hdr-name">Local commercial → logements</div>
+        <div class="typo-hdr-tag">Changement d'usage · PC obligatoire · 6–12 mois instruction · Complexité 3–4/5</div>
+      </div>
+      <div class="typo-body">
+        <div class="trow"><span class="tl">Prix acquisition</span><span class="tv">80–180 k€</span></div>
+        <div class="trow"><span class="tl">Durée opération</span><span class="tv r">18–30 mois</span></div>
+        <div class="trow"><span class="tl">Travaux</span><span class="tv r">150–250 k€</span></div>
+        <div class="trow"><span class="tl">Marge nette cible</span><span class="tv g">20–35 %</span></div>
+        <div class="trow"><span class="tl">Actes requis</span><span class="tv">PC + changement destination</span></div>
+        <div class="trow"><span class="tl">Risque principal</span><span class="tv r">Recours tiers · délais PC</span></div>
+      </div>
+      <div class="typo-foot">
+        <span class="typo-fl">Recommandation</span>
+        <span class="typo-fv" style="color:var(--danger)">Déconseillé 1re op.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">Régions et contexte de marché par typologie</div>
+  <table class="dtable">
+    <thead><tr><th>Région</th><th>Typologies adaptées</th><th>Prix achat m²</th><th>VSB rénové m²</th><th>Liquidité</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Hauts-de-France</b><br><span class="dept-sub">02 · 59 · 60 · 62 · 80</span></td>
+        <td>Division parcellaire · Immeubles rapport</td>
+        <td class="mono tg">800–1 500 €</td>
+        <td class="mono">1 200–2 200 €</td>
+        <td class="tw">Faible à modérée</td>
+      </tr>
+      <tr>
+        <td><b>Grand Est</b><br><span class="dept-sub">10 · 51 · 52 · 55 · 57</span></td>
+        <td>Division parcellaire · Maisons à diviser</td>
+        <td class="mono tg">700–1 300 €</td>
+        <td class="mono">1 000–1 800 €</td>
+        <td class="tw">Faible hors Troyes/Reims</td>
+      </tr>
+      <tr>
+        <td><b>Occitanie intérieure</b><br><span class="dept-sub">12 · 30 · 46 · 48 · 81</span></td>
+        <td>Division parcellaire · Réhab bâtisses</td>
+        <td class="mono tg">900–1 800 €</td>
+        <td class="mono">1 400–2 500 €</td>
+        <td class="tw">Modérée (saisonnalité)</td>
+      </tr>
+      <tr>
+        <td><b>Nouvelle-Aquitaine intérieure</b><br><span class="dept-sub">16 · 19 · 23 · 47 · 79 · 87</span></td>
+        <td>Division parcellaire · Maisons bourgeoises</td>
+        <td class="mono tg">700–1 400 €</td>
+        <td class="mono">1 100–2 000 €</td>
+        <td class="tw">Modérée</td>
+      </tr>
+      <tr>
+        <td><b>Normandie</b><br><span class="dept-sub">14 · 27 · 50 · 61 · 76</span></td>
+        <td>Division parcellaire · Immeubles Rouen/Caen</td>
+        <td class="mono">900–1 600 €</td>
+        <td class="mono">1 300–2 200 €</td>
+        <td class="tw">Modérée (Caen, Rouen)</td>
+      </tr>
+      <tr>
+        <td><b>Centre-Val de Loire</b><br><span class="dept-sub">18 · 28 · 36 · 37 · 41 · 45</span></td>
+        <td>Division parcellaire · Immeubles rapport</td>
+        <td class="mono">800–1 400 €</td>
+        <td class="mono">1 200–2 000 €</td>
+        <td class="tg">Bonne (Orléans, Tours)</td>
+      </tr>
+    </tbody>
+  </table>
+
+</section>
+
+<!-- ══════════════════════════════════════
+     ONGLET 7 — FISCALITÉ & TVA
+══════════════════════════════════════ -->
+<section class="tab-content" id="tva">
+
+  <div class="stitle">Règle TVA — le point le plus souvent mal maîtrisé en 1re opération</div>
+
+  <div class="alert d">
+    <span class="alert-icon">!</span>
+    <div><b>Point critique :</b> le régime TVA applicable à la revente du terrain dépend entièrement de la chronologie du bornage par rapport à l'acte d'achat. Une erreur de calendrier peut coûter 15 000–30 000 € de TVA sur une opération de 200 k€. Source : CGI art. 257-I · Alias Immo guide TVA division parcellaire 2025.</div>
+  </div>
+
+  <div class="tva-grid">
+    <div class="tva-card good">
+      <div class="tva-title">✓ TVA sur la marge — régime favorable</div>
+      <div class="tva-body">
+        <p><b>Condition :</b> le géomètre réalise le bornage et dépose la DPD <strong>avant l'acte notarié d'achat</strong> (entre le SSP et l'acte).</p><br>
+        <p><b>Assiette TVA :</b> (prix de vente terrain − prix d'achat terrain ventilé dans l'acte) × 20 %</p><br>
+        <p><b>Exemple :</b> terrain vendu 56 000 €, ventilé à l'achat pour 18 000 € → TVA sur 38 000 € = 7 600 € de TVA.</p><br>
+        <p><b>Avantage :</b> la TVA n'est due que sur la plus-value, pas sur le prix total.</p>
+      </div>
+    </div>
+    <div class="tva-card bad">
+      <div class="tva-title">✗ TVA sur le prix total — régime pénalisant</div>
+      <div class="tva-body">
+        <p><b>Condition :</b> la division intervient <strong>après l'achat</strong> — le géomètre intervient une fois que la SAS est propriétaire.</p><br>
+        <p><b>Assiette TVA :</b> prix de vente terrain × 20 % = TVA sur la totalité.</p><br>
+        <p><b>Exemple :</b> terrain vendu 56 000 € → TVA de 11 200 € (vs 7 600 € en marge). Écart : 3 600 €.</p><br>
+        <p><b>Impact :</b> sur une opération à 200 k€ de VSB, l'écart peut dépasser 15 000–25 000 €.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">Droits de mutation — régime MDB vs droit commun</div>
+  <table class="dtable">
+    <thead><tr><th>Régime</th><th>Taux</th><th>Condition</th><th class="r">Sur achat 200 k€</th><th class="r">Économie vs droit commun</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Droit commun</b><br><span class="dept-sub">Particulier ou SAS sans objet MDB</span></td>
+        <td class="tr">5,80 %</td>
+        <td>Aucune condition</td>
+        <td class="r mono tr">11 600 €</td>
+        <td class="r mono">—</td>
+      </tr>
+      <tr>
+        <td><b>Régime MDB (art. 1115 CGI)</b><br><span class="dept-sub">SAS / SARL avec objet achat-revente</span></td>
+        <td class="tg">0,715 %</td>
+        <td>Engagement de revendre dans les 5 ans + objet social adapté</td>
+        <td class="r mono tg">1 430 €</td>
+        <td class="r mono tg">− 10 170 €</td>
+      </tr>
+      <tr>
+        <td><b>Régime MDB prolongé</b><br><span class="dept-sub">Si revente entre 5 et 10 ans</span></td>
+        <td class="tw">2,50 %</td>
+        <td>Demande de prorogation avant expiration des 5 ans</td>
+        <td class="r mono tw">5 000 €</td>
+        <td class="r mono tw">− 6 600 €</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="stitle">IS — impôt sur les sociétés sur la marge MDB</div>
+  <table class="dtable">
+    <thead><tr><th>Tranche</th><th>Taux IS</th><th>Condition PME</th><th class="r">Exemple sur marge brute 50 000 €</th></tr></thead>
+    <tbody>
+      <tr><td>0 → 42 500 €</td><td class="tg">15 %</td><td>CA &lt; 10 M€ · capital détenu &gt;75 % par personnes physiques</td><td class="r mono">6 375 €</td></tr>
+      <tr><td>42 500 € → ∞</td><td class="tw">25 %</td><td>Taux normal au-delà du seuil PME</td><td class="r mono">1 875 € (sur 7 500 €)</td></tr>
+      <tr><td style="font-weight:600;color:var(--ink)" colspan="3">IS total sur 50 000 € de marge brute</td><td class="r mono tg">8 250 € — taux effectif 16,5 %</td></tr>
+    </tbody>
+  </table>
+
+  <div class="stitle">Ventilation du prix d'achat dans l'acte — point clé pour la TVA sur marge</div>
+  <div class="narrative">
+    Pour pouvoir calculer la TVA sur la marge, il faut que l'acte notarié d'achat ventile explicitement le prix entre le bâti et le terrain. Sans cette ventilation, l'administration fiscale peut remettre en cause le régime TVA sur marge. Il faut donc demander au notaire de faire apparaître dans l'acte : "prix du bâti : X €" et "prix du terrain : Y €" de façon cohérente avec les valeurs de marché locales. Le notaire peut estimer cette ventilation à partir des données DVF.
+  </div>
+
+  <div class="alert g">
+    <span class="alert-icon">✓</span>
+    <div><b>Récapitulatif des 3 réflexes fiscaux à avoir avant chaque opération :</b> (1) SAS constituée avec objet social adapté → droits de mutation 0,715 % ; (2) géomètre mandaté entre SSP et acte, DPD déposée avant l'acte → TVA sur marge ; (3) ventilation prix bâti/terrain dans l'acte notarié → base de calcul TVA marge sécurisée. Ces 3 points se gèrent avec le notaire en amont — pas en urgence le jour de la signature.</div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════════════════
+     ONGLET 8 — SIMULATEUR MDB
+══════════════════════════════════════ -->
+<section class="tab-content" id="simulateur">
+<div class="sim-layout">
+
+  <!-- ── PANNEAU GAUCHE : ENTRÉES ── -->
+  <div class="sim-panel">
+    <div class="sim-panel-hdr">Simulateur MDB<small>Toutes les variables en entrée — résultats en temps réel</small></div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Type d'opération</div>
+      <div class="sim-field">
+        <span class="sim-label">Stratégie</span>
+        <select class="sim-select" id="s-type" onchange="calc()">
+          <option value="division">Division parcellaire</option>
+          <option value="rehab">Réhab + revente en bloc</option>
+          <option value="lots">Réhab + vente par lots</option>
+          <option value="seche">Revente sèche</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Acquisition</div>
+      <div class="sim-field">
+        <span class="sim-label">Prix d'achat affiché</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-achat" value="180000" min="0" oninput="calc()"><span class="sim-unit">€</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Droits de mutation</span>
+        <select class="sim-select" id="s-droits" onchange="calc()">
+          <option value="0.00715">MDB 0,715 %</option>
+          <option value="0.058">Droit commun 5,8 %</option>
+        </select>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Honoraires agence achat</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-hono-achat" value="0" min="0" oninput="calc()"><span class="sim-unit">€</span></div>
+      </div>
+    </div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Financement</div>
+      <div class="sim-field">
+        <span class="sim-label">Apport fonds propres</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-apport" value="75000" min="0" oninput="calc()"><span class="sim-unit">€</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Taux crédit MDB</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-taux" value="5" min="0" max="20" step="0.1" oninput="calc()"><span class="sim-unit">%</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Durée de portage</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-portage" value="6" min="1" max="60" oninput="calc()"><span class="sim-unit">mois</span></div>
+      </div>
+    </div>
+
+    <div class="sim-group" id="grp-travaux">
+      <div class="sim-group-title">Travaux & frais opérationnels</div>
+      <div class="sim-field">
+        <span class="sim-label">Budget travaux</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-travaux" value="0" min="0" oninput="calc()"><span class="sim-unit">€</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Architecte / MOE</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-moe" value="8" min="0" max="20" step="0.5" oninput="calc()"><span class="sim-unit">%</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Assurance DO</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-do" value="2" min="0" max="10" step="0.5" oninput="calc()"><span class="sim-unit">%</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Géomètre / division</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-geometre" value="3500" min="0" oninput="calc()"><span class="sim-unit">€</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Frais divers</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-divers" value="1200" min="0" oninput="calc()"><span class="sim-unit">€</span></div>
+      </div>
+    </div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Sortie</div>
+      <div class="sim-field">
+        <span class="sim-label">Nombre de lots vendus</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-lots" value="2" min="1" max="30" oninput="calc()"><span class="sim-unit">lots</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Prix de vente moyen / lot</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-pvente" value="109000" min="0" oninput="calc()"><span class="sim-unit">€</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Commercialisation sortie</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-commerc" value="4" min="0" max="10" step="0.5" oninput="calc()"><span class="sim-unit">%</span></div>
+      </div>
+    </div>
+
+    <div class="sim-group">
+      <div class="sim-group-title">Fiscalité</div>
+      <div class="sim-field">
+        <span class="sim-label">Régime TVA</span>
+        <select class="sim-select" id="s-tva" onchange="calc()">
+          <option value="marge">TVA sur marge</option>
+          <option value="total">TVA sur prix total</option>
+          <option value="none">Non assujetti</option>
+        </select>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Taux TVA</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-tva-taux" value="20" min="0" max="20" oninput="calc()"><span class="sim-unit">%</span></div>
+      </div>
+      <div class="sim-field">
+        <span class="sim-label">Marge nette cible (seuil go)</span>
+        <div class="sim-input-wrap"><input class="sim-input" type="number" id="s-cible" value="15" min="0" max="50" step="0.5" oninput="calc()"><span class="sim-unit">%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PANNEAU DROIT : RÉSULTATS ── -->
+  <div class="res-panel" id="res-panel">
+    <!-- Rempli par JS -->
+  </div>
+
+</div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer class="site-footer">
+  <span>Guide MDB · Division Parcellaire · 100 k€ d'apport</span>
+  <span>Juillet 2026 · Sources : DVF+ Cerema · Notaires de France · CGI</span>
+  <span>Données indicatives — consulter un notaire et un expert-comptable</span>
+</footer>
+
+<script>
+/* ── TABS ── */
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'bilan') setTimeout(initSlider, 50);
+}
+
+/* ── BILAN SLIDER ── */
+function fmt(n) { return n.toLocaleString('fr-FR') + ' €'; }
+function calcBilan(prixM2) {
+  const surface = 800;
+  const achat = 180000;
+  const droits = Math.round(achat * 0.00715);
+  const geometre = 3500;
+  const notaire = 4200;
+  const portage = Math.round(achat * 0.7 * 0.05 / 2);
+  const charges = droits + geometre + notaire + portage;
+  const vsbTerrain = surface * prixM2;
+  const vsbMaison = 162000;
+  const vsbTotal = vsbTerrain + vsbMaison;
+  const margeBrute = vsbTotal - achat - charges;
+  const is = margeBrute > 0 ? Math.round(Math.min(margeBrute, 42500) * 0.15 + Math.max(0, margeBrute - 42500) * 0.25) : 0;
+  const margeNette = margeBrute - is;
+  const pctNette = ((margeNette / vsbTotal) * 100);
+  return { vsbTerrain, vsbTotal, margeBrute, margeNette, pctNette };
+}
+
+function initSlider() {
+  const slider = document.getElementById('terrain-slider');
+  if (!slider || slider._inited) return;
+  slider._inited = true;
+  function update() {
+    const v = parseInt(slider.value);
+    document.getElementById('terrain-price-label').textContent = v + ' €/m²';
+    const r = calcBilan(v);
+    document.getElementById('vsb-terrain').textContent = fmt(r.vsbTerrain);
+    document.getElementById('vsb-total').textContent = fmt(r.vsbTotal);
+    document.getElementById('marge-brute').textContent = fmt(r.margeBrute);
+    const mn = document.getElementById('marge-nette');
+    mn.textContent = fmt(r.margeNette) + ' · ' + r.pctNette.toFixed(1) + '%';
+    mn.style.color = r.margeNette >= 0 ? 'var(--go)' : 'var(--danger)';
+    const pct = Math.min(100, Math.max(0, r.pctNette));
+    const bar = document.getElementById('marge-bar');
+    bar.style.width = pct * 2.5 + '%';
+    bar.style.background = r.pctNette < 10 ? 'var(--danger)' : r.pctNette < 18 ? 'var(--warn)' : 'var(--go)';
+    document.getElementById('marge-bar-pct').textContent = r.pctNette.toFixed(1) + '%';
+  }
+  slider.addEventListener('input', update);
+  update();
+}
+
+/* Init premier onglet visible */
+document.addEventListener('DOMContentLoaded', function() {
+  calc();
+});
+
+/* ── SIMULATEUR MDB ── */
+function v(id){ return parseFloat(document.getElementById(id).value) || 0; }
+function vs(id){ return document.getElementById(id).value; }
+function fmtE(n){ return (n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('fr-FR')+' €'; }
+function fmtP(n){ return (n>=0?'+':'')+n.toFixed(1)+' %'; }
+function fmtPabs(n){ return Math.abs(n).toFixed(1)+' %'; }
+function colorClass(n, seuil){ return n>=seuil?'g':n>=seuil*0.6?'w':'r'; }
+
+function calcIS(base){
+  if(base<=0) return 0;
+  const t1 = Math.min(base, 42500)*0.15;
+  const t2 = Math.max(0, base-42500)*0.25;
+  return t1+t2;
+}
+
+function calc(){
+  const achat = v('s-achat');
+  const tauxDroits = v('s-droits');
+  const honoAchat = v('s-hono-achat');
+  const apport = v('s-apport');
+  const tauxCredit = v('s-taux')/100;
+  const portage = v('s-portage');
+  const travaux = v('s-travaux');
+  const moe = v('s-moe')/100;
+  const doAssur = v('s-do')/100;
+  const geometre = v('s-geometre');
+  const divers = v('s-divers');
+  const nbLots = v('s-lots');
+  const pvente = v('s-pvente');
+  const tauxCommerc = v('s-commerc')/100;
+  const tvaTaux = v('s-tva-taux')/100;
+  const tvaModeVal = vs('s-tva');
+  const cible = v('s-cible');
+
+  // CHARGES
+  const droits = achat * tauxDroits;
+  const fraisAnnexes = travaux*(moe+doAssur) + geometre + divers;
+  const totalHorsFin = achat + droits + honoAchat + travaux + fraisAnnexes;
+  const capitalEmprunte = Math.max(0, totalHorsFin - apport);
+  const portageEuros = capitalEmprunte * tauxCredit * (portage/12);
+
+  // RECETTES
+  const vsb = nbLots * pvente;
+  const commerc = vsb * tauxCommerc;
+
+  // TVA
+  let tva = 0;
+  if(tvaModeVal === 'marge'){
+    const achatVentile = achat / Math.max(1, nbLots);
+    const margeParLot = pvente - achatVentile;
+    tva = Math.max(0, margeParLot * tvaTaux) * nbLots;
+  } else if(tvaModeVal === 'total'){
+    tva = vsb * tvaTaux / (1+tvaTaux);
+  }
+
+  const totalCharges = achat + droits + honoAchat + travaux + fraisAnnexes + portageEuros + commerc + tva;
+  const margeBrute = vsb - totalCharges;
+  const is = calcIS(margeBrute);
+  const margeNette = margeBrute - is;
+  const margeNettePct = vsb > 0 ? (margeNette/vsb)*100 : 0;
+  const margeBrutePct = vsb > 0 ? (margeBrute/vsb)*100 : 0;
+  const rfp = apport > 0 ? (margeNette/apport)*100 : 0;
+  const coutRevient = totalCharges / Math.max(1, nbLots);
+  const pointMort = totalCharges;
+
+  // PMA (prix max achat pour atteindre la cible)
+  // VSB - fraisVente - travaux - annexes - portage approximatif - IS approx - cible*VSB = PMA + droits*(PMA)
+  // On résout itérativement (3 passes suffisent)
+  let pma = vsb * (1 - cible/100) - travaux - fraisAnnexes - geometre - divers - commerc;
+  for(let i=0;i<5;i++){
+    const portageApprox = Math.max(0,pma+travaux+fraisAnnexes-apport)*tauxCredit*(portage/12);
+    const mbApprox = vsb - pma*(1+tauxDroits) - travaux - fraisAnnexes - portageApprox - commerc;
+    const isApprox = calcIS(mbApprox);
+    pma = (vsb*(1-cible/100) - travaux - fraisAnnexes - portageApprox - commerc - isApprox) / (1+tauxDroits);
+  }
+  const ecartPma = pma - achat;
+  const ecartPmaPct = achat > 0 ? (ecartPma/achat)*100 : 0;
+
+  // SENSIBILITÉ
+  function margeNetteAvec(vsbMult, travauxMult, portageAdd){
+    const v2 = vsb*vsbMult;
+    const t2 = travaux*travauxMult;
+    const fa2 = t2*(moe+doAssur)+geometre+divers;
+    const p2 = portage+portageAdd;
+    const ce2 = Math.max(0, achat+droits+honoAchat+t2+fa2-apport);
+    const po2 = ce2*tauxCredit*(p2/12);
+    const c2 = v2*tauxCommerc;
+    const tc2 = achat+droits+honoAchat+t2+fa2+po2+c2+tva;
+    const mb2 = v2-tc2;
+    return mb2 > 0 ? mb2-calcIS(mb2) : mb2;
+  }
+  const sensiVSBm5 = margeNetteAvec(0.95,1,0);
+  const sensiVSBm10 = margeNetteAvec(0.90,1,0);
+  const sensiTravp10 = margeNetteAvec(1,1.10,0);
+  const sensiTravp20 = margeNetteAvec(1,1.20,0);
+  const sensiPort3 = margeNetteAvec(1,1,3);
+  const sensiPort6 = margeNetteAvec(1,1,6);
+  const pctOf = (n) => vsb>0?(n/vsb)*100:0;
+
+  // VERDICT
+  let verdictClass, verdictLabel, verdictSub;
+  if(margeNettePct >= cible && ecartPma >= 0){
+    verdictClass='go'; verdictLabel='GO';
+    verdictSub=`Marge nette ${fmtPabs(margeNettePct)} ≥ cible ${fmtPabs(cible)} · PMA > prix demandé de ${fmtE(ecartPma)}`;
+  } else if(margeNettePct >= cible*0.65 || (margeNettePct >= 10 && ecartPma < 0 && ecartPma > -achat*0.08)){
+    verdictClass='cond'; verdictLabel='GO conditionnel';
+    verdictSub=`Marge nette ${fmtPabs(margeNettePct)} — négocier le prix ou optimiser les frais`;
+  } else {
+    verdictClass='nogo'; verdictLabel='NO-GO';
+    verdictSub=`Marge nette insuffisante (${fmtPabs(margeNettePct)}) ou prix trop élevé vs PMA`;
+  }
+
+  // ALERTES
+  const alertes = [];
+  if(margeNettePct < 10) alertes.push({t:'d', msg:'<b>Marge nette < 10 %</b> — en dessous du seuil de viabilité minimum MDB.'});
+  if(rfp < 20) alertes.push({t:'w', msg:`<b>Rendement fonds propres ${rfp.toFixed(1)} %</b> — inférieur au seuil recommandé de 20 %.`});
+  if(ecartPma < 0) alertes.push({t:'w', msg:`<b>PMA ${fmtE(pma)} < prix demandé ${fmtE(achat)}</b> — négocier ${fmtE(-ecartPma)} ou ${fmtPabs(-ecartPmaPct)} de décote.`});
+  if(capitalEmprunte > apport*3) alertes.push({t:'w', msg:'<b>Levier élevé :</b> le capital emprunté dépasse 3× l\'apport — risque de refus bancaire.'});
+  if(margeNette > 0 && sensiVSBm10 < 0) alertes.push({t:'w', msg:'<b>Fragilité VSB :</b> une baisse de prix de sortie de 10 % rend l\'opération déficitaire.'});
+
+  // RENDER
+  const panel = document.getElementById('res-panel');
+  panel.innerHTML = `
+    <div class="verdict-bar ${verdictClass}">
+      <div class="verdict-title">${verdictLabel}</div>
+      <div class="verdict-sub">${verdictSub}</div>
+    </div>
+
+    <div class="kpi4">
+      <div class="kpi4-cell">
+        <div class="kpi4-lbl">Marge nette après IS</div>
+        <div class="kpi4-val ${colorClass(margeNettePct, cible)}">${fmtE(margeNette)}</div>
+        <div class="kpi4-sub">${margeNettePct.toFixed(1)} % de la VSB</div>
+      </div>
+      <div class="kpi4-cell">
+        <div class="kpi4-lbl">VSB totale</div>
+        <div class="kpi4-val">${fmtE(vsb)}</div>
+        <div class="kpi4-sub">${nbLots} lot${nbLots>1?'s':''} × ${fmtE(pvente)}</div>
+      </div>
+      <div class="kpi4-cell">
+        <div class="kpi4-lbl">Rendement fonds propres</div>
+        <div class="kpi4-val ${colorClass(rfp,20)}">${rfp.toFixed(1)} %</div>
+        <div class="kpi4-sub">Marge nette / apport ${fmtE(apport)}</div>
+      </div>
+      <div class="kpi4-cell">
+        <div class="kpi4-lbl">IS estimé</div>
+        <div class="kpi4-val">${fmtE(is)}</div>
+        <div class="kpi4-sub">Taux effectif ${margeBrute>0?((is/margeBrute)*100).toFixed(1):0} %</div>
+      </div>
+    </div>
+
+    <div class="pma-gauge">
+      <div class="pma-gauge-title">Prix maximum d'acquisition (PMA) vs prix demandé</div>
+      <div class="pma-nums">
+        <span style="font-size:12px;color:var(--ink-2)">Prix demandé : <b style="color:var(--ink);font-family:var(--font-m)">${fmtE(achat)}</b></span>
+        <span style="font-size:12px;color:var(--ink-2)">PMA : <b style="font-family:var(--font-m);color:${pma>=achat?'var(--go)':'var(--danger)'}">${fmtE(pma)}</b></span>
+      </div>
+      <div class="pma-track">
+        <div class="pma-fill" style="width:${Math.min(100,Math.max(5,(achat/Math.max(pma,achat))*100))}%;background:${pma>=achat?'var(--go)':'var(--danger)'}"></div>
+      </div>
+      <div class="pma-legend">
+        <span>0 €</span>
+        <span class="${pma>=achat?'pma-ok':'pma-ko'}">${ecartPma>=0?'PMA > prix ✓ +'+fmtE(ecartPma):'Prix > PMA ✗ −'+fmtE(-ecartPma)}</span>
+        <span>${fmtE(Math.max(pma,achat)*1.05)}</span>
+      </div>
+    </div>
+
+    <div class="bilan-res">
+      <div class="br grp"><span>Charges</span><span></span></div>
+      <div class="br"><span class="br-lbl">Prix d'achat</span><span class="br-val">${fmtE(achat)}</span></div>
+      <div class="br sub"><span class="br-lbl">Droits de mutation (${(tauxDroits*100).toFixed(3)} %)</span><span class="br-val r">${fmtE(-droits)}</span></div>
+      ${honoAchat>0?`<div class="br sub"><span class="br-lbl">Honoraires agence achat</span><span class="br-val r">${fmtE(-honoAchat)}</span></div>`:''}
+      ${travaux>0?`<div class="br sub"><span class="br-lbl">Travaux</span><span class="br-val r">${fmtE(-travaux)}</span></div>`:''}
+      ${fraisAnnexes>0?`<div class="br sub"><span class="br-lbl">Frais annexes (MOE, DO, géomètre, divers)</span><span class="br-val r">${fmtE(-fraisAnnexes)}</span></div>`:''}
+      <div class="br sub"><span class="br-lbl">Frais de portage (${portage} mois · ${(tauxCredit*100).toFixed(2)} %)</span><span class="br-val r">${fmtE(-portageEuros)}</span></div>
+      <div class="br sub"><span class="br-lbl">Commercialisation sortie (${(tauxCommerc*100).toFixed(1)} %)</span><span class="br-val r">${fmtE(-commerc)}</span></div>
+      ${tva>0?`<div class="br sub"><span class="br-lbl">TVA (${tvaModeVal==='marge'?'sur marge':'sur prix total'})</span><span class="br-val r">${fmtE(-tva)}</span></div>`:''}
+      <div class="br"><span class="br-lbl" style="font-weight:500;color:var(--ink)">Total charges</span><span class="br-val r">${fmtE(-totalCharges)}</span></div>
+      <div class="br grp"><span>Résultats</span><span></span></div>
+      <div class="br"><span class="br-lbl">Marge brute avant IS</span><span class="br-val ${margeBrute>=0?'g':'r'}">${fmtE(margeBrute)} · ${margeBrutePct.toFixed(1)} %</span></div>
+      <div class="br sub"><span class="br-lbl">IS estimé (PME : 15 % → 25 %)</span><span class="br-val r">${fmtE(-is)}</span></div>
+      <div class="br total"><span class="br-lbl">Marge nette après IS</span><span class="br-val">${fmtE(margeNette)} · ${margeNettePct.toFixed(1)} %</span></div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px 16px">
+      <div style="font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px">Analyse de sensibilité — impact sur la marge nette</div>
+      <div class="sensi-grid">
+        <div class="sensi-card">
+          <div class="sensi-scenario">VSB −5 %</div>
+          <div class="sensi-val" style="color:${sensiVSBm5>=0?'var(--go)':'var(--danger)'}">${fmtE(sensiVSBm5)}</div>
+          <div class="sensi-delta" style="color:${sensiVSBm5-margeNette<0?'var(--danger)':'var(--go)'}">${fmtP(pctOf(sensiVSBm5)-margeNettePct)} pts</div>
+        </div>
+        <div class="sensi-card">
+          <div class="sensi-scenario">VSB −10 %</div>
+          <div class="sensi-val" style="color:${sensiVSBm10>=0?'var(--go)':'var(--danger)'}">${fmtE(sensiVSBm10)}</div>
+          <div class="sensi-delta" style="color:${sensiVSBm10-margeNette<0?'var(--danger)':'var(--go)'}">${fmtP(pctOf(sensiVSBm10)-margeNettePct)} pts</div>
+        </div>
+        <div class="sensi-card">
+          <div class="sensi-scenario">Travaux +10 %</div>
+          <div class="sensi-val" style="color:${sensiTravp10>=0?'var(--go)':'var(--danger)'}">${fmtE(sensiTravp10)}</div>
+          <div class="sensi-delta" style="color:${sensiTravp10-margeNette<0?'var(--danger)':'var(--go)'}">${fmtP(pctOf(sensiTravp10)-margeNettePct)} pts</div>
+        </div>
+        <div class="sensi-card">
+          <div class="sensi-scenario">Travaux +20 %</div>
+          <div class="sensi-val" style="color:${sensiTravp20>=0?'var(--go)':'var(--danger)'}">${fmtE(sensiTravp20)}</div>
+          <div class="sensi-delta" style="color:${sensiTravp20-margeNette<0?'var(--danger)':'var(--go)'}">${fmtP(pctOf(sensiTravp20)-margeNettePct)} pts</div>
+        </div>
+        <div class="sensi-card">
+          <div class="sensi-scenario">Portage +3 mois</div>
+          <div class="sensi-val" style="color:${sensiPort3>=0?'var(--go)':'var(--danger)'}">${fmtE(sensiPort3)}</div>
+          <div class="sensi-delta" style="color:${sensiPort3-margeNette<0?'var(--danger)':'var(--go)'}">${fmtP(pctOf(sensiPort3)-margeNettePct)} pts</div>
+        </div>
+        <div class="sensi-card">
+          <div class="sensi-scenario">Portage +6 mois</div>
+          <div class="sensi-val" style="color:${sensiPort6>=0?'var(--go)':'var(--danger)'}">${fmtE(sensiPort6)}</div>
+          <div class="sensi-delta" style="color:${sensiPort6-margeNette<0?'var(--danger)':'var(--go)'}">${fmtP(pctOf(sensiPort6)-margeNettePct)} pts</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding:8px 10px;background:var(--card);border-radius:3px;font-family:var(--font-m);font-size:11px;color:var(--ink-2)">
+        Point mort VSB : <b style="color:var(--ink)">${fmtE(pointMort)}</b> · Coût de revient par lot : <b style="color:var(--ink)">${fmtE(coutRevient)}</b> · Capital emprunté : <b style="color:var(--ink)">${fmtE(capitalEmprunte)}</b>
+      </div>
+    </div>
+
+    ${alertes.map(a=>`<div class="res-alert ${a.t}"><span>●</span><span>${a.msg}</span></div>`).join('')}
+  `;
+}
+</script>
+</body>
+</html>
