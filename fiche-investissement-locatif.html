@@ -38,6 +38,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 .site-header{background:var(--ink);color:#f5f3ee;padding:18px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
 .site-logo{font-family:var(--font-d);font-size:14px;font-weight:600;letter-spacing:.02em}
 .site-logo span{font-weight:300;opacity:.55}
+.site-header-right{display:flex;align-items:center;gap:16px}
+.site-back{font-family:var(--font-m);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:rgba(245,243,238,.65);text-decoration:none;padding:4px 10px;border:1px solid rgba(245,243,238,.25);border-radius:3px;transition:color .15s,border-color .15s}
+.site-back:hover{color:#f5f3ee;border-color:rgba(245,243,238,.5)}
 .site-tag{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;opacity:.45}
 
 /* ── HERO ── */
@@ -216,7 +219,10 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 <!-- ══ SITE HEADER ══ -->
 <header class="site-header">
   <div class="site-logo">Analyse Investissement Locatif <span>· Fiche opportunité</span></div>
-  <div class="site-tag">Prompt v2.0 · Schema v2.0</div>
+  <div class="site-header-right">
+    <a class="site-back" href="index.html">← ImmoAgg</a>
+    <div class="site-tag">Prompt v2.0 · Schema v2.0</div>
+  </div>
 </header>
 
 <!-- ══ HERO ══ -->

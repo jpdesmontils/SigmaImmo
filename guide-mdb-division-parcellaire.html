@@ -41,6 +41,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 .site-header{background:var(--ink);color:#f5f3ee;padding:20px 32px;display:flex;justify-content:space-between;align-items:center}
 .site-logo{font-family:var(--font-d);font-size:15px;font-weight:600;letter-spacing:.02em}
 .site-logo span{font-weight:300;opacity:.6}
+.site-header-right{display:flex;align-items:center;gap:16px}
+.site-back{font-family:var(--font-m);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:rgba(245,243,238,.65);text-decoration:none;padding:4px 10px;border:1px solid rgba(245,243,238,.25);border-radius:3px;transition:color .15s,border-color .15s}
+.site-back:hover{color:#f5f3ee;border-color:rgba(245,243,238,.5)}
 .site-tag{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;opacity:.5}
 
 /* ── HERO ── */
@@ -53,11 +56,11 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 .hkpi{background:var(--bg);padding:14px 16px}
 .hkpi-l{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
 .hkpi-v{font-family:var(--font-m);font-size:20px;font-weight:700;color:var(--ink);line-height:1}
-.hkpi-v.g{color:var(--go)}.hkpi-v.w{color:var(--warn)}
+.hkpi-v.g{color:var(--go)}.hkpi-v.w{color:var(--warn)}.hkpi-v.r{color:var(--danger)}
 .hkpi-s{font-size:11px;color:var(--ink-3);margin-top:3px}
 
 /* ── TABS ── */
-.tabs-nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto;gap:0}
+.tabs-nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto;gap:0;position:sticky;top:0;z-index:10;box-shadow:0 1px 0 var(--border)}
 .tab-btn{font-family:var(--font-b);font-size:13px;font-weight:500;color:var(--ink-3);padding:14px 20px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s}
 .tab-btn:hover{color:var(--ink)}
 .tab-btn.active{color:var(--ink);border-bottom-color:var(--ink)}
@@ -283,7 +286,10 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 <!-- ══ HEADER ══ -->
 <header class="site-header">
   <div class="site-logo">Guide MDB <span>· Division Parcellaire</span></div>
-  <div class="site-tag">Analyse · Juillet 2026</div>
+  <div class="site-header-right">
+    <a class="site-back" href="index.html">← ImmoAgg</a>
+    <div class="site-tag">Analyse · Juillet 2026</div>
+  </div>
 </header>
 
 <!-- ══ HERO ══ -->
