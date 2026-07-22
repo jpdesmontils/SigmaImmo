@@ -258,7 +258,11 @@
       cursor: pointer;
       transition: all .15s;
     }
-    .selection-btn.active {
+    .selection-btn.sel-shortlist { color: var(--go); }
+    .selection-btn.sel-ecartee   { color: var(--danger); }
+    .selection-btn.sel-invest    { color: var(--warn); }
+    /* Sélecteur renforcé pour toujours l'emporter sur les couleurs sémantiques ci-dessus */
+    .selection-btns .selection-btn.active {
       border-color: var(--text);
       background: var(--text);
       color: var(--bg);
@@ -955,9 +959,9 @@
       <h3>Sélection</h3>
       <div class="selection-btns">
         <button class="selection-btn active" data-selection="all">Toutes</button>
-        <button class="selection-btn" data-selection="shortlist" style="color:#145a2e">⭐ ShortList</button>
-        <button class="selection-btn" data-selection="ecartee" style="color:#831515">✕ Écartées</button>
-        <button class="selection-btn" data-selection="invest" style="color:#7a4108">$ Invest</button>
+        <button class="selection-btn sel-shortlist" data-selection="shortlist">⭐ ShortList</button>
+        <button class="selection-btn sel-ecartee" data-selection="ecartee">✕ Écartées</button>
+        <button class="selection-btn sel-invest" data-selection="invest">$ Invest</button>
       </div>
     </div>
 

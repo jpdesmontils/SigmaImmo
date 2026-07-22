@@ -423,9 +423,9 @@ async function renderMap() {
     var color = '#9a9890';
     if (item.price && maxPrice > minPrice) {
       var t = (item.price - minPrice) / (maxPrice - minPrice);
-      var rv = Math.round(20  + (131 - 20)  * t);
-      var gv = Math.round(90  + (21  - 90)  * t);
-      var bv = Math.round(46  + (21  - 46)  * t);
+      var rv = Math.round(34  + (239 - 34)  * t);
+      var gv = Math.round(197 + (68  - 197) * t);
+      var bv = Math.round(94  + (68  - 94)  * t);
       color = 'rgb(' + rv + ',' + gv + ',' + bv + ')';
     }
 
