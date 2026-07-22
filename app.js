@@ -363,7 +363,7 @@ async function renderMap() {
     iconCreateFunction: function(cluster) {
       var count = cluster.getChildCount();
       return L.divIcon({
-        html: '<div style="width:36px;height:36px;background:#2563eb;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4);">' + count + '</div>',
+        html: '<div style="width:36px;height:36px;background:#16150f;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;font-family:\'JetBrains Mono\',monospace;color:#f5f3ee;box-shadow:0 2px 8px rgba(22,21,15,.4);">' + count + '</div>',
         iconSize: [36, 36],
         iconAnchor: [18, 18],
         className: ''
@@ -405,17 +405,17 @@ async function renderMap() {
     var lat = item.coords.lat;
     var lng = item.coords.lng;
 
-    var color = '#94a3b8';
+    var color = '#9a9890';
     if (item.price && maxPrice > minPrice) {
       var t = (item.price - minPrice) / (maxPrice - minPrice);
-      var rv = Math.round(34  + (239 - 34)  * t);
-      var gv = Math.round(197 + (68  - 197) * t);
-      var bv = Math.round(94  + (68  - 94)  * t);
+      var rv = Math.round(20  + (131 - 20)  * t);
+      var gv = Math.round(90  + (21  - 90)  * t);
+      var bv = Math.round(46  + (21  - 46)  * t);
       color = 'rgb(' + rv + ',' + gv + ',' + bv + ')';
     }
 
     var icon = L.divIcon({
-      html: '<div style="width:28px;height:28px;background:' + color + ';border:2px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>',
+      html: '<div style="width:28px;height:28px;background:' + color + ';border:2px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(22,21,15,.4);"></div>',
       iconSize: [28, 28],
       iconAnchor: [14, 28],
       className: ''
@@ -442,14 +442,14 @@ async function renderMap() {
   ];
 
   var cityIcon = L.divIcon({
-    html: '<div style="width:22px;height:22px;background:#3b82f6;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>',
+    html: '<div style="width:22px;height:22px;background:#7a4108;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(22,21,15,.4);"></div>',
     iconSize: [22, 22], iconAnchor: [11, 11], className: ''
   });
 
   refCities.forEach(function(city) {
     L.marker([city.lat, city.lng], { icon: cityIcon, zIndexOffset: -100 })
       .addTo(map)
-      .bindPopup('<div style="font-family:system-ui;font-size:13px;font-weight:600;padding:4px 2px;">' + (city.name.includes('Gare') ? '🚉' : '📍') + ' ' + city.name + '</div>', { maxWidth: 160 });
+      .bindPopup('<div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600;padding:4px 2px;color:#16150f;">' + (city.name.includes('Gare') ? '🚉' : '📍') + ' ' + city.name + '</div>', { maxWidth: 160 });
   });
 
   // Listener popup — une seule fois grâce au map.off() en début de fonction
@@ -482,29 +482,29 @@ function popupHTML(item, idx) {
   const imgSrc = getImageUrl(item);
   const sel = item.selection || '';
 
-  const btnStyle = 'flex:1;padding:6px 4px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;text-align:center;border:1px solid';
+  const btnStyle = 'flex:1;padding:6px 4px;border-radius:3px;cursor:pointer;font-size:11px;font-weight:600;text-align:center;border:1px solid';
   const shortActive = sel === 'shortlist';
   const ecartActive = sel === 'ecartee';
 
   const investActive = sel === 'invest';
 
-  const btnShort = `<button data-popup-tag="shortlist" data-popup-idx="${idx}" style="${btnStyle} ${shortActive ? '#059669;background:rgba(16,185,129,.2);color:#34d399' : '#334155;background:#1e293b;color:#94a3b8'}">⭐ ShortList</button>`;
-  const btnEcart = `<button data-popup-tag="ecartee"   data-popup-idx="${idx}" style="${btnStyle} ${ecartActive ? '#dc2626;background:rgba(239,68,68,.2);color:#f87171'   : '#334155;background:#1e293b;color:#94a3b8'}">✕ Écarter</button>`;
-  const btnInvest = `<button data-popup-tag="invest" data-popup-idx="${idx}" style="${btnStyle} ${investActive ? '#b45309;background:rgba(245,158,11,.2);color:#fbbf24' : '#334155;background:#1e293b;color:#94a3b8'}">$ Invest</button>`;
+  const btnShort = `<button data-popup-tag="shortlist" data-popup-idx="${idx}" style="${btnStyle} ${shortActive ? '#7ec99a;background:#d6f0df;color:#145a2e' : '#d0ccc3;background:#edeae3;color:#5a5850'}">⭐ ShortList</button>`;
+  const btnEcart = `<button data-popup-tag="ecartee"   data-popup-idx="${idx}" style="${btnStyle} ${ecartActive ? '#d97373;background:#fce8e8;color:#831515'   : '#d0ccc3;background:#edeae3;color:#5a5850'}">✕ Écarter</button>`;
+  const btnInvest = `<button data-popup-tag="invest" data-popup-idx="${idx}" style="${btnStyle} ${investActive ? '#e0a84a;background:#faefd5;color:#7a4108' : '#d0ccc3;background:#edeae3;color:#5a5850'}">$ Invest</button>`;
 
   return `
-    <div style="font-family:system-ui;font-size:13px;min-width:220px;">
-      ${imgSrc ? `<img src="${esc(imgSrc)}" style="width:100%;height:110px;object-fit:cover;border-radius:6px;margin-bottom:8px;" loading="lazy">` : ''}
+    <div style="font-family:Inter,sans-serif;font-size:13px;min-width:220px;color:#16150f;">
+      ${imgSrc ? `<img src="${esc(imgSrc)}" style="width:100%;height:110px;object-fit:cover;border-radius:3px;margin-bottom:8px;" loading="lazy">` : ''}
       <div style="font-weight:600;margin-bottom:4px;line-height:1.3;">${esc(item.title || 'Annonce')}</div>
       ${selectionTagHTML(sel)}
-      ${item.price ? `<div style="color:#f59e0b;font-weight:700;margin-bottom:2px;">${formatPrice(item.price)}</div>` : ''}
-      ${item.surface ? `<div style="color:#94a3b8;font-size:12px;margin-bottom:6px;">${item.surface} m²</div>` : ''}
+      ${item.price ? `<div style="font-family:'JetBrains Mono',monospace;color:#7a4108;font-weight:700;margin-bottom:2px;">${formatPrice(item.price)}</div>` : ''}
+      ${item.surface ? `<div style="color:#9a9890;font-size:12px;margin-bottom:6px;">${item.surface} m²</div>` : ''}
       <div style="display:flex;gap:5px;margin-bottom:6px;">
         ${btnShort}${btnEcart}${btnInvest}
       </div>
       <div style="display:flex;gap:5px;">
-        <button data-open-viewer="${idx}" style="${btnStyle} #2563eb;background:#2563eb;color:#fff;flex:1;">🖼 Voir l'annonce</button>
-        ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="${btnStyle} #334155;background:#1e293b;color:#e2e8f0;flex:1;text-decoration:none;display:block;">→ Annonce</a>` : ''}
+        <button data-open-viewer="${idx}" style="${btnStyle} #16150f;background:#16150f;color:#f5f3ee;flex:1;">🖼 Voir l'annonce</button>
+        ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="${btnStyle} #d0ccc3;background:#edeae3;color:#16150f;flex:1;text-decoration:none;display:block;">→ Annonce</a>` : ''}
       </div>
     </div>`;
 }
