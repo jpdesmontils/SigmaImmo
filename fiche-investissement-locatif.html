@@ -194,6 +194,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 .cond-item:last-child{border-bottom:none}
 .cond-num{font-family:var(--font-m);font-size:10px;color:var(--cond);font-weight:700;min-width:20px;padding-top:1px}
 
+/* ── ANNONCE SOURCE ── */
+.source-annonce{margin:20px 32px 0;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:4px}
+.source-annonce h2{font-family:var(--font-d);font-size:18px;margin-bottom:5px}.source-annonce p{color:var(--ink-2);line-height:1.65}.source-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:14px}.source-gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;background:var(--card)}.source-meta{font:10px var(--font-m);color:var(--ink-3);margin-top:8px}
 /* ── SOURCES ── */
 .sources-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:20px}
 .src-item{font-size:11px;color:var(--ink-3);line-height:1.5}
@@ -213,6 +216,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
   .risq-hdr,.risq-row{grid-template-columns:1fr}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/4.2.0/mustache.min.js"></script>
 </head>
 <body>
 
@@ -286,6 +290,15 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
     </div>
   </div>
 </div>
+
+<section class="source-annonce" id="source-annonce" hidden></section>
+<script id="source-annonce-template" type="x-tmpl-mustache">
+  <h2>Annonce source</h2>
+  <p>{{title}}</p>
+  <div class="source-meta">{{price}} · {{location}} · {{source}}</div>
+  {{#description}}<p>{{description}}</p>{{/description}}
+  {{#images.length}}<div class="source-gallery">{{#images}}<img src="{{url}}" alt="Photo de l'annonce source" loading="lazy">{{/images}}</div>{{/images.length}}
+</script>
 
 <!-- ══ TABS ══ -->
 <nav class="tabs-nav" role="tablist">
@@ -849,6 +862,22 @@ function show(id){
   document.getElementById(id).classList.add('active');
   event.currentTarget.classList.add('active');
 }
+async function renderSourceAnnonce() {
+  const listingId = new URLSearchParams(location.search).get('listing');
+  if (!listingId) return;
+  try {
+    const response = await fetch('https://solenis-studio.fr/sigma-immo/api/listings.php?limit=500');
+    const payload = await response.json();
+    const listing = (payload.results || payload.items || []).find(item => String(item.id) === listingId);
+    if (!listing) return;
+    const images = (listing.images || listing.photos || []).map(image => ({ url: typeof image === 'string' ? image : image.url })).filter(image => image.url);
+    const context = { title: listing.title || 'Annonce immobilière', price: listing.price ? new Intl.NumberFormat('fr-FR', {style:'currency', currency:'EUR', maximumFractionDigits:0}).format(listing.price) : (listing.priceText || 'Prix non renseigné'), location: [listing.city, listing.postalCode].filter(Boolean).join(' ') || listing.location || '', source: listing.source || listing.agency || '', description: listing.description || '', images };
+    const target = document.getElementById('source-annonce');
+    target.innerHTML = Mustache.render(document.getElementById('source-annonce-template').innerHTML, context);
+    target.hidden = false;
+  } catch (error) { console.warn('Annonce source indisponible', error); }
+}
+renderSourceAnnonce();
 </script>
 </body>
 </html>

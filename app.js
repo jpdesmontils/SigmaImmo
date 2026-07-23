@@ -33,6 +33,7 @@ const viewer = {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('[ImmoAgg] DOM prêt, init...');
   initViewSwitcher();
+  initInAppNavigation();
   initFilters();
   initViewer();
   initDeleteModal();
@@ -183,6 +184,85 @@ function resetFilters() {
   applyFiltersAndRender();
 }
 
+// ── Navigation In App ─────────────────────────────────────────
+function initInAppNavigation() {
+  document.querySelectorAll('[data-in-app-url]').forEach(btn => {
+    btn.addEventListener('click', () => openInApp(btn.dataset.inAppUrl, btn));
+  });
+  document.querySelector('[data-in-app-favorites]').addEventListener('click', showFavorites);
+}
+
+async function openInApp(url, activeButton, listing) {
+  closeViewer();
+  document.getElementById('view-switcher').hidden = true;
+  document.querySelector('.main').classList.add('in-app-mode');
+  ['gallery', 'list', 'map'].forEach(v => document.getElementById('view-' + v).classList.remove('active'));
+  document.getElementById('view-in-app').classList.add('active');
+  document.querySelectorAll('.in-app-nav-btn').forEach(btn => btn.classList.toggle('active', btn === activeButton));
+  const content = document.getElementById('in-app-content');
+  content.textContent = 'Chargement…';
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const guide = new DOMParser().parseFromString(await response.text(), 'text/html');
+    document.getElementById('in-app-styles').textContent = [...guide.querySelectorAll('style')].map(style => style.textContent).join('\n');
+    guide.querySelectorAll('script, .site-header').forEach(node => node.remove());
+    content.innerHTML = guide.body.innerHTML;
+    bindInAppTabs(content);
+    if (listing) renderInAppSourceAnnonce(content, listing);
+  } catch (error) {
+    console.error('[ImmoAgg] Chargement In App impossible:', error);
+    content.innerHTML = '<div class="empty-state"><strong>Contenu indisponible</strong><span>Réessayez dans quelques instants.</span></div>';
+  }
+  if (typeof closeSidebar === 'function') closeSidebar();
+}
+
+function bindInAppTabs(content) {
+  content.querySelectorAll('.tab-btn').forEach(button => {
+    const match = button.getAttribute('onclick')?.match(/show\('([^']+)'\)/);
+    button.removeAttribute('onclick');
+    if (!match) return;
+    button.addEventListener('click', () => {
+      content.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      content.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
+      content.querySelector('#' + match[1])?.classList.add('active');
+      button.classList.add('active');
+    });
+  });
+}
+
+function renderInAppSourceAnnonce(content, listing) {
+  const target = content.querySelector('#source-annonce');
+  if (!target) return;
+  const images = getImages(listing);
+  const title = listing.title || 'Annonce immobilière';
+  target.hidden = false;
+  target.innerHTML = '<h2>Annonce source</h2><p></p><div class="source-meta"></div>';
+  target.querySelector('p').textContent = listing.description || title;
+  target.querySelector('.source-meta').textContent = [listing.price ? formatPrice(listing.price) : listing.priceText, getLoc(listing), listing.source || listing.agency].filter(Boolean).join(' · ');
+  if (images.length) {
+    const gallery = document.createElement('div'); gallery.className = 'source-gallery';
+    images.forEach(src => { const image = document.createElement('img'); image.src = src; image.alt = 'Photo de l’annonce source'; image.loading = 'lazy'; gallery.append(image); });
+    target.append(gallery);
+  }
+}
+
+function showFavorites() {
+  document.getElementById('view-in-app').classList.remove('active');
+  document.getElementById('in-app-content').replaceChildren();
+  document.getElementById('in-app-styles').textContent = '';
+  document.getElementById('view-switcher').hidden = false;
+  document.querySelector('.main').classList.remove('in-app-mode');
+  currentView = 'gallery';
+  document.querySelectorAll('.view-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === 'gallery'));
+  document.getElementById('view-gallery').classList.add('active');
+  document.querySelectorAll('.in-app-nav-btn').forEach(btn => btn.classList.toggle('active', btn.hasAttribute('data-in-app-favorites')));
+  renderGallery();
+  if (typeof closeSidebar === 'function') closeSidebar();
+}
+
+function openFicheInApp(item) { openInApp('fiche-investissement-locatif.html', null, item); }
+
 // ── Vue switcher ──────────────────────────────────────────────
 function initViewSwitcher() {
   document.querySelectorAll('.view-btn').forEach(btn => {
@@ -219,7 +299,7 @@ function renderGallery() {
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
       // Ne pas ouvrir la visionneuse si clic sur un bouton action
-      if (e.target.closest('.card-btn-delete') || e.target.closest('.card-btn-map') || e.target.closest('.card-btn-tag')) return;
+      if (e.target.closest('.card-btn-delete') || e.target.closest('.card-btn-map') || e.target.closest('.card-btn-tag') || e.target.closest('.card-btn-fiche')) return;
       openViewer(parseInt(card.dataset.idx));
     });
   });
@@ -231,6 +311,10 @@ function renderGallery() {
       const idx = parseInt(btn.dataset.idx);
       showOnMap(idx);
     });
+  });
+
+  grid.querySelectorAll('.card-btn-fiche').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); openFicheInApp(filtered[parseInt(btn.dataset.idx)]); });
   });
 
   // Boutons tag sélection
@@ -267,11 +351,10 @@ function cardHTML(item, idx) {
   const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag');
   const btnInvest = selectionButtonHTML(idx, 'invest', 'card-btn-tag');
 
-  // Lien vers la fiche d'opportunité — affiché uniquement si l'annonce a déjà une fiche
-  // renseignée (champ item.ficheUrl). Aucune génération de fiche ici.
-  const hasFiche = !!item.ficheUrl;
+  // La fiche d'analyse de démonstration est disponible pour chaque annonce.
+  const hasFiche = true;
   const btnFiche = hasFiche
-    ? `<a class="card-btn-fiche" href="${esc(item.ficheUrl)}" target="_blank" rel="noopener" title="Voir la fiche d'opportunité" onclick="event.stopPropagation()">📄</a>`
+    ? `<button class="card-btn-fiche" data-idx="${idx}" title="Voir la fiche dans l'application">📄</button>`
     : '';
 
   return `
@@ -337,9 +420,7 @@ async function renderList() {
       : '<div class="list-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface2)">🏠</div>';
     var cp = item.postalCode ? '<br><small style="color:var(--muted)">' + esc(item.postalCode) + ' · ' + esc(getDept(item)) + '</small>' : '<br><small style="color:var(--muted)">' + esc(getDept(item)) + '</small>';
 
-    var ficheLink = item.ficheUrl
-      ? '<a href="' + esc(item.ficheUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--go);font-size:12px;">📄 Fiche</a>'
-      : '';
+    var ficheLink = '<button type="button" onclick="event.stopPropagation();openFicheInApp(filtered[' + idx + '])" style="color:var(--go);font-size:12px;border:0;background:none;cursor:pointer;">📄 Fiche In App</button>';
 
     return '<tr style="cursor:pointer" onclick="openViewer(' + idx + ')">'
       + '<td>' + thumb + '</td>'
@@ -658,7 +739,7 @@ function renderViewerInfo(item) {
   const sel = item.selection || '';
 
   document.getElementById('viewer-tags').innerHTML =
-    '<span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(sel) + (item.ficheUrl ? '<span class="tag tag-fiche">📄 Fiche</span>' : '');
+    '<span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(sel) + '<span class="tag tag-fiche">📄 Fiche</span>';
 
   document.getElementById('viewer-title').textContent = item.title || 'Annonce immobilière';
 
@@ -701,10 +782,11 @@ function renderViewerInfo(item) {
   if (linkUrl) { link.href = linkUrl; link.style.display = ''; }
   else { link.style.display = 'none'; }
 
-  // Lien fiche d'opportunité — visible uniquement si déjà renseigné (item.ficheUrl)
+  // La fiche s'ouvre dans le cadre de l'application, jamais dans un nouvel onglet.
   const ficheLink = document.getElementById('viewer-fiche-link');
-  if (item.ficheUrl) { ficheLink.href = item.ficheUrl; ficheLink.hidden = false; }
-  else { ficheLink.hidden = true; }
+  ficheLink.href = '#';
+  ficheLink.onclick = e => { e.preventDefault(); openFicheInApp(item); };
+  ficheLink.hidden = false;
 }
 
 function viewerStatsHTML(item) {
@@ -938,3 +1020,4 @@ function debounce(fn, delay) {
 }
 
 window.openViewer = openViewer;
+window.openFicheInApp = openFicheInApp;
