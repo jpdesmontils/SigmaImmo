@@ -5,6 +5,8 @@
 // PHP 7.0+, pas de dépendances
 // ============================================================
 
+require_once __DIR__ . '/logger.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -49,11 +51,10 @@ function processFavorites($incoming) {
     $store = deduplicateStore($raw, 'id');
     $added = 0; $updated = 0;
 
-    // DEBUG temporaire
-    $first = isset($incoming[0]) ? json_encode(array_slice($incoming[0], 0, 4, true)) : 'vide';
-    file_put_contents(DATA_DIR . 'debug.log',
-        date('Y-m-d H:i:s') . " recu=" . count($incoming) . " premier=" . $first . "\n",
-        FILE_APPEND);
+    appLog('app', 'sync.favorites_received', [
+        'count' => count($incoming),
+        'first_id' => isset($incoming[0]['id']) ? (string)$incoming[0]['id'] : null
+    ]);
 
     foreach ($incoming as $listing) {
         // Construire l'URL depuis l'id si absente

@@ -5,6 +5,8 @@
 // PHP 7.0+, pas de dépendances
 // ============================================================
 
+require_once __DIR__ . '/logger.php';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
@@ -22,27 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 // ── Config ────────────────────────────────────────────────────
 define('DATA_DIR', __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
-define('DEBUG_FILE', DATA_DIR . 'debug_listings.log');
+define('ANALYSIS_JOBS_DIR', DATA_DIR . 'analyses/jobs/');
 
-// ── Debug ─────────────────────────────────────────────────────
-function debugLog($label, $data = null) {
-    if (!is_dir(DATA_DIR)) {
-        @mkdir(DATA_DIR, 0755, true);
-    }
-
-    $line = date('Y-m-d H:i:s') . ' | ' . $label;
-
-    if ($data !== null) {
-        $line .= ' | ' . json_encode($data, JSON_UNESCAPED_UNICODE);
-    }
-
-    @file_put_contents(DEBUG_FILE, $line . "\n", FILE_APPEND);
-}
-
-debugLog('REQUEST', [
+// ── Journalisation ─────────────────────────────────────────────
+appLog('app', 'listings.request', [
     'method' => $_SERVER['REQUEST_METHOD'],
     'query' => $_GET,
-    'data_dir' => DATA_DIR,
     'favorites_exists' => file_exists(FAVORITES_FILE)
 ]);
 
@@ -53,6 +40,19 @@ $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
 
 // ── Load data ─────────────────────────────────────────────────
 $items = array_values(loadJson(FAVORITES_FILE, []));
+
+// Expose uniquement la disponibilité locale des analyses, jamais leur contenu.
+foreach ($items as &$item) {
+    $id = isset($item['id']) ? (string)$item['id'] : '';
+    $safeId = preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) ? $id : '';
+    $item['analyses'] = [
+        'locatif' => $safeId !== '' && is_file(DATA_DIR . 'analyses/locatif/' . $safeId . '.json'),
+        'mdb' => $safeId !== '' && is_file(DATA_DIR . 'analyses/mdb/' . $safeId . '.json')
+    ];
+    $job = $safeId !== '' ? loadJson(ANALYSIS_JOBS_DIR . $safeId . '.json', []) : [];
+    $item['analysisRunning'] = ($job['status'] ?? '') === 'running';
+}
+unset($item);
 
 // ── Search ────────────────────────────────────────────────────
 if ($q !== '') {
@@ -116,7 +116,7 @@ $response = [
     'ts' => time()
 ];
 
-debugLog('RESPONSE', [
+appLog('app', 'RESPONSE', [
     'total' => $total,
     'count' => count($items),
     'first' => isset($items[0]) ? $items[0] : null
@@ -128,21 +128,21 @@ exit;
 // ── Utils ─────────────────────────────────────────────────────
 function loadJson($file, $default) {
     if (!file_exists($file)) {
-        debugLog('LOAD_JSON_MISSING', ['file' => $file]);
+        appLog('app', 'LOAD_JSON_MISSING', ['file' => $file]);
         return $default;
     }
 
     $content = file_get_contents($file);
 
     if ($content === false || trim($content) === '') {
-        debugLog('LOAD_JSON_EMPTY', ['file' => $file]);
+        appLog('app', 'LOAD_JSON_EMPTY', ['file' => $file]);
         return $default;
     }
 
     $decoded = json_decode($content, true);
 
     if (!is_array($decoded)) {
-        debugLog('LOAD_JSON_INVALID', [
+        appLog('app', 'LOAD_JSON_INVALID', [
             'file' => $file,
             'error' => json_last_error_msg(),
             'preview' => substr($content, 0, 500)
@@ -150,7 +150,7 @@ function loadJson($file, $default) {
         return $default;
     }
 
-    debugLog('LOAD_JSON_OK', [
+    appLog('app', 'LOAD_JSON_OK', [
         'file' => $file,
         'count' => count($decoded)
     ]);
