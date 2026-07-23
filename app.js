@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initFilters();
   initViewer();
   initDeleteModal();
+  initAnalysisModal();
   await loadData();
 });
 
@@ -281,7 +282,8 @@ function showFavorites() {
   if (typeof closeSidebar === 'function') closeSidebar();
 }
 
-function openFicheInApp(item) { openInApp('fiche-investissement-locatif.html', null, item); }
+function analysisType(item) { return item.analyses && item.analyses.locatif ? 'locatif' : (item.analyses && item.analyses.mdb ? 'mdb' : null); }
+function openFicheInApp(item) { const type = analysisType(item); if (!type) return; openInApp(type === 'mdb' ? 'fiche-mdb.html?id=' + encodeURIComponent(item.id) : 'fiche-investissement-locatif.html?listing=' + encodeURIComponent(item.id), null, item); }
 
 // ── Vue switcher ──────────────────────────────────────────────
 function initViewSwitcher() {
@@ -319,7 +321,7 @@ function renderGallery() {
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
       // Ne pas ouvrir la visionneuse si clic sur un bouton action
-      if (e.target.closest('.card-btn-delete') || e.target.closest('.card-btn-map') || e.target.closest('.card-btn-tag') || e.target.closest('.card-btn-fiche')) return;
+      if (e.target.closest('.card-btn-delete') || e.target.closest('.card-btn-map') || e.target.closest('.card-btn-tag') || e.target.closest('.card-btn-fiche') || e.target.closest('.card-btn-analyze')) return;
       openViewer(parseInt(card.dataset.idx));
     });
   });
@@ -333,9 +335,8 @@ function renderGallery() {
     });
   });
 
-  grid.querySelectorAll('.card-btn-fiche').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); openFicheInApp(filtered[parseInt(btn.dataset.idx)]); });
-  });
+  grid.querySelectorAll('.card-btn-fiche').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openFicheInApp(filtered[parseInt(btn.dataset.idx)]); }));
+  grid.querySelectorAll('.card-btn-analyze').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openAnalysisModal(filtered[parseInt(btn.dataset.idx)]); }));
 
   // Boutons tag sélection
   grid.querySelectorAll('.card-btn-tag').forEach(btn => {
@@ -371,11 +372,10 @@ function cardHTML(item, idx) {
   const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag');
   const btnInvest = selectionButtonHTML(idx, 'invest', 'card-btn-tag');
 
-  // La fiche d'analyse de démonstration est disponible pour chaque annonce.
-  const hasFiche = true;
-  const btnFiche = hasFiche
-    ? `<button class="card-btn-fiche" data-idx="${idx}" title="Voir la fiche dans l'application">📄</button>`
-    : '';
+  const isInvest = sel === 'invest';
+  const hasFiche = isInvest && !!analysisType(item);
+  const btnFiche = hasFiche ? `<button class="card-btn-fiche" data-idx="${idx}" title="Voir la fiche d'investissement">📄</button>` : '';
+  const btnAnalyze = isInvest ? `<button class="card-btn-analyze" data-idx="${idx}" title="Analyser l'opportunité">🤖</button>` : '';
 
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
@@ -397,7 +397,7 @@ function cardHTML(item, idx) {
           ${btnEcart}
           ${btnInvest}
           <button class="card-btn-map" data-idx="${idx}" title="Voir sur la carte">🗺</button>
-          ${btnFiche}
+          ${btnFiche}${btnAnalyze}
           <button class="card-btn-delete" data-idx="${idx}" title="Supprimer">🗑</button>
         </div>
       </div>
@@ -440,7 +440,7 @@ async function renderList() {
       : '<div class="list-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface2)">🏠</div>';
     var cp = item.postalCode ? '<br><small style="color:var(--muted)">' + esc(item.postalCode) + ' · ' + esc(getDept(item)) + '</small>' : '<br><small style="color:var(--muted)">' + esc(getDept(item)) + '</small>';
 
-    var ficheLink = '<button type="button" onclick="event.stopPropagation();openFicheInApp(filtered[' + idx + '])" style="color:var(--go);font-size:12px;border:0;background:none;cursor:pointer;">📄 Fiche In App</button>';
+    var ficheLink = analysisType(item) ? '<button type="button" onclick="event.stopPropagation();openFicheInApp(filtered[' + idx + '])" style="color:var(--go);font-size:12px;border:0;background:none;cursor:pointer;">📄 Fiche In App</button>' : (item.selection === 'invest' ? '<button type="button" onclick="event.stopPropagation();openAnalysisModal(filtered[' + idx + '])" style="color:var(--warn);font-size:12px;border:0;background:none;cursor:pointer;">🤖 Analyser</button>' : '');
 
     return '<tr style="cursor:pointer" onclick="openViewer(' + idx + ')">'
       + '<td>' + thumb + '</td>'
@@ -758,8 +758,8 @@ function renderViewerInfo(item) {
   const idx = viewer.listingIndex;
   const sel = item.selection || '';
 
-  document.getElementById('viewer-tags').innerHTML =
-    '<span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(sel) + '<span class="tag tag-fiche">📄 Fiche</span>';
+  const type = analysisType(item);
+  document.getElementById('viewer-tags').innerHTML = '<span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(sel) + (type ? '<span class="tag tag-fiche">📄 Fiche</span>' : '');
 
   document.getElementById('viewer-title').textContent = item.title || 'Annonce immobilière';
 
@@ -804,9 +804,9 @@ function renderViewerInfo(item) {
 
   // La fiche s'ouvre dans le cadre de l'application, jamais dans un nouvel onglet.
   const ficheLink = document.getElementById('viewer-fiche-link');
-  ficheLink.href = '#';
-  ficheLink.onclick = e => { e.preventDefault(); openFicheInApp(item); };
-  ficheLink.hidden = false;
+  if (type) { ficheLink.href = '#'; ficheLink.textContent = '📄 Fiche In App'; ficheLink.onclick = e => { e.preventDefault(); openFicheInApp(item); }; ficheLink.hidden = false; }
+  else if (sel === 'invest') { ficheLink.href = '#'; ficheLink.textContent = '🤖 Analyser'; ficheLink.onclick = e => { e.preventDefault(); openAnalysisModal(item); }; ficheLink.hidden = false; }
+  else ficheLink.hidden = true;
 }
 
 function viewerStatsHTML(item) {
@@ -976,6 +976,29 @@ async function confirmDelete() {
   applyFiltersAndRender();
 }
 
+// ── Analyse OpenAI ─────────────────────────────────────────────
+let analysisTarget = null, analysisPoll = null;
+function initAnalysisModal() {
+  document.getElementById('analysis-modal-cancel').addEventListener('click', closeAnalysisModal);
+  document.getElementById('analysis-modal').addEventListener('click', e => { if (e.target.id === 'analysis-modal') closeAnalysisModal(); });
+  document.querySelectorAll('[data-analysis-type]').forEach(btn => btn.addEventListener('click', () => startAnalysis(btn.dataset.analysisType)));
+}
+function openAnalysisModal(item) {
+  if (!item || item.selection !== 'invest') return;
+  analysisTarget = item; const a = item.analyses || {};
+  document.getElementById('analysis-modal-title').textContent = item.title || 'cette annonce';
+  document.getElementById('analysis-overwrite-note').hidden = !a.locatif && !a.mdb;
+  document.getElementById('analysis-modal').classList.add('open');
+}
+function closeAnalysisModal() { analysisTarget = null; document.getElementById('analysis-modal').classList.remove('open'); }
+async function startAnalysis(type) {
+  const item = analysisTarget; if (!item) return;
+  closeAnalysisModal(); showToast('Analyse en cours : vous serez notifié à la fin.', 'info');
+  try { const r = await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:item.id,type})}); const data=await r.json(); if(!r.ok) throw Error(data.error||'Démarrage impossible'); pollAnalysis(item, type); } catch(e) { showToast('Échec : '+e.message, 'error'); }
+}
+function pollAnalysis(item, type) { clearInterval(analysisPoll); analysisPoll=setInterval(async () => { try { const r=await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php?id='+encodeURIComponent(item.id)); const d=await r.json(), job=d.job||{}; if(job.status==='completed'){clearInterval(analysisPoll); item.analyses=d.analyses; showToast('Analyse terminée avec succès.', 'success'); applyFiltersAndRender();} if(job.status==='failed'){clearInterval(analysisPoll); showToast('Échec de l’analyse : '+(job.error||'erreur inconnue'), 'error');} } catch(e) {} }, 2500); }
+function showToast(message, kind) { const el=document.createElement('div'); el.className='app-toast '+kind; el.textContent=message; document.body.append(el); setTimeout(()=>el.remove(), 6000); }
+
 // ── Helpers ───────────────────────────────────────────────────
 function getImageUrl(item) {
   if (item.imageUrl)    return item.imageUrl;
@@ -1041,3 +1064,4 @@ function debounce(fn, delay) {
 
 window.openViewer = openViewer;
 window.openFicheInApp = openFicheInApp;
+window.openAnalysisModal = openAnalysisModal;
