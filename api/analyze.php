@@ -60,13 +60,17 @@ if (!function_exists('exec')) {
 if (!is_dir(dirname($launcherLog)) && !@mkdir(dirname($launcherLog), 0755, true) && !is_dir(dirname($launcherLog))) {
     failJob($path, $job, 'Répertoire de logs du worker inaccessible.');
 }
-$command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/analyze_worker.php') . ' ' . escapeshellarg($id) . ' ' . escapeshellarg($type) . ' >> ' . escapeshellarg($launcherLog) . ' 2>&1 &';
+$phpBinary = PHP_BINARY ?: '/usr/bin/php';
+if (!is_executable($phpBinary)) {
+    failJob($path, $job, 'Le binaire PHP CLI est introuvable ou non exécutable : ' . $phpBinary);
+}
+$command = escapeshellarg($phpBinary) . ' ' . escapeshellarg(__DIR__ . '/analyze_worker.php') . ' ' . escapeshellarg($id) . ' ' . escapeshellarg($type) . ' >> ' . escapeshellarg($launcherLog) . ' 2>&1 &';
 @exec($command, $output, $exitCode);
 if ($exitCode !== 0) {
     failJob($path, $job, 'Impossible de démarrer le traitement en arrière-plan.');
     aiLog('analysis.worker_start_failed', ['id' => $id, 'type' => $type, 'exit_code' => $exitCode]);
 }
-aiLog('analysis.worker_spawned', ['id' => $id, 'type' => $type, 'launcher_log' => $launcherLog]);
+aiLog('analysis.worker_spawned', ['id' => $id, 'type' => $type, 'php_binary' => $phpBinary, 'launcher_log' => $launcherLog]);
 echo json_encode(['ok' => true, 'job' => $job], JSON_UNESCAPED_UNICODE);
 
 function validId($id) { return is_string($id) && preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id); }
