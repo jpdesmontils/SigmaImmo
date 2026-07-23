@@ -93,6 +93,8 @@ function initDeleteModal() {
 
 // ── Filtres ───────────────────────────────────────────────────
 function initFilters() {
+  // Les filtres ont été remplacés par la navigation des guides In App.
+  if (!document.getElementById('f-city')) return;
   const debounced = debounce(applyFiltersAndRender, 300);
 
   document.getElementById('f-city').addEventListener('input', e => {
