@@ -135,12 +135,18 @@
 
     /* ── Navigation In App ───────────────────────────────────── */
     .in-app-nav { display:flex; flex-direction:column; gap:4px; }
-    .in-app-nav-title { font-family:var(--font-m); font-size:10px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .in-app-nav-title { font-family:var(--font-m); font-size:10px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); }
     .in-app-nav-btn { width:100%; border:1px solid transparent; border-radius:4px; background:transparent; color:var(--text-2); padding:11px 10px; text-align:left; cursor:pointer; font:500 13px var(--font); transition:background .15s,border-color .15s,color .15s; }
     .in-app-nav-btn:hover { background:var(--surface2); color:var(--text); }
     .in-app-nav-btn.active { background:var(--surface2); border-color:var(--border); color:var(--text); font-weight:600; }
     .in-app-nav-btn small { display:block; margin-top:3px; color:var(--muted); font:10px var(--font-m); }
     .in-app-nav-separator { border:0; border-top:1px solid var(--border); margin:10px 0; }
+    .in-app-nav-group-toggle { display:flex; align-items:center; justify-content:space-between; width:100%; border:0; background:transparent; cursor:pointer; padding:0 0 8px; margin-bottom:8px; border-bottom:1px solid var(--border); }
+    .in-app-nav-group-toggle:hover .in-app-nav-title { color:var(--text); }
+    .in-app-nav-chevron { color:var(--muted); font-size:10px; transition:transform .15s; }
+    .in-app-nav-group-toggle[aria-expanded="false"] .in-app-nav-chevron { transform:rotate(-90deg); }
+    .in-app-nav-group-items { display:flex; flex-direction:column; gap:4px; overflow:hidden; }
+    .in-app-nav-group-items[hidden] { display:none; }
 
     /* ── Sidebar filtres ──────────────────────────────────────── */
     .layout {
@@ -860,7 +866,7 @@
   <div class="view-switcher" id="view-switcher">
     <button class="view-btn active" data-view="gallery" title="Galerie">⊞</button>
     <button class="view-btn" data-view="list" title="Liste">≡</button>
-    <button class="view-btn" data-view="map" title="Carte">⊙</button>
+    <button class="view-btn" data-view="map" title="Carte">🌐</button>
   </div>
 </header>
 
@@ -879,11 +885,17 @@
     <div class="filter-group"><h3>Sélection</h3><div class="selection-btns"><button class="selection-btn active" data-selection="all">Toutes</button><button class="selection-btn sel-shortlist" data-selection="shortlist">⭐ ShortList</button><button class="selection-btn sel-ecartee" data-selection="ecartee">✕ Écartées</button><button class="selection-btn sel-invest" data-selection="invest">$ Invest</button></div></div>
     <button class="btn-reset" id="btn-reset">↺ Réinitialiser les filtres</button>
     <hr class="in-app-nav-separator">
-    <nav class="in-app-nav" aria-label="Guides disponibles">
-      <div class="in-app-nav-title">Guides disponibles</div>
-      <button class="in-app-nav-btn" data-in-app-url="guide-mdb-division-parcellaire.html">Guide opérationnel — Marchand de biens<small>Division parcellaire · 100 k€ d'apport</small></button>
-      <button class="in-app-nav-btn" data-in-app-url="guide-investissement-locatif.html">Guide opérationnel — Investissement locatif<small>Sélection à mise en location · 125 k€ d'apport</small></button>
-      <button class="in-app-nav-btn active" data-in-app-favorites>⭐ Favoris<small>Galerie des annonces sauvegardées</small></button>
+    <nav class="in-app-nav" aria-label="Navigation">
+      <button class="in-app-nav-group-toggle" id="guides-toggle" aria-expanded="true" aria-controls="guides-list">
+        <span class="in-app-nav-title">Guides disponibles</span>
+        <span class="in-app-nav-chevron" aria-hidden="true">▾</span>
+      </button>
+      <div class="in-app-nav-group-items" id="guides-list">
+        <button class="in-app-nav-btn" data-in-app-url="guide-mdb-division-parcellaire.html">Guide opérationnel — Marchand de biens<small>Division parcellaire · 100 k€ d'apport</small></button>
+        <button class="in-app-nav-btn" data-in-app-url="guide-investissement-locatif.html">Guide opérationnel — Investissement locatif<small>Sélection à mise en location · 125 k€ d'apport</small></button>
+      </div>
+      <hr class="in-app-nav-separator">
+      <button class="in-app-nav-btn active" data-in-app-favorites>🖼 Galerie<small>Galerie des annonces sauvegardées</small></button>
     </nav>
   </aside>
 

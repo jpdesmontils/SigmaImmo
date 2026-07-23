@@ -192,6 +192,17 @@ function initInAppNavigation() {
     btn.addEventListener('click', () => openInApp(btn.dataset.inAppUrl, btn));
   });
   document.querySelector('[data-in-app-favorites]').addEventListener('click', showFavorites);
+  initGuidesToggle();
+}
+
+function initGuidesToggle() {
+  const toggle = document.getElementById('guides-toggle');
+  const list = document.getElementById('guides-list');
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!expanded));
+    list.hidden = expanded;
+  });
 }
 
 async function openInApp(url, activeButton, listing) {
@@ -208,9 +219,9 @@ async function openInApp(url, activeButton, listing) {
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const guide = new DOMParser().parseFromString(await response.text(), 'text/html');
     document.getElementById('in-app-styles').textContent = [...guide.querySelectorAll('style')].map(style => style.textContent).join('\n');
-    guide.querySelectorAll('script, .site-header').forEach(node => node.remove());
+    guide.querySelectorAll('.site-header').forEach(node => node.remove());
     content.innerHTML = guide.body.innerHTML;
-    bindInAppTabs(content);
+    await runInAppScripts(content);
     if (listing) renderInAppSourceAnnonce(content, listing);
   } catch (error) {
     console.error('[ImmoAgg] Chargement In App impossible:', error);
@@ -219,18 +230,25 @@ async function openInApp(url, activeButton, listing) {
   if (typeof closeSidebar === 'function') closeSidebar();
 }
 
-function bindInAppTabs(content) {
-  content.querySelectorAll('.tab-btn').forEach(button => {
-    const match = button.getAttribute('onclick')?.match(/show\('([^']+)'\)/);
-    button.removeAttribute('onclick');
-    if (!match) return;
-    button.addEventListener('click', () => {
-      content.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      content.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
-      content.querySelector('#' + match[1])?.classList.add('active');
-      button.classList.add('active');
+// Scripts injected via innerHTML never execute; re-create each <script> so the
+// guide's own tab-switching/simulator logic (showTab, calc…) actually runs.
+async function runInAppScripts(content) {
+  const scripts = [...content.querySelectorAll('script')];
+  for (const oldScript of scripts) {
+    const type = (oldScript.getAttribute('type') || '').toLowerCase();
+    if (type && type !== 'text/javascript' && type !== 'module') continue; // e.g. text/x-template data blocks: leave inert
+    const script = document.createElement('script');
+    for (const attr of oldScript.attributes) script.setAttribute(attr.name, attr.value);
+    script.textContent = oldScript.textContent;
+    await new Promise(resolve => {
+      if (script.src) {
+        script.addEventListener('load', resolve);
+        script.addEventListener('error', resolve);
+      }
+      oldScript.replaceWith(script);
+      if (!script.src) resolve();
     });
-  });
+  }
 }
 
 function renderInAppSourceAnnonce(content, listing) {
