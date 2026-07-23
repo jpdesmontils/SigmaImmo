@@ -762,6 +762,11 @@ function renderViewerInfo(item) {
   const idx = viewer.listingIndex;
   const sel = item.selection || '';
 
+  const eyebrow = [item.agency || sourceLabel(item.source), item.reference, getLoc(item)]
+    .filter(Boolean)
+    .join(' · ');
+  document.getElementById('viewer-eyebrow').textContent = eyebrow || 'Annonce sauvegardée';
+
   const type = analysisType(item);
   document.getElementById('viewer-tags').innerHTML = '<span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(sel) + (type ? '<span class="tag tag-fiche">📄 Fiche</span>' : '');
 
