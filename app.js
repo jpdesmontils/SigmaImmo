@@ -194,20 +194,65 @@ function initInAppNavigation() {
   document.querySelector('[data-in-app-favorites]').addEventListener('click', showFavorites);
 }
 
-function openInApp(url, activeButton) {
+async function openInApp(url, activeButton, listing) {
   closeViewer();
-  document.getElementById('in-app-frame').src = url;
   document.getElementById('view-switcher').hidden = true;
   document.querySelector('.main').classList.add('in-app-mode');
   ['gallery', 'list', 'map'].forEach(v => document.getElementById('view-' + v).classList.remove('active'));
   document.getElementById('view-in-app').classList.add('active');
   document.querySelectorAll('.in-app-nav-btn').forEach(btn => btn.classList.toggle('active', btn === activeButton));
+  const content = document.getElementById('in-app-content');
+  content.textContent = 'Chargement…';
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const guide = new DOMParser().parseFromString(await response.text(), 'text/html');
+    document.getElementById('in-app-styles').textContent = [...guide.querySelectorAll('style')].map(style => style.textContent).join('\n');
+    guide.querySelectorAll('script, .site-header').forEach(node => node.remove());
+    content.innerHTML = guide.body.innerHTML;
+    bindInAppTabs(content);
+    if (listing) renderInAppSourceAnnonce(content, listing);
+  } catch (error) {
+    console.error('[ImmoAgg] Chargement In App impossible:', error);
+    content.innerHTML = '<div class="empty-state"><strong>Contenu indisponible</strong><span>Réessayez dans quelques instants.</span></div>';
+  }
   if (typeof closeSidebar === 'function') closeSidebar();
 }
 
+function bindInAppTabs(content) {
+  content.querySelectorAll('.tab-btn').forEach(button => {
+    const match = button.getAttribute('onclick')?.match(/show\('([^']+)'\)/);
+    button.removeAttribute('onclick');
+    if (!match) return;
+    button.addEventListener('click', () => {
+      content.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      content.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
+      content.querySelector('#' + match[1])?.classList.add('active');
+      button.classList.add('active');
+    });
+  });
+}
+
+function renderInAppSourceAnnonce(content, listing) {
+  const target = content.querySelector('#source-annonce');
+  if (!target) return;
+  const images = getImages(listing);
+  const title = listing.title || 'Annonce immobilière';
+  target.hidden = false;
+  target.innerHTML = '<h2>Annonce source</h2><p></p><div class="source-meta"></div>';
+  target.querySelector('p').textContent = listing.description || title;
+  target.querySelector('.source-meta').textContent = [listing.price ? formatPrice(listing.price) : listing.priceText, getLoc(listing), listing.source || listing.agency].filter(Boolean).join(' · ');
+  if (images.length) {
+    const gallery = document.createElement('div'); gallery.className = 'source-gallery';
+    images.forEach(src => { const image = document.createElement('img'); image.src = src; image.alt = 'Photo de l’annonce source'; image.loading = 'lazy'; gallery.append(image); });
+    target.append(gallery);
+  }
+}
+
 function showFavorites() {
-  document.getElementById('in-app-frame').src = 'about:blank';
   document.getElementById('view-in-app').classList.remove('active');
+  document.getElementById('in-app-content').replaceChildren();
+  document.getElementById('in-app-styles').textContent = '';
   document.getElementById('view-switcher').hidden = false;
   document.querySelector('.main').classList.remove('in-app-mode');
   currentView = 'gallery';
@@ -218,10 +263,7 @@ function showFavorites() {
   if (typeof closeSidebar === 'function') closeSidebar();
 }
 
-function openFicheInApp(item) {
-  const listingId = item.id ? '?listing=' + encodeURIComponent(item.id) : '';
-  openInApp('fiche-investissement-locatif.html' + listingId, null);
-}
+function openFicheInApp(item) { openInApp('fiche-investissement-locatif.html', null, item); }
 
 // ── Vue switcher ──────────────────────────────────────────────
 function initViewSwitcher() {
