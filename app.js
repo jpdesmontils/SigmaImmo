@@ -376,8 +376,10 @@ function cardHTML(item, idx) {
   const isInvest = sel === 'invest';
   const hasFiche = isInvest && !!analysisType(item);
   const btnFiche = hasFiche ? `<button class="card-btn-fiche" data-idx="${idx}" title="Voir la fiche d'investissement">📄</button>` : '';
-  const btnAnalyze = isInvest ? (item.analysisRunning
-    ? `<button class="card-btn-analyze card-btn-analysis-running" disabled title="Analyse en cours">⏳</button>`
+  const btnAnalyze = isInvest ? (item.analysisStatus === 'queued'
+    ? `<button class="card-btn-analyze card-btn-analysis-queued" disabled title="Analyse en attente">⌛</button>`
+    : item.analysisStatus === 'running'
+    ? `<button class="card-btn-analyze card-btn-analysis-running" disabled title="Analyse en cours côté LLM"><span class="analysis-progress" aria-label="Analyse en cours"></span></button>`
     : `<button class="card-btn-analyze" data-idx="${idx}" title="Analyser l'opportunité">🤖</button>`) : '';
 
   return `
@@ -443,7 +445,7 @@ async function renderList() {
       : '<div class="list-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface2)">🏠</div>';
     var cp = item.postalCode ? '<br><small style="color:var(--muted)">' + esc(item.postalCode) + ' · ' + esc(getDept(item)) + '</small>' : '<br><small style="color:var(--muted)">' + esc(getDept(item)) + '</small>';
 
-    var ficheLink = item.analysisRunning ? '<span title="Analyse en cours" style="color:var(--muted);font-size:12px;">⏳ En cours</span>' : (analysisType(item) ? '<button type="button" onclick="event.stopPropagation();openFicheInApp(filtered[' + idx + '])" style="color:var(--go);font-size:12px;border:0;background:none;cursor:pointer;">📄 Fiche In App</button>' : (item.selection === 'invest' ? '<button type="button" onclick="event.stopPropagation();openAnalysisModal(filtered[' + idx + '])" style="color:var(--warn);font-size:12px;border:0;background:none;cursor:pointer;">🤖 Analyser</button>' : ''));
+    var ficheLink = item.analysisStatus === 'queued' ? '<span title="Analyse en attente" style="color:var(--muted);font-size:12px;">⌛ En attente</span>' : item.analysisStatus === 'running' ? '<span title="Analyse en cours côté LLM" style="color:var(--muted);font-size:12px;">◌ Analyse en cours</span>' : (analysisType(item) ? '<button type="button" onclick="event.stopPropagation();openFicheInApp(filtered[' + idx + '])" style="color:var(--go);font-size:12px;border:0;background:none;cursor:pointer;">📄 Fiche In App</button>' : (item.selection === 'invest' ? '<button type="button" onclick="event.stopPropagation();openAnalysisModal(filtered[' + idx + '])" style="color:var(--warn);font-size:12px;border:0;background:none;cursor:pointer;">🤖 Analyser</button>' : ''));
 
     return '<tr style="cursor:pointer" onclick="openViewer(' + idx + ')">'
       + '<td>' + thumb + '</td>'
@@ -815,7 +817,8 @@ function renderViewerInfo(item) {
 
   // La fiche s'ouvre dans le cadre de l'application, jamais dans un nouvel onglet.
   const ficheLink = document.getElementById('viewer-fiche-link');
-  if (item.analysisRunning) { ficheLink.removeAttribute('href'); ficheLink.textContent = '⏳ Analyse en cours'; ficheLink.onclick = null; ficheLink.hidden = false; ficheLink.style.opacity = '.65'; }
+  if (item.analysisStatus === 'queued') { ficheLink.removeAttribute('href'); ficheLink.textContent = '⌛ Analyse en attente'; ficheLink.onclick = null; ficheLink.hidden = false; ficheLink.style.opacity = '.65'; }
+  else if (item.analysisStatus === 'running') { ficheLink.removeAttribute('href'); ficheLink.textContent = '◌ Analyse en cours'; ficheLink.onclick = null; ficheLink.hidden = false; ficheLink.style.opacity = '.65'; }
   else if (type) { ficheLink.href = '#'; ficheLink.textContent = '📄 Fiche In App'; ficheLink.onclick = e => { e.preventDefault(); openFicheInApp(item); }; ficheLink.hidden = false; ficheLink.style.opacity = ''; }
   else if (sel === 'invest') { ficheLink.href = '#'; ficheLink.textContent = '🤖 Analyser'; ficheLink.onclick = e => { e.preventDefault(); openAnalysisModal(item); }; ficheLink.hidden = false; ficheLink.style.opacity = ''; }
   else ficheLink.hidden = true;
@@ -998,7 +1001,7 @@ function initAnalysisModal() {
   document.querySelectorAll('[data-analysis-type]').forEach(btn => btn.addEventListener('click', () => startAnalysis(btn.dataset.analysisType)));
 }
 function openAnalysisModal(item) {
-  if (!item || item.selection !== 'invest' || item.analysisRunning) return;
+  if (!item || item.selection !== 'invest' || item.analysisStatus) return;
   analysisTarget = item; const a = item.analyses || {};
   document.getElementById('analysis-modal-title').textContent = item.title || 'cette annonce';
   document.getElementById('analysis-overwrite-note').hidden = !a.locatif && !a.mdb;
@@ -1007,10 +1010,10 @@ function openAnalysisModal(item) {
 function closeAnalysisModal() { analysisTarget = null; document.getElementById('analysis-modal').classList.remove('open'); }
 async function startAnalysis(type) {
   const item = analysisTarget; if (!item) return;
-  closeAnalysisModal(); showToast('Analyse en cours : vous serez notifié à la fin.', 'info');
-  try { const r = await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:item.id,type})}); const data=await r.json(); if(!r.ok) throw Error(data.error||'Démarrage impossible'); item.analysisRunning = true; applyFiltersAndRender(); pollAnalysis(item, type); } catch(e) { showToast('Échec : '+e.message, 'error'); }
+  closeAnalysisModal(); showToast('Analyse mise en attente : vous serez notifié à la fin.', 'info');
+  try { const r = await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:item.id,type})}); const data=await r.json(); if(!r.ok) throw Error(data.error||'Démarrage impossible'); item.analysisStatus = data.job.status; applyFiltersAndRender(); pollAnalysis(item, type); } catch(e) { showToast('Échec : '+e.message, 'error'); }
 }
-function pollAnalysis(item, type) { clearInterval(analysisPoll); analysisPoll=setInterval(async () => { try { const r=await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php?id='+encodeURIComponent(item.id)); const d=await r.json(), job=d.job||{}; if(job.status==='completed'){clearInterval(analysisPoll); item.analysisRunning=false; item.analyses=d.analyses; showToast('Analyse terminée avec succès.', 'success'); applyFiltersAndRender();} if(job.status==='failed'){clearInterval(analysisPoll); item.analysisRunning=false; applyFiltersAndRender(); showToast('Échec de l’analyse : '+(job.error||'erreur inconnue'), 'error');} } catch(e) {} }, 2500); }
+function pollAnalysis(item, type) { clearInterval(analysisPoll); analysisPoll=setInterval(async () => { try { const r=await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php?id='+encodeURIComponent(item.id)); const d=await r.json(), job=d.job||{}; item.analysisStatus = job.status === 'queued' || job.status === 'running' ? job.status : null; if(job.status==='completed'){clearInterval(analysisPoll); item.analyses=d.analyses; showToast('Analyse terminée avec succès.', 'success'); applyFiltersAndRender();} if(job.status==='failed'){clearInterval(analysisPoll); applyFiltersAndRender(); showToast('Échec de l’analyse : '+(job.error||'erreur inconnue'), 'error');} } catch(e) {} }, 2500); }
 function showToast(message, kind) { const el=document.createElement('div'); el.className='app-toast '+kind; el.textContent=message; document.body.append(el); setTimeout(()=>el.remove(), 6000); }
 
 // ── Helpers ───────────────────────────────────────────────────
