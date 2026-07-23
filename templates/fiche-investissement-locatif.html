@@ -210,12 +210,18 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 /* ── FOOTER ── */
 .site-footer{margin-top:40px;border-top:1px solid var(--border);padding:16px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 
+/* ── RECALCUL ── */
+.recalculate-button{position:fixed;right:24px;bottom:24px;z-index:20;width:48px;height:48px;border:1px solid var(--cond-border);border-radius:50%;background:var(--cond-bg);color:var(--cond);font-size:21px;cursor:pointer;box-shadow:0 4px 14px rgba(22,21,15,.18);transition:transform .15s,background .15s,color .15s}
+.recalculate-button:hover:not(:disabled){background:var(--cond);color:#fff;transform:translateY(-2px)}
+.recalculate-button:disabled{cursor:wait;opacity:.7}
+
 @media(max-width:680px){
   .hero{padding:20px 16px 0}
   .hero-top{grid-template-columns:1fr}
   .tabs-nav{padding:0 16px}
   .tab-content{padding:20px 16px}
   .risq-hdr,.risq-row{grid-template-columns:1fr}
+  .recalculate-button{right:16px;bottom:16px}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/4.2.0/mustache.min.js"></script>
@@ -253,7 +259,47 @@ function makeContext(a) {
 async function render() {
   const app = document.getElementById('app');
   if (!analysisId) { app.className = 'error'; app.textContent = 'Identifiant d’analyse manquant.'; return; }
-  try { const endpoint = location.pathname.includes('/templates/') ? '../api/analysis.php' : 'api/analysis.php'; const response = await fetch(`${endpoint}?id=${encodeURIComponent(analysisId)}&type=locatif`); const payload = await response.json(); if (!response.ok || !payload.analysis) throw new Error(payload.error || 'Analyse indisponible'); document.title = `Fiche investissement locatif — ${payload.analysis.annonce?.reference_annonce || analysisId}`; app.className = ''; app.innerHTML = Mustache.render(document.getElementById('fiche-template').innerHTML, makeContext(payload.analysis)); app.querySelectorAll('.tab-btn').forEach(button => button.addEventListener('click', () => { app.querySelectorAll('.tab-content').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.tab)); app.querySelectorAll('.tab-btn').forEach(tab => tab.classList.toggle('active', tab === button)); })); } catch (error) { app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
+  try { const response = await fetch(`../api/analysis.php?id=${encodeURIComponent(analysisId)}&type=locatif`); const payload = await response.json(); if (!response.ok || !payload.analysis) throw new Error(payload.error || 'Analyse indisponible'); document.title = `Fiche investissement locatif — ${payload.analysis.annonce?.reference_annonce || analysisId}`; app.className = ''; app.innerHTML = Mustache.render(document.getElementById('fiche-template').innerHTML, makeContext(payload.analysis)); app.querySelectorAll('.tab-btn').forEach(button => button.addEventListener('click', () => { app.querySelectorAll('.tab-content').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.tab)); app.querySelectorAll('.tab-btn').forEach(tab => tab.classList.toggle('active', tab === button)); })); addRecalculateButton(); } catch (error) { app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
+}
+function addRecalculateButton() {
+  const button = document.createElement('button');
+  button.className = 'recalculate-button';
+  button.type = 'button';
+  button.title = 'Recalculer l’analyse locative';
+  button.setAttribute('aria-label', 'Recalculer l’analyse locative');
+  button.textContent = '🤖';
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    button.textContent = '⌛';
+    try {
+      const response = await fetch('../api/analyze.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: analysisId, type: 'locatif' }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Démarrage du recalcul impossible');
+      button.title = 'Recalcul en cours';
+      button.setAttribute('aria-label', 'Recalcul en cours');
+      const poll = setInterval(async () => {
+        try {
+          const statusResponse = await fetch(`../api/analyze.php?id=${encodeURIComponent(analysisId)}`);
+          const statusPayload = await statusResponse.json();
+          const status = statusPayload.job?.status;
+          if (status === 'completed') { clearInterval(poll); location.reload(); }
+          if (status === 'failed') {
+            clearInterval(poll);
+            button.disabled = false;
+            button.textContent = '🤖';
+            button.title = 'Recalculer l’analyse locative';
+            button.setAttribute('aria-label', 'Recalculer l’analyse locative');
+            alert(`Recalcul impossible : ${statusPayload.job.error || 'erreur inconnue'}`);
+          }
+        } catch (_) {}
+      }, 2500);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = '🤖';
+      alert(`Recalcul impossible : ${error.message}`);
+    }
+  });
+  document.body.append(button);
 }
 render();
 })();

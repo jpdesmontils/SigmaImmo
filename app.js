@@ -376,7 +376,8 @@ function cardHTML(item, idx) {
   const isInvest = sel === 'invest';
   const hasFiche = isInvest && !!analysisType(item);
   const btnFiche = hasFiche ? `<button class="card-btn-fiche" data-idx="${idx}" title="Voir la fiche d'investissement">📄</button>` : '';
-  const btnAnalyze = isInvest ? (item.analysisStatus === 'queued'
+  // Une analyse existante se relance depuis sa fiche locative, pas depuis la liste.
+  const btnAnalyze = isInvest && !hasFiche ? (item.analysisStatus === 'queued'
     ? `<button class="card-btn-analyze card-btn-analysis-queued" disabled title="Analyse en attente">⌛</button>`
     : item.analysisStatus === 'running'
     ? `<button class="card-btn-analyze card-btn-analysis-running" disabled title="Analyse en cours côté LLM"><span class="analysis-progress" aria-label="Analyse en cours"></span></button>`
@@ -1001,10 +1002,9 @@ function initAnalysisModal() {
   document.querySelectorAll('[data-analysis-type]').forEach(btn => btn.addEventListener('click', () => startAnalysis(btn.dataset.analysisType)));
 }
 function openAnalysisModal(item) {
-  if (!item || item.selection !== 'invest' || item.analysisStatus) return;
-  analysisTarget = item; const a = item.analyses || {};
+  if (!item || item.selection !== 'invest' || item.analysisStatus || analysisType(item)) return;
+  analysisTarget = item;
   document.getElementById('analysis-modal-title').textContent = item.title || 'cette annonce';
-  document.getElementById('analysis-overwrite-note').hidden = !a.locatif && !a.mdb;
   document.getElementById('analysis-modal').classList.add('open');
 }
 function closeAnalysisModal() { analysisTarget = null; document.getElementById('analysis-modal').classList.remove('open'); }
