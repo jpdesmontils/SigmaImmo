@@ -361,7 +361,7 @@
       margin-top: 8px;
     }
     /* Boutons uniformes sur les cartes */
-    .card-btn-map, .card-btn-delete, .card-btn-tag, .card-btn-fiche {
+    .card-btn-map, .card-btn-delete, .card-btn-tag, .card-btn-fiche, .card-btn-analyze {
       flex: 1;
       padding: 5px 0;
       border-radius: 3px;
@@ -381,6 +381,9 @@
     .card-btn-tag:hover    { background: var(--surface3);  color: var(--text); }
     .card-btn-fiche        { background: var(--go-bg); color: var(--go); border-color: var(--go-border); }
     .card-btn-fiche:hover  { background: var(--go); color: var(--bg); border-color: var(--go); }
+    .card-btn-analyze { background:var(--warn-bg); color:var(--warn); border-color:var(--warn-border); }
+    .app-toast { position:fixed;right:20px;bottom:20px;z-index:3000;padding:12px 16px;border-radius:4px;background:var(--text);color:var(--bg);box-shadow:0 8px 24px #0004; }
+    .app-toast.success{background:var(--go)} .app-toast.error{background:var(--danger)}
     .tag-shortlist-active { background: var(--go-bg)     !important; color: var(--go)     !important; border-color: var(--go-border)     !important; }
     .tag-ecartee-active   { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: var(--danger-border) !important; }
     .tag-invest-active    { background: var(--warn-bg)   !important; color: var(--warn)   !important; border-color: var(--warn-border)   !important; }
@@ -1017,6 +1020,9 @@
   </div>
 </div>
 
+
+<!-- Modale analyse -->
+<div class="delete-modal" id="analysis-modal"><div class="delete-modal-box"><h3>🤖 Analyser l’opportunité</h3><p id="analysis-modal-title"></p><p id="analysis-overwrite-note" hidden><strong>Une analyse existe déjà :</strong> le calcul sélectionné sera écrasé.</p><p>Choisissez le type d’analyse à lancer.</p><div class="delete-modal-actions"><button class="btn-modal-cancel" id="analysis-modal-cancel">Annuler</button><button class="btn-modal-confirm" data-analysis-type="locatif">Locatif</button><button class="btn-modal-confirm" data-analysis-type="mdb">MDB</button></div></div></div>
 <script>
   var sidebarEl = document.querySelector('.sidebar');
   var overlayEl = document.getElementById('sidebar-overlay');

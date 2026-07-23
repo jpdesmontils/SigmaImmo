@@ -54,6 +54,17 @@ $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
 // ── Load data ─────────────────────────────────────────────────
 $items = array_values(loadJson(FAVORITES_FILE, []));
 
+// Expose uniquement la disponibilité locale des analyses, jamais leur contenu.
+foreach ($items as &$item) {
+    $id = isset($item['id']) ? (string)$item['id'] : '';
+    $safeId = preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) ? $id : '';
+    $item['analyses'] = [
+        'locatif' => $safeId !== '' && is_file(DATA_DIR . 'analyses/locatif/' . $safeId . '.json'),
+        'mdb' => $safeId !== '' && is_file(DATA_DIR . 'analyses/mdb/' . $safeId . '.json')
+    ];
+}
+unset($item);
+
 // ── Search ────────────────────────────────────────────────────
 if ($q !== '') {
     $needle = mb_strtolower($q, 'UTF-8');
