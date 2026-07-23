@@ -1,5 +1,6 @@
 <?php
 /** Lance et suit les analyses OpenAI sans bloquer la requête HTTP. */
+require_once __DIR__ . '/logger.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -32,27 +33,31 @@ if (!is_dir(JOBS_DIR) && !mkdir(JOBS_DIR, 0755, true) && !is_dir(JOBS_DIR)) json
 
 $path = jobPath($id);
 $current = readJson($path);
-if (($current['status'] ?? '') === 'running') jsonError(409, 'Une analyse est déjà en cours pour cette annonce.');
+if (($current['status'] ?? '') === 'running') { aiLog('analysis.start_rejected_running', ['id' => $id, 'type' => $type]); jsonError(409, 'Une analyse est déjà en cours pour cette annonce.'); }
 
 $job = ['id' => $id, 'type' => $type, 'status' => 'running', 'started_at' => gmdate('c'), 'finished_at' => null, 'error' => null];
 // Le verrou exclusif évite que deux requêtes simultanées démarrent deux workers.
 $handle = @fopen($path, 'x');
 if ($handle === false) {
     $current = readJson($path);
-    if (($current['status'] ?? '') === 'running') jsonError(409, 'Une analyse est déjà en cours pour cette annonce.');
+    if (($current['status'] ?? '') === 'running') { aiLog('analysis.start_rejected_running', ['id' => $id, 'type' => $type]); jsonError(409, 'Une analyse est déjà en cours pour cette annonce.'); }
     if (!@file_put_contents($path, json_encode($job, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX)) jsonError(500, 'Écriture de la tâche impossible.');
 } else {
     fwrite($handle, json_encode($job, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
     fclose($handle);
 }
 
+aiLog('analysis.job_created', ['id' => $id, 'type' => $type]);
+
 $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/analyze_worker.php') . ' ' . escapeshellarg($id) . ' ' . escapeshellarg($type) . ' > /dev/null 2>&1 &';
 @exec($command, $output, $exitCode);
 if ($exitCode !== 0) {
     $job['status'] = 'failed'; $job['finished_at'] = gmdate('c'); $job['error'] = 'Impossible de démarrer le traitement en arrière-plan.';
     writeJson($path, $job);
+    aiLog('analysis.worker_start_failed', ['id' => $id, 'type' => $type, 'exit_code' => $exitCode]);
     jsonError(500, $job['error']);
 }
+aiLog('analysis.worker_started', ['id' => $id, 'type' => $type]);
 echo json_encode(['ok' => true, 'job' => $job], JSON_UNESCAPED_UNICODE);
 
 function validId($id) { return is_string($id) && preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id); }
