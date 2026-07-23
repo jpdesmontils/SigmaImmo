@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche opportunité — Immeuble Perpignan Saint-Martin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f3ee;
+  --surface:#ffffff;
+  --card:#edeae3;
+  --card-hi:#e4e1d8;
+  --border:#d0ccc3;
+  --border-hi:#a8a49b;
+  --ink:#16150f;
+  --ink-2:#5a5850;
+  --ink-3:#9a9890;
+  --go:#145a2e;
+  --go-bg:#d6f0df;
+  --go-border:#7ec99a;
+  --cond:#7a4108;
+  --cond-bg:#faefd5;
+  --cond-border:#e0a84a;
+  --nogo:#831515;
+  --nogo-bg:#fce8e8;
+  --nogo-border:#d97373;
+  --font-d:'Space Grotesk',sans-serif;
+  --font-b:'Inter',sans-serif;
+  --font-m:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+#app.loading,#app.error{max-width:960px;margin:48px auto;padding:20px 32px;font-family:var(--font-d);font-size:16px}
+#app.error{color:var(--nogo)}
+
+/* ── HEADER ── */
+.site-header{background:var(--ink);color:#f5f3ee;padding:18px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.site-logo{font-family:var(--font-d);font-size:14px;font-weight:600;letter-spacing:.02em}
+.site-logo span{font-weight:300;opacity:.55}
+.site-header-right{display:flex;align-items:center;gap:16px}
+.site-back{font-family:var(--font-m);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:rgba(245,243,238,.65);text-decoration:none;padding:4px 10px;border:1px solid rgba(245,243,238,.25);border-radius:3px;transition:color .15s,border-color .15s}
+.site-back:hover{color:#f5f3ee;border-color:rgba(245,243,238,.5)}
+.site-tag{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;opacity:.45}
+
+/* ── HERO ── */
+.hero{background:var(--surface);padding:32px 32px 0;border-bottom:1px solid var(--border)}
+.hero-top{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:0}
+.hero-eyebrow{font-family:var(--font-m);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.hero-title{font-family:var(--font-d);font-size:26px;font-weight:700;color:var(--ink);line-height:1.2;margin-bottom:5px}
+.hero-sub{font-size:13px;color:var(--ink-2);line-height:1.5}
+.verdict-block{text-align:right;flex-shrink:0}
+.verdict-pill{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:2px;font-family:var(--font-m);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid;margin-bottom:8px}
+.verdict-pill.go{color:var(--go);border-color:var(--go-border);background:var(--go-bg)}
+.verdict-pill.cond{color:var(--cond);border-color:var(--cond-border);background:var(--cond-bg)}
+.verdict-pill.nogo{color:var(--nogo);border-color:var(--nogo-border);background:var(--nogo-bg)}
+.verdict-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.score-circle-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:8px}
+.score-circle{position:relative;width:76px;height:76px}
+.score-circle svg{transform:rotate(-90deg)}
+.score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:var(--font-m);font-size:22px;font-weight:700;line-height:1}
+.score-denom{font-family:var(--font-m);font-size:10px;color:var(--ink-3)}
+.hero-date{font-family:var(--font-m);font-size:9px;color:var(--ink-3);letter-spacing:.06em}
+
+/* KPI strip dans le hero */
+.hero-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--border);border-top:1px solid var(--border)}
+.hkpi{background:var(--card);padding:14px 16px}
+.hkpi-l{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+.hkpi-v{font-family:var(--font-m);font-size:18px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:3px}
+.hkpi-v.g{color:var(--go)}.hkpi-v.w{color:var(--cond)}.hkpi-v.r{color:var(--nogo)}
+.hkpi-s{font-size:11px;color:var(--ink-3)}
+
+/* ── TABS ── */
+.tabs-nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto;gap:0;position:sticky;top:0;z-index:10}
+.tab-btn{font-family:var(--font-b);font-size:13px;font-weight:500;color:var(--ink-3);padding:13px 18px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{color:var(--ink);border-bottom-color:var(--ink)}
+.tab-content{display:none;padding:28px 32px;max-width:960px;margin:0 auto}
+.tab-content.active{display:block}
+
+/* ── SECTION TITLE ── */
+.stitle{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:18px;margin-top:28px}
+.stitle:first-child{margin-top:0}
+
+/* ── NARRATIVE ── */
+.narrative{background:var(--card);border-left:3px solid var(--cond);padding:14px 18px;font-size:13px;color:var(--ink-2);line-height:1.75;margin-bottom:20px}
+.narrative.go{border-left-color:var(--go)}
+.narrative.nogo{border-left-color:var(--nogo)}
+
+/* ── ALERTS ── */
+.alerts{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:10px 14px;border-radius:2px;font-size:12px;line-height:1.6;border:1px solid}
+.alert.g{background:var(--go-bg);border-color:var(--go-border);color:var(--go)}
+.alert.w{background:var(--cond-bg);border-color:var(--cond-border);color:var(--cond)}
+.alert.d{background:var(--nogo-bg);border-color:var(--nogo-border);color:var(--nogo)}
+.alert b{font-weight:600}
+.ai{flex-shrink:0;margin-top:1px}
+
+/* ── AXES GRID ── */
+.axes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+@media(max-width:680px){.axes-grid{grid-template-columns:1fr 1fr}}
+.axe-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:14px 15px;transition:border-color .15s}
+.axe-card:hover{border-color:var(--border-hi)}
+.axe-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.axe-name{font-family:var(--font-d);font-size:12px;font-weight:500;color:var(--ink)}
+.axe-poids{font-family:var(--font-m);font-size:9px;color:var(--ink-3);margin-top:2px}
+.axe-score-wrap{text-align:right}
+.axe-score{font-family:var(--font-m);font-size:20px;font-weight:700;line-height:1}
+.axe-verdict-lbl{font-family:var(--font-m);font-size:9px;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.score-bar{height:3px;background:var(--card-hi);border-radius:2px;margin-bottom:8px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:2px}
+.axe-comment{font-size:11px;color:var(--ink-3);line-height:1.5}
+.sh{color:var(--go)}.sh .score-bar-fill{background:var(--go)}
+.sm{color:var(--cond)}.sm .score-bar-fill{background:var(--cond)}
+.sl{color:var(--nogo)}.sl .score-bar-fill{background:var(--nogo)}
+
+/* ── KPI DETAIL TABLE ── */
+.detail-block{background:var(--surface);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.detail-hdr{display:flex;justify-content:space-between;align-items:center;padding:9px 15px;background:var(--card);border-bottom:1px solid var(--border)}
+.detail-hdr-name{font-family:var(--font-d);font-size:12px;font-weight:600;color:var(--ink)}
+.detail-hdr-score{font-family:var(--font-m);font-size:11px;font-weight:700;padding:2px 9px;border-radius:2px;border:1px solid}
+.detail-hdr-score.sh{color:var(--go);border-color:var(--go-border);background:var(--go-bg)}
+.detail-hdr-score.sm{color:var(--cond);border-color:var(--cond-border);background:var(--cond-bg)}
+.detail-hdr-score.sl{color:var(--nogo);border-color:var(--nogo-border);background:var(--nogo-bg)}
+.krow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:baseline;padding:8px 15px;border-bottom:1px solid var(--border);font-size:12px}
+.krow:last-child{border-bottom:none}
+.klbl{color:var(--ink-2)}
+.kval{font-family:var(--font-m);font-weight:500;color:var(--ink);white-space:nowrap}
+.kval.g{color:var(--go)}.kval.w{color:var(--cond)}.kval.r{color:var(--nogo)}
+.ksrc{font-family:var(--font-m);font-size:10px;color:var(--ink-3);white-space:nowrap}
+.kcomment{grid-column:1/-1;font-size:11px;color:var(--ink-3);padding-bottom:3px;line-height:1.5}
+
+/* ── SCÉNARIOS ── */
+.scenarios{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+@media(max-width:580px){.scenarios{grid-template-columns:1fr}}
+.scen-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.scen-hdr{padding:10px 14px;background:var(--card);border-bottom:1px solid var(--border);font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--ink)}
+.scen-row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 14px;border-bottom:1px solid var(--border);font-size:12px}
+.scen-row:last-of-type{border-bottom:none}
+.scen-lbl{color:var(--ink-3)}
+.scen-val{font-family:var(--font-m);font-weight:500;color:var(--ink)}
+.scen-foot{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--card-hi);border-top:1px solid var(--border-hi)}
+.scen-cf-lbl{font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.scen-cf-val{font-family:var(--font-m);font-size:17px;font-weight:700}
+.hypo{font-size:11px;color:var(--ink-3);line-height:1.65;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:3px;margin-bottom:20px}
+.hypo span{color:var(--ink-2)}
+
+/* ── REVENUS TABLE ── */
+.rev-table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.rev-table th{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding:8px 12px;background:var(--card-hi);border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:left}
+.rev-table th:last-child{border-right:none}
+.rev-table td{padding:8px 12px;font-size:12px;color:var(--ink-2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);vertical-align:top}
+.rev-table td:last-child{border-right:none}
+.rev-table tr:last-child td{border-bottom:none}
+.rev-table tr:hover td{background:var(--card)}
+.rev-table .total td{background:var(--card-hi);font-weight:600;border-top:1px solid var(--border-hi)}
+.lot-badge{display:inline-block;padding:1px 7px;border-radius:2px;font-family:var(--font-m);font-size:9px;border:1px solid;margin-right:4px}
+.lb-comm{color:var(--cond);border-color:var(--cond-border)}
+.lb-resi{color:var(--go);border-color:var(--go-border)}
+.mono{font-family:var(--font-m);color:var(--ink)}
+.tg{color:var(--go)!important;font-weight:500}.tw{color:var(--cond)!important}.tr{color:var(--nogo)!important}
+
+/* ── RISQUES ── */
+.risques{border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.risq-hdr{display:grid;grid-template-columns:88px 1fr 1fr auto;background:var(--card-hi);border-bottom:1px solid var(--border)}
+.rhc{padding:8px 12px;font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);border-right:1px solid var(--border)}
+.rhc:last-child{border-right:none;text-align:right}
+.risq-row{display:grid;grid-template-columns:88px 1fr 1fr auto;background:var(--surface);border-bottom:1px solid var(--border)}
+.risq-row:last-child{border-bottom:none}
+.risq-row:hover{background:var(--card)}
+.rcrit{padding:12px;display:flex;align-items:flex-start;justify-content:center;border-right:1px solid var(--border)}
+.rbadge{font-family:var(--font-m);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border:1px solid;border-radius:2px;white-space:nowrap}
+.rbadge.rc{color:var(--nogo);border-color:var(--nogo-border);background:var(--nogo-bg)}
+.rbadge.re{color:var(--cond);border-color:var(--cond-border);background:var(--cond-bg)}
+.rbadge.rm{color:var(--ink-3);border-color:var(--border)}
+.rbody{padding:10px 12px;border-right:1px solid var(--border)}
+.rtitle{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:2px}
+.rimpact{font-family:var(--font-m);font-size:10px}
+.raction{padding:10px 12px;font-size:11px;color:var(--ink-2);line-height:1.5;border-right:1px solid var(--border)}
+.rmarge{padding:10px 12px;font-family:var(--font-m);font-size:12px;font-weight:700;text-align:right;white-space:nowrap}
+
+/* ── UPSIDES ── */
+.upside-card{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;background:var(--surface);border:1px solid var(--go-border);border-radius:3px;padding:12px 15px;margin-bottom:8px}
+.upside-title{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.upside-desc{font-size:11px;color:var(--ink-3);line-height:1.5}
+.upside-val-lbl{font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px;text-align:right}
+.upside-val-num{font-family:var(--font-m);font-size:14px;font-weight:700;color:var(--go);text-align:right}
+.upside-meta{font-family:var(--font-m);font-size:9px;color:var(--ink-3);margin-top:2px;text-align:right}
+
+/* ── CONTRÔLES ── */
+.conditions{border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.cond-item{display:flex;gap:10px;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--ink-2)}
+.cond-item:last-child{border-bottom:none}
+.cond-num{font-family:var(--font-m);font-size:10px;color:var(--cond);font-weight:700;min-width:20px;padding-top:1px}
+
+/* ── ANNONCE SOURCE ── */
+.source-annonce{margin:20px 32px 0;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:4px}
+.source-annonce h2{font-family:var(--font-d);font-size:18px;margin-bottom:5px}.source-annonce p{color:var(--ink-2);line-height:1.65}.source-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:14px}.source-gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;background:var(--card)}.source-meta{font:10px var(--font-m);color:var(--ink-3);margin-top:8px}
+/* ── SOURCES ── */
+.sources-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:20px}
+.src-item{font-size:11px;color:var(--ink-3);line-height:1.5}
+.src-item::before{content:"→ ";color:var(--border-hi)}
+
+/* ── SCORE RADAR ── */
+.radar-wrap{display:flex;justify-content:center;margin-bottom:20px}
+
+/* ── FOOTER ── */
+.site-footer{margin-top:40px;border-top:1px solid var(--border);padding:16px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+
+@media(max-width:680px){
+  .hero{padding:20px 16px 0}
+  .hero-top{grid-template-columns:1fr}
+  .tabs-nav{padding:0 16px}
+  .tab-content{padding:20px 16px}
+  .risq-hdr,.risq-row{grid-template-columns:1fr}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/4.2.0/mustache.min.js"></script>
+</head>
+<body>
+<main id="app" class="loading">Chargement de l’analyse…</main>
+
+<script id="fiche-template" type="x-tmpl-mustache">
+<header class="site-header"><div class="site-logo">Analyse Investissement Locatif <span>· Fiche opportunité</span></div><div class="site-header-right"><a class="site-back" href="../index.html">← ImmoAgg</a><div class="site-tag">Prompt v{{promptVersion}} · Schema v{{schemaVersion}}</div></div></header>
+<div class="hero"><div class="hero-top"><div><div class="hero-eyebrow">{{source}} · Réf. {{reference}} · {{city}} ({{postalCode}}) · {{analysisDate}}</div><h1 class="hero-title">{{propertyType}} · {{surface}} m²<br>{{neighborhood}} — {{city}}</h1><div class="hero-sub">{{lotsCount}} lots · DPE {{dpeBuilding}} / logements {{dpeHomes}} · Construit {{yearBuilt}} · Honoraires {{fees}}</div></div><div class="verdict-block"><div class="score-circle-wrap"><div class="score-circle"><svg width="76" height="76" viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" fill="none" stroke="#e4e1d8" stroke-width="5"/><circle cx="38" cy="38" r="32" fill="none" stroke="{{decisionColor}}" stroke-width="5" stroke-dasharray="201.1" stroke-dashoffset="{{scoreOffset}}" stroke-linecap="round"/></svg><div class="score-inner"><span class="score-num" style="color:{{decisionColor}}">{{score}}</span><span class="score-denom">/100</span></div></div></div><div><span class="verdict-pill {{decisionClass}}"><span class="verdict-dot"></span>{{decision}}</span></div><div class="hero-date">Analysé le {{analysisDate}}</div></div></div><div class="hero-kpis"><div class="hkpi"><div class="hkpi-l">Prix affiché</div><div class="hkpi-v">{{askingPrice}}</div><div class="hkpi-s">{{pricePerSqm}}/m²</div></div><div class="hkpi"><div class="hkpi-l">Coût total projet</div><div class="hkpi-v w">{{totalCost}}</div><div class="hkpi-s">+ notaire {{notaryFees}}</div></div><div class="hkpi"><div class="hkpi-l">Revenus bruts/an</div><div class="hkpi-v">{{annualRevenue}}</div><div class="hkpi-s">Reconstitué {{annualRevenueRebuilt}}</div></div><div class="hkpi"><div class="hkpi-l">Rendement net</div><div class="hkpi-v g">{{netYield}}</div><div class="hkpi-s">Avant impôt</div></div><div class="hkpi"><div class="hkpi-l">Cash-flow</div><div class="hkpi-v g">{{cashflowRange}}</div><div class="hkpi-s">/mois</div></div></div></div>
+<nav class="tabs-nav" role="tablist"><button class="tab-btn active" data-tab="exec">Exec summary</button><button class="tab-btn" data-tab="axes">Synthèse axes</button><button class="tab-btn" data-tab="detail">Détail KPI</button><button class="tab-btn" data-tab="revenus">Revenus & lots</button><button class="tab-btn" data-tab="finance">Scénarios financiers</button><button class="tab-btn" data-tab="risques">Risques & upsides</button><button class="tab-btn" data-tab="sources">Sources</button></nav>
+<section class="tab-content active" id="exec"><div class="stitle">Résumé de l’analyse</div><div class="narrative {{decisionClass}}">{{summary}}</div><div class="stitle">Conditions de la décision</div><div class="conditions">{{#conditions}}<div class="cond-item"><span class="cond-num">{{number}}</span><span>{{text}}</span></div>{{/conditions}}{{^conditions}}<div class="cond-item">Aucune condition renseignée.</div>{{/conditions}}</div><div class="stitle">Points clés</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="background:var(--go-bg);border:1px solid var(--go-border);border-radius:3px;padding:12px 14px"><div class="upside-title">Point fort principal</div><div class="upside-desc">{{strength}}</div></div><div style="background:var(--cond-bg);border:1px solid var(--cond-border);border-radius:3px;padding:12px 14px"><div class="upside-title">Point de vigilance principal</div><div class="upside-desc">{{watchout}}</div></div></div></section>
+<section class="tab-content" id="axes"><div class="stitle">Scores par axe — note globale {{score}}/100</div><div class="axes-grid">{{#axes}}<div class="axe-card"><div class="axe-head"><div><div class="axe-name">{{name}}</div><div class="axe-poids">Poids {{weight}} %</div></div><div class="axe-score-wrap {{scoreClass}}"><div class="axe-score">{{score}}</div><div class="axe-verdict-lbl">{{verdict}}</div></div></div><div class="score-bar {{scoreClass}}"><div class="score-bar-fill" style="width:{{score}}%"></div></div><div class="axe-comment">{{comment}}</div></div>{{/axes}}</div></section>
+<section class="tab-content" id="detail"><div class="stitle">Indicateurs détaillés par axe</div>{{#axes}}<div class="detail-block"><div class="detail-hdr"><div class="detail-hdr-name">{{name}} · {{weight}} %</div><div class="detail-hdr-score {{scoreClass}}">{{score}} / 100</div></div>{{#kpis}}<div class="krow"><span class="klbl">{{label}}</span><span class="kval {{valueClass}}">{{value}}</span><span class="ksrc">{{source}}</span>{{#comment}}<span class="kcomment">{{comment}}</span>{{/comment}}</div>{{/kpis}}{{^kpis}}<div class="krow"><span class="klbl">Aucun indicateur détaillé disponible.</span></div>{{/kpis}}</div>{{/axes}}</section>
+<section class="tab-content" id="revenus"><div class="stitle">Décomposition des revenus par lot</div><table class="rev-table"><thead><tr><th>Lot</th><th>Type</th><th>Surface</th><th>Locataire</th><th>Loyer HC/mois</th><th>Charges</th><th>Total/an</th><th>Note</th></tr></thead><tbody>{{#lots}}<tr><td><span class="lot-badge {{lotClass}}">{{level}}</span></td><td class="mono">{{type}}</td><td class="mono">{{surface}}</td><td>{{tenant}}</td><td class="mono tg">{{rent}}</td><td class="mono">{{charges}}</td><td class="mono tg">{{annualTotal}}</td><td>{{note}}</td></tr>{{/lots}}<tr class="total"><td colspan="6">Total</td><td class="mono">{{annualRevenueRebuilt}}</td><td></td></tr></tbody></table></section>
+<section class="tab-content" id="finance"><div class="stitle">Scénarios financiers</div><div class="scenarios">{{#scenarios}}<div class="scen-card"><div class="scen-hdr">{{label}} — {{deposit}}</div><div class="scen-row"><span class="scen-lbl">Capital emprunté</span><span class="scen-val">{{loan}}</span></div><div class="scen-row"><span class="scen-lbl">Mensualité crédit</span><span class="scen-val">{{payment}}/mois</span></div><div class="scen-row"><span class="scen-lbl">Revenus HC/mois</span><span class="scen-val tg">{{income}}/mois</span></div><div class="scen-row"><span class="scen-lbl">Charges NR/mois</span><span class="scen-val">{{expenses}}/mois</span></div><div class="scen-row"><span class="scen-lbl">Rendement brut / net</span><span class="scen-val tg">{{grossYield}} / {{netYield}}</span></div><div class="scen-foot"><span class="scen-cf-lbl">Cash-flow mensuel</span><span class="scen-cf-val tg">{{cashflow}}</span></div></div>{{/scenarios}}</div><div class="hypo"><span>Financement :</span> crédit sur {{creditTerm}} ans au taux de {{creditRate}}.</div></section>
+<section class="tab-content" id="risques"><div class="stitle">Risques classés par criticité</div><div class="risques"><div class="risq-hdr"><div class="rhc">Criticité</div><div class="rhc">Risque</div><div class="rhc">Action requise</div><div class="rhc">Impact</div></div>{{#risks}}<div class="risq-row"><div class="rcrit"><span class="rbadge {{criticalityClass}}">{{criticality}}</span></div><div class="rbody"><div class="rtitle">{{title}}</div></div><div class="raction">{{action}}</div><div class="rmarge {{impactClass}}">{{impact}}</div></div>{{/risks}}</div><div class="stitle">Upsides identifiés</div>{{#upsides}}<div class="upside-card"><div><div class="upside-title">{{title}}</div><div class="upside-desc">{{description}}</div></div><div><div class="upside-val-lbl">Upside brut/an</div><div class="upside-val-num">{{impact}}</div><div class="upside-meta">{{horizon}}</div></div></div>{{/upsides}}</section>
+<section class="tab-content" id="sources"><div class="stitle">Sources utilisées</div><div class="sources-grid">{{#sources}}<div class="src-item">{{label}}</div>{{/sources}}</div><div class="stitle">Disclaimer</div><p style="font-size:12px;color:var(--ink-3);line-height:1.7">Cette fiche est produite à titre indicatif à partir de données publiques. Elle ne constitue pas un conseil en investissement.</p></section>
+<footer class="site-footer"><span>Analyse Investissement Locatif · Prompt v{{promptVersion}} · Schema v{{schemaVersion}}</span><span>{{city}} ({{postalCode}}) · {{analysisDate}}</span><span>{{decision}} · {{score}}/100</span></footer>
+</script>
+<script>
+(() => {
+const query = new URLSearchParams(location.search);
+const analysisId = query.get('id') || query.get('listing');
+const euro = value => typeof value === 'number' ? value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }) : '—';
+const percent = value => typeof value === 'number' ? `${value.toLocaleString('fr-FR')} %` : '—';
+const date = value => value ? new Intl.DateTimeFormat('fr-FR').format(new Date(`${value}T00:00:00`)) : '—';
+const label = value => String(value || '—').replaceAll('_', ' ').replace(/\b\w/g, char => char.toUpperCase());
+const scoreClass = score => score >= 70 ? 'sh' : score >= 50 ? 'sm' : 'sl';
+const decisionStyle = decision => decision === 'go' ? ['go', '#145a2e'] : decision === 'no_go' ? ['nogo', '#831515'] : ['cond', '#7a4108'];
+function makeContext(a) {
+  const announcement = a.annonce || {}, address = announcement.adresse || {}, features = announcement.caracteristiques || {}, price = announcement.prix || {}, revenue = announcement.revenus || {}, finance = a.financement || {}, summary = a.exec_summary || {}, global = a.note_globale || {}, [decisionClass, decisionColor] = decisionStyle(global.decision);
+  return { source: announcement.agence_nom || announcement.source_plateforme || '—', reference: announcement.reference_annonce || '—', city: address.ville || '—', postalCode: address.code_postal || '—', neighborhood: address.quartier || '—', propertyType: label(announcement.type_bien), surface: features.surface_totale_m2 ?? '—', lotsCount: features.nb_lots ?? '—', yearBuilt: features.annee_construction ?? '—', dpeBuilding: (announcement.dpe || {}).lettre_bien || '—', dpeHomes: (announcement.dpe || {}).lettre_logements || '—', fees: announcement.prix?.honoraires_charge || '—', analysisDate: date(a.meta?.date_analyse), promptVersion: a.meta?.version_prompt || '—', schemaVersion: a.meta?.version_schema || '—', score: global.score ?? summary.note ?? '—', scoreOffset: Math.max(0, 201.1 * (1 - Number(global.score ?? summary.note ?? 0) / 100)).toFixed(1), decision: summary.decision_label || label(global.decision), decisionClass, decisionColor, askingPrice: euro(price.affiche), pricePerSqm: euro(price.m2_affiche), totalCost: euro(finance.cout_total), notaryFees: euro(finance.frais_notaire), annualRevenue: euro(revenue.total_annonce_an), annualRevenueRebuilt: euro(revenue.total_reconstitue_an), netYield: percent(summary.rendement_net_min_pct), cashflowRange: `${euro(summary.cashflow_min_mois)} à ${euro(summary.cashflow_max_mois)}`, summary: summary.resume_narratif || 'Résumé indisponible.', strength: summary.point_fort || '—', watchout: summary.point_vigilance || '—', creditTerm: finance.duree_credit_ans ? `${finance.duree_credit_ans} ans` : '—', creditRate: percent(finance.taux_credit_pct), conditions: (global.conditions_go || []).map((text, index) => ({ number: String(index + 1).padStart(2, '0'), text })), axes: Object.entries(a.axes || {}).map(([key, axis]) => ({ name: label(key), weight: axis.poids_pct ?? '—', score: axis.score ?? '—', verdict: label(axis.verdict), comment: axis.commentaire_synthetique || '—', scoreClass: scoreClass(axis.score), kpis: (axis.kpis || []).map(kpi => ({ label: kpi.label || kpi.nom || '—', value: kpi.valeur || kpi.value || '—', source: kpi.source || '—', comment: kpi.commentaire || '', valueClass: scoreClass(kpi.score) })) })), lots: (announcement.lots || []).map(lot => ({ level: lot.niveau || '—', type: label(lot.type), surface: lot.surface_m2 ? `${lot.surface_m2} m²` : '—', tenant: lot.locataire || '—', rent: euro(lot.loyer_hc_mois), charges: euro(lot.charges_mois), annualTotal: euro((lot.loyer_total_mois || 0) * 12), note: lot.note || '—', lotClass: lot.type === 'local_commercial' ? 'lb-comm' : 'lb-resi' })), scenarios: (finance.scenarios || []).map(scenario => ({ label: scenario.label || 'Scénario', deposit: euro(scenario.apport_eur), loan: euro(scenario.capital_emprunte), payment: euro(scenario.mensualite_credit), income: euro(scenario.revenus_hc_mois), expenses: euro(scenario.charges_nr_mois), cashflow: euro(scenario.cashflow_mois), grossYield: percent(scenario.rendement_brut_pct), netYield: percent(scenario.rendement_net_pct) })), risks: (a.risques || []).map(risk => ({ title: risk.titre || '—', criticality: label(risk.criticite), action: risk.action || '—', impact: euro(risk.impact_cashflow_si_realise ?? risk.budget_estime_max ?? risk.budget_estime_min), criticalityClass: risk.criticite === 'critique' ? 'rc' : risk.criticite === 'eleve' ? 're' : 'rm', impactClass: risk.criticite === 'critique' ? 'tr' : 'tw' })), upsides: (a.upsides || []).map(upside => ({ title: upside.titre || '—', description: upside.description || '—', impact: `${euro(upside.impact_revenu_an_min)} à ${euro(upside.impact_revenu_an_max)}`, horizon: label(upside.horizon) })), sources: (a.sources || []).map(source => ({ label: source.label || source })) };
+}
+async function render() {
+  const app = document.getElementById('app');
+  if (!analysisId) { app.className = 'error'; app.textContent = 'Identifiant d’analyse manquant.'; return; }
+  try { const endpoint = location.pathname.includes('/templates/') ? '../api/analysis.php' : 'api/analysis.php'; const response = await fetch(`${endpoint}?id=${encodeURIComponent(analysisId)}&type=locatif`); const payload = await response.json(); if (!response.ok || !payload.analysis) throw new Error(payload.error || 'Analyse indisponible'); document.title = `Fiche investissement locatif — ${payload.analysis.annonce?.reference_annonce || analysisId}`; app.className = ''; app.innerHTML = Mustache.render(document.getElementById('fiche-template').innerHTML, makeContext(payload.analysis)); app.querySelectorAll('.tab-btn').forEach(button => button.addEventListener('click', () => { app.querySelectorAll('.tab-content').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.tab)); app.querySelectorAll('.tab-btn').forEach(tab => tab.classList.toggle('active', tab === button)); })); } catch (error) { app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
+}
+render();
+})();
+</script>
+</body>
+</html>

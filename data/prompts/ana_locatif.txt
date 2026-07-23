@@ -142,7 +142,7 @@ Liste des 3 risques principaux, classés par criticité (critique / élevé / mo
 Liste complète des sources citées avec URL ou référence et date de consultation. 
 
 ### Mise en forme des résultats
-Mets en forme les résultats selon le modele en base de connaissance fiche-investissement-locatif.html
+Mets en forme les résultats selon le modèle en base de connaissance templates/fiche-investissement-locatif.html
 
 
 ## Format de sortie — Fiche d'étude d'opportunité respecte le format json suivante{

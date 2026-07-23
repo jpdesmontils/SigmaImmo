@@ -284,7 +284,7 @@ function showFavorites() {
 }
 
 function analysisType(item) { return item.analyses && item.analyses.locatif ? 'locatif' : (item.analyses && item.analyses.mdb ? 'mdb' : null); }
-function openFicheInApp(item) { const type = analysisType(item); if (!type) return; openInApp(type === 'mdb' ? 'fiche-mdb.html?id=' + encodeURIComponent(item.id) : 'fiche-investissement-locatif.html?listing=' + encodeURIComponent(item.id), null, item); }
+function openFicheInApp(item) { const type = analysisType(item); if (!type) return; openInApp(type === 'mdb' ? 'fiche-mdb.html?id=' + encodeURIComponent(item.id) : 'templates/fiche-investissement-locatif.html?id=' + encodeURIComponent(item.id), null, item); }
 
 // ── Vue switcher ──────────────────────────────────────────────
 function initViewSwitcher() {
