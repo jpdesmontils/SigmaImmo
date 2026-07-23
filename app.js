@@ -207,7 +207,7 @@ function initGuidesToggle() {
 }
 
 async function openInApp(url, activeButton, listing) {
-  closeViewer();
+  hideViewer();
   document.getElementById('view-switcher').hidden = true;
   document.querySelector('.main').classList.add('in-app-mode');
   ['gallery', 'list', 'map'].forEach(v => document.getElementById('view-' + v).classList.remove('active'));
@@ -270,6 +270,7 @@ function renderInAppSourceAnnonce(content, listing) {
 
 function showFavorites() {
   document.getElementById('view-in-app').classList.remove('active');
+  hideViewer();
   document.getElementById('in-app-content').replaceChildren();
   document.getElementById('in-app-styles').textContent = '';
   document.getElementById('view-switcher').hidden = false;
@@ -642,14 +643,10 @@ function initViewer() {
   document.getElementById('viewer-delete-btn').addEventListener('click', () => openDeleteModal(viewer.listingIndex));
 
   document.addEventListener('keydown', e => {
-    if (!document.getElementById('viewer').classList.contains('open')) return;
+    if (!document.getElementById('view-viewer').classList.contains('active')) return;
     if (e.key === 'ArrowLeft')  photoStep(-1);
     if (e.key === 'ArrowRight') photoStep(1);
     if (e.key === 'Escape')     closeViewer();
-  });
-
-  document.getElementById('viewer').addEventListener('click', e => {
-    if (e.target === document.getElementById('viewer')) closeViewer();
   });
 
   // Balayage tactile pour parcourir les photos sur mobile
@@ -666,14 +663,21 @@ function initViewer() {
 
 function openViewer(startIdx) {
   viewer.listingIndex = startIdx;
-  document.getElementById('viewer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  document.getElementById('view-switcher').hidden = true;
+  document.querySelector('.main').classList.add('in-app-mode');
+  ['gallery', 'list', 'map', 'in-app'].forEach(v => document.getElementById('view-' + v).classList.remove('active'));
+  document.getElementById('view-viewer').classList.add('active');
   renderViewer();
+  window.scrollTo(0, 0);
 }
 
 function closeViewer() {
-  document.getElementById('viewer').classList.remove('open');
-  document.body.style.overflow = '';
+  if (!document.getElementById('view-viewer').classList.contains('active')) return;
+  showFavorites();
+}
+
+function hideViewer() {
+  document.getElementById('view-viewer').classList.remove('active');
 }
 
 function renderViewer() {
@@ -922,6 +926,8 @@ function selectionButtonHTML(idx, selection, className) {
 async function showOnMap(idx) {
   const item = filtered[idx];
   if (!item) return;
+
+  if (document.getElementById('view-viewer').classList.contains('active')) showFavorites();
 
   // Passer en vue carte
   document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
