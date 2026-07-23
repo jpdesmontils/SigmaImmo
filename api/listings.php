@@ -50,7 +50,7 @@ foreach ($items as &$item) {
         'mdb' => $safeId !== '' && is_file(DATA_DIR . 'analyses/mdb/' . $safeId . '.json')
     ];
     $job = $safeId !== '' ? loadJson(ANALYSIS_JOBS_DIR . $safeId . '.json', []) : [];
-    $item['analysisRunning'] = ($job['status'] ?? '') === 'running';
+    $item['analysisStatus'] = activeAnalysisStatus($job);
 }
 unset($item);
 
@@ -156,6 +156,14 @@ function loadJson($file, $default) {
     ]);
 
     return $decoded;
+}
+
+// "running" est réservé à la fenêtre où le worker attend la réponse du LLM.
+function activeAnalysisStatus($job) {
+    if (($job['status'] ?? '') === 'queued') return 'queued';
+    if (($job['status'] ?? '') !== 'running') return null;
+    $expiresAt = isset($job['lease_expires_at']) ? strtotime($job['lease_expires_at']) : false;
+    return $expiresAt !== false && $expiresAt > time() ? 'running' : null;
 }
 
 function numericValue($item, $field) {
