@@ -245,7 +245,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 <script>
 (() => {
 const query = new URLSearchParams(location.search);
-const analysisId = query.get('id') || query.get('listing');
+const analysisId = query.get('id') || query.get('listing') || window.__immoAnalysisId;
 const euro = value => typeof value === 'number' ? value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }) : '—';
 const percent = value => typeof value === 'number' ? `${value.toLocaleString('fr-FR')} %` : '—';
 const date = value => value ? new Intl.DateTimeFormat('fr-FR').format(new Date(`${value}T00:00:00`)) : '—';
@@ -259,7 +259,7 @@ function makeContext(a) {
 async function render() {
   const app = document.getElementById('app');
   if (!analysisId) { app.className = 'error'; app.textContent = 'Identifiant d’analyse manquant.'; return; }
-  try { const response = await fetch(`../api/analysis.php?id=${encodeURIComponent(analysisId)}&type=locatif`); const payload = await response.json(); if (!response.ok || !payload.analysis) throw new Error(payload.error || 'Analyse indisponible'); document.title = `Fiche investissement locatif — ${payload.analysis.annonce?.reference_annonce || analysisId}`; app.className = ''; app.innerHTML = Mustache.render(document.getElementById('fiche-template').innerHTML, makeContext(payload.analysis)); app.querySelectorAll('.tab-btn').forEach(button => button.addEventListener('click', () => { app.querySelectorAll('.tab-content').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.tab)); app.querySelectorAll('.tab-btn').forEach(tab => tab.classList.toggle('active', tab === button)); })); addRecalculateButton(); } catch (error) { app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
+  try { const response = await fetch(`https://solenis-studio.fr/sigma-immo/api/analysis.php?id=${encodeURIComponent(analysisId)}&type=locatif`); const payload = await response.json(); if (!response.ok || !payload.analysis) throw new Error(payload.error || 'Analyse indisponible'); document.title = `Fiche investissement locatif — ${payload.analysis.annonce?.reference_annonce || analysisId}`; app.className = ''; app.innerHTML = Mustache.render(document.getElementById('fiche-template').innerHTML, makeContext(payload.analysis)); app.querySelectorAll('.tab-btn').forEach(button => button.addEventListener('click', () => { app.querySelectorAll('.tab-content').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.tab)); app.querySelectorAll('.tab-btn').forEach(tab => tab.classList.toggle('active', tab === button)); })); addRecalculateButton(); } catch (error) { app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
 }
 function addRecalculateButton() {
   const button = document.createElement('button');
