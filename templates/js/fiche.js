@@ -1,8 +1,8 @@
 (() => {
-  const scriptUrl = document.currentScript?.src || location.href;
+  const currentScript = document.currentScript;
+  const scriptUrl = currentScript?.src || location.href;
   const apiUrl = new URL('../../api/', scriptUrl);
-  const config = document.documentElement.dataset;
-  const type = config.analysisType;
+  const type = currentScript?.dataset.analysisType || document.documentElement.dataset.analysisType;
   const analysisId = new URLSearchParams(location.search).get('id') || new URLSearchParams(location.search).get('listing') || window.__immoAnalysisId;
   const euro = value => typeof value === 'number' ? value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }) : '—';
   const percent = value => typeof value === 'number' ? `${value.toLocaleString('fr-FR')} %` : '—';
