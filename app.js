@@ -297,7 +297,7 @@ function openFicheInApp(item, type) {
   // Les scripts des fiches sont exécutés dans index.html : leur URL ne contient
   // donc pas le paramètre id de la ressource chargée par openInApp.
   window.__immoAnalysisId = item.id;
-  openInApp(selectedType === 'mdb' ? 'fiche-mdb.html?id=' + encodeURIComponent(item.id) : 'templates/fiche-investissement-locatif.html?id=' + encodeURIComponent(item.id), null, item);
+  openInApp('templates/fiche-investissement-' + selectedType + '.html?id=' + encodeURIComponent(item.id), null, item);
 }
 
 let ficheChoiceTarget = null;
