@@ -137,6 +137,10 @@ function initFilters() {
 }
 
 function applyFiltersAndRender() {
+  // Un changement de filtre doit toujours ramener la galerie lorsque le contenu
+  // actuellement affiché est un guide ou une fiche chargée dans l'application.
+  if (document.getElementById('view-in-app').classList.contains('active')) showFavorites({ render: false });
+
   filtered = allListings.filter(item => {
     if (filters.selection !== 'all' && item.selection !== filters.selection) return false;
     if (filters.city && !getLoc(item).toLowerCase().includes(filters.city)) return false;
@@ -221,10 +225,12 @@ async function openInApp(url, activeButton, listing) {
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const guide = new DOMParser().parseFromString(await response.text(), 'text/html');
     document.getElementById('in-app-styles').textContent = [...guide.querySelectorAll('style')].map(style => style.textContent).join('\n');
-    guide.querySelectorAll('.site-header').forEach(node => node.remove());
+    // Les guides n'ont pas besoin de leur en-tête dans la SPA. Les fiches le
+    // conservent afin d'exposer les actions « Retour » et « Voir l'annonce ».
+    if (!listing) guide.querySelectorAll('.site-header').forEach(node => node.remove());
     content.innerHTML = guide.body.innerHTML;
     await runInAppScripts(content, response.url || new URL(url, window.location.href).href);
-    if (listing) renderInAppSourceAnnonce(content, listing);
+    if (listing) setupInAppFicheNavigation(content, listing);
   } catch (error) {
     console.error('[ImmoAgg] Chargement In App impossible:', error);
     content.innerHTML = '<div class="empty-state"><strong>Contenu indisponible</strong><span>Réessayez dans quelques instants.</span></div>';
@@ -257,6 +263,17 @@ async function runInAppScripts(content, templateUrl) {
   }
 }
 
+function setupInAppFicheNavigation(content, listing) {
+  const returnButton = content.querySelector('[data-in-app-return]');
+  if (!returnButton) return;
+  returnButton.hidden = false;
+  returnButton.addEventListener('click', () => {
+    const listingIndex = filtered.findIndex(item => item.id === listing.id);
+    if (listingIndex >= 0) openViewer(listingIndex);
+    else showFavorites();
+  });
+}
+
 function renderInAppSourceAnnonce(content, listing) {
   const target = content.querySelector('#source-annonce');
   if (!target) return;
@@ -273,7 +290,7 @@ function renderInAppSourceAnnonce(content, listing) {
   }
 }
 
-function showFavorites() {
+function showFavorites({ render = true } = {}) {
   document.getElementById('view-in-app').classList.remove('active');
   hideViewer();
   document.getElementById('in-app-content').replaceChildren();
@@ -284,7 +301,7 @@ function showFavorites() {
   document.querySelectorAll('.view-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === 'gallery'));
   document.getElementById('view-gallery').classList.add('active');
   document.querySelectorAll('.in-app-nav-btn').forEach(btn => btn.classList.toggle('active', btn.hasAttribute('data-in-app-favorites')));
-  renderGallery();
+  if (render) renderGallery();
   if (typeof closeSidebar === 'function') closeSidebar();
 }
 
