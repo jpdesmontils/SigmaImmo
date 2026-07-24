@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-analysis-type="locatif">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,7 +47,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 
 /* ── HERO ── */
 .hero{background:var(--surface);padding:32px 32px 0;border-bottom:1px solid var(--border)}
-.hero-top{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:0}
+.hero-top{display:grid;grid-template-columns:136px 1fr auto;gap:24px;align-items:start;padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:0}
 .hero-eyebrow{font-family:var(--font-m);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
 .hero-title{font-family:var(--font-d);font-size:26px;font-weight:700;color:var(--ink);line-height:1.2;margin-bottom:5px}
 .hero-sub{font-size:13px;color:var(--ink-2);line-height:1.5}
@@ -210,14 +210,16 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 /* ── FOOTER ── */
 .site-footer{margin-top:40px;border-top:1px solid var(--border);padding:16px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;font-family:var(--font-m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 
+/* ── PHOTOS DU BIEN ── */
+.property-gallery{width:136px}.property-main-image{display:block;width:136px;height:102px;object-fit:cover;border:1px solid var(--border);border-radius:3px;background:var(--card)}.property-thumbs{display:flex;gap:4px;overflow-x:auto;margin-top:6px;padding-bottom:2px}.property-thumb{flex:0 0 28px;width:28px;height:22px;border:1px solid var(--border);border-radius:2px;background:center/cover no-repeat;cursor:pointer;padding:0}.property-thumb.active{border:2px solid var(--cond)}
 /* ── RECALCUL ── */
 .recalculate-button{position:fixed;right:24px;bottom:24px;z-index:20;width:48px;height:48px;border:1px solid var(--cond-border);border-radius:50%;background:var(--cond-bg);color:var(--cond);font-size:21px;cursor:pointer;box-shadow:0 4px 14px rgba(22,21,15,.18);transition:transform .15s,background .15s,color .15s}
 .recalculate-button:hover:not(:disabled){background:var(--cond);color:#fff;transform:translateY(-2px)}
-.recalculate-button:disabled{cursor:wait;opacity:.7}
+.recalculate-button:disabled{cursor:wait;opacity:.7}.recalculate-modal{position:fixed;z-index:30;inset:0;display:grid;place-items:center;padding:20px;background:rgba(22,21,15,.42)}.recalculate-modal-box{width:min(440px,100%);padding:24px;background:var(--surface);border:1px solid var(--border-hi);border-radius:4px;box-shadow:0 16px 42px rgba(22,21,15,.25)}.recalculate-modal-box h2{font-family:var(--font-d);font-size:20px;margin-bottom:8px}.recalculate-modal-box p{color:var(--ink-2)}.recalculate-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:20px}.recalculate-actions button{border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;background:var(--surface);font:500 12px var(--font-b);cursor:pointer}.recalculate-actions button[data-type]{background:var(--ink);border-color:var(--ink);color:#fff}
 
 @media(max-width:680px){
   .hero{padding:20px 16px 0}
-  .hero-top{grid-template-columns:1fr}
+  .hero-top{grid-template-columns:1fr}.property-gallery{width:100%;display:flex;gap:8px}.property-main-image{width:132px;height:99px}.property-thumbs{align-self:center;max-width:calc(100% - 140px);margin-top:0}
   .tabs-nav{padding:0 16px}
   .tab-content{padding:20px 16px}
   .risq-hdr,.risq-row{grid-template-columns:1fr}
@@ -229,8 +231,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 <main id="app" class="loading">Chargement de l’analyse…</main>
 
 <script id="fiche-template" type="x-template">
-<header class="site-header"><div class="site-logo">Analyse Investissement Locatif <span>· Fiche opportunité</span></div><div class="site-header-right"><a class="site-back" href="../index.html">← ImmoAgg</a><div class="site-tag">Prompt v{{promptVersion}} · Schema v{{schemaVersion}}</div></div></header>
-<div class="hero"><div class="hero-top"><div><div class="hero-eyebrow">{{source}} · Réf. {{reference}} · {{city}} ({{postalCode}}) · {{analysisDate}}</div><h1 class="hero-title">{{propertyType}} · {{surface}} m²<br>{{neighborhood}} — {{city}}</h1><div class="hero-sub">{{lotsCount}} lots · DPE {{dpeBuilding}} / logements {{dpeHomes}} · Construit {{yearBuilt}} · Honoraires {{fees}}</div></div><div class="verdict-block"><div class="score-circle-wrap"><div class="score-circle"><svg width="76" height="76" viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" fill="none" stroke="#e4e1d8" stroke-width="5"/><circle cx="38" cy="38" r="32" fill="none" stroke="{{decisionColor}}" stroke-width="5" stroke-dasharray="201.1" stroke-dashoffset="{{scoreOffset}}" stroke-linecap="round"/></svg><div class="score-inner"><span class="score-num" style="color:{{decisionColor}}">{{score}}</span><span class="score-denom">/100</span></div></div></div><div><span class="verdict-pill {{decisionClass}}"><span class="verdict-dot"></span>{{decision}}</span></div><div class="hero-date">Analysé le {{analysisDate}}</div></div></div><div class="hero-kpis"><div class="hkpi"><div class="hkpi-l">Prix affiché</div><div class="hkpi-v">{{askingPrice}}</div><div class="hkpi-s">{{pricePerSqm}}/m²</div></div><div class="hkpi"><div class="hkpi-l">Coût total projet</div><div class="hkpi-v w">{{totalCost}}</div><div class="hkpi-s">+ notaire {{notaryFees}}</div></div><div class="hkpi"><div class="hkpi-l">Revenus bruts/an</div><div class="hkpi-v">{{annualRevenue}}</div><div class="hkpi-s">Reconstitué {{annualRevenueRebuilt}}</div></div><div class="hkpi"><div class="hkpi-l">Rendement net</div><div class="hkpi-v g">{{netYield}}</div><div class="hkpi-s">Avant impôt</div></div><div class="hkpi"><div class="hkpi-l">Cash-flow</div><div class="hkpi-v g">{{cashflowRange}}</div><div class="hkpi-s">/mois</div></div></div></div>
+<header class="site-header"><div class="site-logo">Analyse Investissement Locatif <span>· Fiche opportunité</span></div><div class="site-header-right"><a class="site-back" data-source-link href="../index.html">← Revenir à l’annonce</a><div class="site-tag">Prompt v{{promptVersion}} · Schema v{{schemaVersion}}</div></div></header>
+<div class="hero"><div class="hero-top"><div class="property-gallery" data-property-gallery><img class="property-main-image" data-gallery-main alt=""><div class="property-thumbs" data-gallery-thumbs></div></div><div><div class="hero-eyebrow">{{source}} · Réf. {{reference}} · {{city}} ({{postalCode}}) · {{analysisDate}}</div><h1 class="hero-title">{{propertyType}} · {{surface}} m²<br>{{neighborhood}} — {{city}}</h1><div class="hero-sub">{{lotsCount}} lots · DPE {{dpeBuilding}} / logements {{dpeHomes}} · Construit {{yearBuilt}} · Honoraires {{fees}}</div></div><div class="verdict-block"><div class="score-circle-wrap"><div class="score-circle"><svg width="76" height="76" viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" fill="none" stroke="#e4e1d8" stroke-width="5"/><circle cx="38" cy="38" r="32" fill="none" stroke="{{decisionColor}}" stroke-width="5" stroke-dasharray="201.1" stroke-dashoffset="{{scoreOffset}}" stroke-linecap="round"/></svg><div class="score-inner"><span class="score-num" style="color:{{decisionColor}}">{{score}}</span><span class="score-denom">/100</span></div></div></div><div><span class="verdict-pill {{decisionClass}}"><span class="verdict-dot"></span>{{decision}}</span></div><div class="hero-date">Analysé le {{analysisDate}}</div></div></div><div class="hero-kpis"><div class="hkpi"><div class="hkpi-l">Prix affiché</div><div class="hkpi-v">{{askingPrice}}</div><div class="hkpi-s">{{pricePerSqm}}/m²</div></div><div class="hkpi"><div class="hkpi-l">Coût total projet</div><div class="hkpi-v w">{{totalCost}}</div><div class="hkpi-s">+ notaire {{notaryFees}}</div></div><div class="hkpi"><div class="hkpi-l">Revenus bruts/an</div><div class="hkpi-v">{{annualRevenue}}</div><div class="hkpi-s">Reconstitué {{annualRevenueRebuilt}}</div></div><div class="hkpi"><div class="hkpi-l">Rendement net</div><div class="hkpi-v g">{{netYield}}</div><div class="hkpi-s">Avant impôt</div></div><div class="hkpi"><div class="hkpi-l">Cash-flow</div><div class="hkpi-v g">{{cashflowRange}}</div><div class="hkpi-s">/mois</div></div></div></div>
 <nav class="tabs-nav" role="tablist"><button class="tab-btn active" data-tab="exec">Exec summary</button><button class="tab-btn" data-tab="axes">Synthèse axes</button><button class="tab-btn" data-tab="detail">Détail KPI</button><button class="tab-btn" data-tab="revenus">Revenus & lots</button><button class="tab-btn" data-tab="finance">Scénarios financiers</button><button class="tab-btn" data-tab="risques">Risques & upsides</button><button class="tab-btn" data-tab="sources">Sources</button></nav>
 <section class="tab-content active" id="exec"><div class="stitle">Résumé de l’analyse</div><div class="narrative {{decisionClass}}">{{summary}}</div><div class="stitle">Conditions de la décision</div><div class="conditions">{{#conditions}}<div class="cond-item"><span class="cond-num">{{number}}</span><span>{{text}}</span></div>{{/conditions}}{{^conditions}}<div class="cond-item">Aucune condition renseignée.</div>{{/conditions}}</div><div class="stitle">Points clés</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="background:var(--go-bg);border:1px solid var(--go-border);border-radius:3px;padding:12px 14px"><div class="upside-title">Point fort principal</div><div class="upside-desc">{{strength}}</div></div><div style="background:var(--cond-bg);border:1px solid var(--cond-border);border-radius:3px;padding:12px 14px"><div class="upside-title">Point de vigilance principal</div><div class="upside-desc">{{watchout}}</div></div></div></section>
 <section class="tab-content" id="axes"><div class="stitle">Scores par axe — note globale {{score}}/100</div><div class="axes-grid">{{#axes}}<div class="axe-card"><div class="axe-head"><div><div class="axe-name">{{name}}</div><div class="axe-poids">Poids {{weight}} %</div></div><div class="axe-score-wrap {{scoreClass}}"><div class="axe-score">{{score}}</div><div class="axe-verdict-lbl">{{verdict}}</div></div></div><div class="score-bar {{scoreClass}}"><div class="score-bar-fill" style="width:{{score}}%"></div></div><div class="axe-comment">{{comment}}</div></div>{{/axes}}</div></section>
@@ -241,91 +243,6 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 <section class="tab-content" id="sources"><div class="stitle">Sources utilisées</div><div class="sources-grid">{{#sources}}<div class="src-item">{{label}}</div>{{/sources}}</div><div class="stitle">Disclaimer</div><p style="font-size:12px;color:var(--ink-3);line-height:1.7">Cette fiche est produite à titre indicatif à partir de données publiques. Elle ne constitue pas un conseil en investissement.</p></section>
 <footer class="site-footer"><span>Analyse Investissement Locatif · Prompt v{{promptVersion}} · Schema v{{schemaVersion}}</span><span>{{city}} ({{postalCode}}) · {{analysisDate}}</span><span>{{decision}} · {{score}}/100</span></footer>
 </script>
-<script>
-(() => {
-const query = new URLSearchParams(location.search);
-const analysisId = query.get('id') || query.get('listing') || window.__immoAnalysisId;
-const euro = value => typeof value === 'number' ? value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }) : '—';
-const percent = value => typeof value === 'number' ? `${value.toLocaleString('fr-FR')} %` : '—';
-const date = value => value ? new Intl.DateTimeFormat('fr-FR').format(new Date(`${value}T00:00:00`)) : '—';
-const label = value => String(value || '—').replaceAll('_', ' ').replace(/\b\w/g, char => char.toUpperCase());
-const scoreClass = score => score >= 70 ? 'sh' : score >= 50 ? 'sm' : 'sl';
-const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-const valueFor = (context, name) => name.split('.').reduce((value, key) => value?.[key], context);
-function renderTemplate(template, context) {
-  const root = { children: [] }, stack = [root];
-  for (const part of template.split(/(\{\{\s*[#/^]?\s*[\w.]+\s*\}\})/)) {
-    const match = part.match(/^\{\{\s*([#/^]?)\s*([\w.]+)\s*\}\}$/);
-    if (!match) { if (part) stack.at(-1).children.push(part); continue; }
-    const [, type, name] = match;
-    if (type === '#' || type === '^') { const node = { type, name, children: [] }; stack.at(-1).children.push(node); stack.push(node); }
-    else if (type === '/') { if (stack.length === 1 || stack.at(-1).name !== name) throw new Error(`Balise de modèle non fermée : ${name}`); stack.pop(); }
-    else stack.at(-1).children.push({ type: 'value', name });
-  }
-  if (stack.length !== 1) throw new Error(`Balise de modèle non fermée : ${stack.at(-1).name}`);
-  const renderNodes = (nodes, scope) => nodes.map(node => {
-    if (typeof node === 'string') return node;
-    const value = valueFor(scope, node.name);
-    if (node.type === 'value') return escapeHtml(value);
-    const present = Array.isArray(value) ? value.length > 0 : Boolean(value);
-    if ((node.type === '#' && !present) || (node.type === '^' && present)) return '';
-    if (node.type === '^') return renderNodes(node.children, scope);
-    return Array.isArray(value) ? value.map(item => renderNodes(node.children, { ...scope, ...(item && typeof item === 'object' ? item : {}) })).join('') : renderNodes(node.children, scope);
-  }).join('');
-  return renderNodes(root.children, context);
-}
-const decisionStyle = decision => decision === 'go' ? ['go', '#145a2e'] : decision === 'no_go' ? ['nogo', '#831515'] : ['cond', '#7a4108'];
-function makeContext(a) {
-  const announcement = a.annonce || {}, address = announcement.adresse || {}, features = announcement.caracteristiques || {}, price = announcement.prix || {}, revenue = announcement.revenus || {}, finance = a.financement || {}, summary = a.exec_summary || {}, global = a.note_globale || {}, [decisionClass, decisionColor] = decisionStyle(global.decision);
-  return { source: announcement.agence_nom || announcement.source_plateforme || '—', reference: announcement.reference_annonce || '—', city: address.ville || '—', postalCode: address.code_postal || '—', neighborhood: address.quartier || '—', propertyType: label(announcement.type_bien), surface: features.surface_totale_m2 ?? '—', lotsCount: features.nb_lots ?? '—', yearBuilt: features.annee_construction ?? '—', dpeBuilding: (announcement.dpe || {}).lettre_bien || '—', dpeHomes: (announcement.dpe || {}).lettre_logements || '—', fees: announcement.prix?.honoraires_charge || '—', analysisDate: date(a.meta?.date_analyse), promptVersion: a.meta?.version_prompt || '—', schemaVersion: a.meta?.version_schema || '—', score: global.score ?? summary.note ?? '—', scoreOffset: Math.max(0, 201.1 * (1 - Number(global.score ?? summary.note ?? 0) / 100)).toFixed(1), decision: summary.decision_label || label(global.decision), decisionClass, decisionColor, askingPrice: euro(price.affiche), pricePerSqm: euro(price.m2_affiche), totalCost: euro(finance.cout_total), notaryFees: euro(finance.frais_notaire), annualRevenue: euro(revenue.total_annonce_an), annualRevenueRebuilt: euro(revenue.total_reconstitue_an), netYield: percent(summary.rendement_net_min_pct), cashflowRange: `${euro(summary.cashflow_min_mois)} à ${euro(summary.cashflow_max_mois)}`, summary: summary.resume_narratif || 'Résumé indisponible.', strength: summary.point_fort || '—', watchout: summary.point_vigilance || '—', creditTerm: finance.duree_credit_ans ? `${finance.duree_credit_ans} ans` : '—', creditRate: percent(finance.taux_credit_pct), conditions: (global.conditions_go || []).map((text, index) => ({ number: String(index + 1).padStart(2, '0'), text })), axes: Object.entries(a.axes || {}).map(([key, axis]) => ({ name: label(key), weight: axis.poids_pct ?? '—', score: axis.score ?? '—', verdict: label(axis.verdict), comment: axis.commentaire_synthetique || '—', scoreClass: scoreClass(axis.score), kpis: (axis.kpis || []).map(kpi => ({ label: kpi.label || kpi.nom || '—', value: kpi.valeur || kpi.value || '—', source: kpi.source || '—', comment: kpi.commentaire || '', valueClass: scoreClass(kpi.score) })) })), lots: (announcement.lots || []).map(lot => ({ level: lot.niveau || '—', type: label(lot.type), surface: lot.surface_m2 ? `${lot.surface_m2} m²` : '—', tenant: lot.locataire || '—', rent: euro(lot.loyer_hc_mois), charges: euro(lot.charges_mois), annualTotal: euro((lot.loyer_total_mois || 0) * 12), note: lot.note || '—', lotClass: lot.type === 'local_commercial' ? 'lb-comm' : 'lb-resi' })), scenarios: (finance.scenarios || []).map(scenario => ({ label: scenario.label || 'Scénario', deposit: euro(scenario.apport_eur), loan: euro(scenario.capital_emprunte), payment: euro(scenario.mensualite_credit), income: euro(scenario.revenus_hc_mois), expenses: euro(scenario.charges_nr_mois), cashflow: euro(scenario.cashflow_mois), grossYield: percent(scenario.rendement_brut_pct), netYield: percent(scenario.rendement_net_pct) })), risks: (a.risques || []).map(risk => ({ title: risk.titre || '—', criticality: label(risk.criticite), action: risk.action || '—', impact: euro(risk.impact_cashflow_si_realise ?? risk.budget_estime_max ?? risk.budget_estime_min), criticalityClass: risk.criticite === 'critique' ? 'rc' : risk.criticite === 'eleve' ? 're' : 'rm', impactClass: risk.criticite === 'critique' ? 'tr' : 'tw' })), upsides: (a.upsides || []).map(upside => ({ title: upside.titre || '—', description: upside.description || '—', impact: `${euro(upside.impact_revenu_an_min)} à ${euro(upside.impact_revenu_an_max)}`, horizon: label(upside.horizon) })), sources: (a.sources || []).map(source => ({ label: source.label || source })) };
-}
-async function render() {
-  const app = document.getElementById('app');
-  if (!analysisId) { app.className = 'error'; app.textContent = 'Identifiant d’analyse manquant.'; return; }
-  try { const response = await fetch(`https://solenis-studio.fr/sigma-immo/api/analysis.php?id=${encodeURIComponent(analysisId)}&type=locatif`); const payload = await response.json(); if (!response.ok || !payload.analysis) throw new Error(payload.error || 'Analyse indisponible'); document.title = `Fiche investissement locatif — ${payload.analysis.annonce?.reference_annonce || analysisId}`; app.className = ''; app.innerHTML = renderTemplate(document.getElementById('fiche-template').innerHTML, makeContext(payload.analysis)); app.querySelectorAll('.tab-btn').forEach(button => button.addEventListener('click', () => { app.querySelectorAll('.tab-content').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.tab)); app.querySelectorAll('.tab-btn').forEach(tab => tab.classList.toggle('active', tab === button)); })); addRecalculateButton(); } catch (error) { app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
-}
-function addRecalculateButton() {
-  const button = document.createElement('button');
-  button.className = 'recalculate-button';
-  button.type = 'button';
-  button.title = 'Recalculer l’analyse locative';
-  button.setAttribute('aria-label', 'Recalculer l’analyse locative');
-  button.textContent = '🤖';
-  button.addEventListener('click', async () => {
-    button.disabled = true;
-    button.textContent = '⌛';
-    try {
-      const response = await fetch('../api/analyze.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: analysisId, type: 'locatif' }) });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Démarrage du recalcul impossible');
-      button.title = 'Recalcul en cours';
-      button.setAttribute('aria-label', 'Recalcul en cours');
-      const poll = setInterval(async () => {
-        try {
-          const statusResponse = await fetch(`../api/analyze.php?id=${encodeURIComponent(analysisId)}`);
-          const statusPayload = await statusResponse.json();
-          const status = statusPayload.job?.status;
-          if (status === 'completed') { clearInterval(poll); location.reload(); }
-          if (status === 'failed') {
-            clearInterval(poll);
-            button.disabled = false;
-            button.textContent = '🤖';
-            button.title = 'Recalculer l’analyse locative';
-            button.setAttribute('aria-label', 'Recalculer l’analyse locative');
-            alert(`Recalcul impossible : ${statusPayload.job.error || 'erreur inconnue'}`);
-          }
-        } catch (_) {}
-      }, 2500);
-    } catch (error) {
-      button.disabled = false;
-      button.textContent = '🤖';
-      alert(`Recalcul impossible : ${error.message}`);
-    }
-  });
-  document.body.append(button);
-}
-render();
-})();
-</script>
+<script src="js/fiche.js"></script>
 </body>
 </html>

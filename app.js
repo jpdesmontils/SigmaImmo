@@ -223,7 +223,7 @@ async function openInApp(url, activeButton, listing) {
     document.getElementById('in-app-styles').textContent = [...guide.querySelectorAll('style')].map(style => style.textContent).join('\n');
     guide.querySelectorAll('.site-header').forEach(node => node.remove());
     content.innerHTML = guide.body.innerHTML;
-    await runInAppScripts(content);
+    await runInAppScripts(content, response.url || new URL(url, window.location.href).href);
     if (listing) renderInAppSourceAnnonce(content, listing);
   } catch (error) {
     console.error('[ImmoAgg] Chargement In App impossible:', error);
@@ -234,21 +234,25 @@ async function openInApp(url, activeButton, listing) {
 
 // Scripts injected via innerHTML never execute; re-create each <script> so the
 // guide's own tab-switching/simulator logic (showTab, calc…) actually runs.
-async function runInAppScripts(content) {
+async function runInAppScripts(content, templateUrl) {
   const scripts = [...content.querySelectorAll('script')];
   for (const oldScript of scripts) {
     const type = (oldScript.getAttribute('type') || '').toLowerCase();
     if (type && type !== 'text/javascript' && type !== 'module') continue; // e.g. text/x-template data blocks: leave inert
     const script = document.createElement('script');
-    for (const attr of oldScript.attributes) script.setAttribute(attr.name, attr.value);
+    const source = oldScript.getAttribute('src');
+    for (const attr of oldScript.attributes) if (attr.name !== 'src') script.setAttribute(attr.name, attr.value);
+    // Le contenu est injecté dans index.html : un chemin relatif doit donc être
+    // résolu depuis la template téléchargée et non depuis la SPA hôte.
+    if (source) script.src = new URL(source, templateUrl).href;
     script.textContent = oldScript.textContent;
     await new Promise(resolve => {
-      if (script.src) {
+      if (source) {
         script.addEventListener('load', resolve);
         script.addEventListener('error', resolve);
       }
       oldScript.replaceWith(script);
-      if (!script.src) resolve();
+      if (!source) resolve();
     });
   }
 }
@@ -297,7 +301,7 @@ function openFicheInApp(item, type) {
   // Les scripts des fiches sont exécutés dans index.html : leur URL ne contient
   // donc pas le paramètre id de la ressource chargée par openInApp.
   window.__immoAnalysisId = item.id;
-  openInApp(selectedType === 'mdb' ? 'fiche-mdb.html?id=' + encodeURIComponent(item.id) : 'templates/fiche-investissement-locatif.html?id=' + encodeURIComponent(item.id), null, item);
+  openInApp('templates/fiche-investissement-' + selectedType + '.html?id=' + encodeURIComponent(item.id), null, item);
 }
 
 let ficheChoiceTarget = null;

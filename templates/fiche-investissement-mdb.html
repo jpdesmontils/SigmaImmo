@@ -1,123 +1,15 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-analysis-type="mdb">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fiche opportunité MDB — {{annonce_id}}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <style>
-    *,*::before,*::after{box-sizing:border-box}body{margin:0;background:#f5f3ee;color:#16150f;font:13px/1.5 Inter,Arial,sans-serif}.site-header{background:#16150f;color:#f5f3ee;padding:18px 32px;display:flex;justify-content:space-between;gap:12px;align-items:center}.logo,h1,h2{font-family:"Space Grotesk",Arial,sans-serif}.logo{font-size:14px;font-weight:600}.tag,.eyebrow,.label,th{font:9px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase}.tag,.eyebrow,.label{color:#9a9890}.sheet{max-width:1080px;margin:auto;padding:32px}.hero{background:#fff;border:1px solid #d0ccc3;border-radius:4px;overflow:hidden}.hero-main{display:grid;grid-template-columns:1fr auto;gap:24px;padding:28px 30px}.eyebrow{margin-bottom:10px}h1{margin:0 0 6px;font-size:27px;line-height:1.15}h2{font-size:16px;margin:0}.subtitle{color:#5a5850}.decision{align-self:start;text-align:right}.pill{display:inline-flex;gap:7px;align-items:center;border:1px solid;padding:7px 11px;border-radius:3px;font:700 10px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase}.pill::before{content:"";width:6px;height:6px;background:currentColor;border-radius:50%}.go{color:#145a2e;background:#d6f0df;border-color:#7ec99a}.go_conditionnel{color:#7a4108;background:#faefd5;border-color:#e0a84a}.no_go{color:#831515;background:#fce8e8;border-color:#d97373}.date{margin-top:8px;font:9px "JetBrains Mono",monospace;color:#9a9890}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#d0ccc3;border-top:1px solid #d0ccc3}.kpi{padding:14px 16px;background:#edeae3}.kpi .value{margin:5px 0 2px;font:700 17px "JetBrains Mono",monospace}.content{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:20px;margin-top:20px}.card{background:#fff;border:1px solid #d0ccc3;border-radius:4px;padding:20px;margin-bottom:20px}.section-title{padding-bottom:9px;border-bottom:1px solid #d0ccc3;margin:0 0 14px;font:600 11px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase}.narrative{background:#edeae3;border-left:3px solid #7a4108;padding:14px 16px;color:#5a5850}.list{padding-left:18px;margin:10px 0 0}.list li{margin:6px 0}.scenario{border:1px solid #d0ccc3;border-radius:3px;overflow:hidden;margin:10px 0}.scenario h2{font-size:13px;padding:10px 13px;background:#edeae3}.rows{margin:0}.row{display:flex;justify-content:space-between;gap:14px;padding:7px 13px;border-top:1px solid #d0ccc3}.row dt{color:#5a5850}.row dd{margin:0;font:500 12px "JetBrains Mono",monospace;text-align:right}.row.total{background:#e4e1d8}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:580px}th{background:#e4e1d8;color:#5a5850;text-align:left;padding:9px;border:1px solid #d0ccc3}td{padding:9px;border:1px solid #d0ccc3;vertical-align:top}td:last-child{text-align:right;font-family:"JetBrains Mono",monospace}.risk{border-left:4px solid #a8a49b;background:#edeae3;padding:12px 14px;margin:9px 0}.risk-title{font-weight:600}.risk-action{margin-top:5px;color:#5a5850}.notice{background:#faefd5;border:1px solid #e0a84a;color:#7a4108;padding:11px 13px;margin:8px 0}.footer{padding:18px 0 0;color:#9a9890;font:9px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase}@media(max-width:720px){.site-header,.sheet{padding-left:16px;padding-right:16px}.hero-main,.content{grid-template-columns:1fr}.decision{text-align:left}.kpis{grid-template-columns:1fr 1fr}}
-  </style>
-</head>
-<body>
-  <header class="site-header">
-    <div class="logo">Analyse Marchand de Biens · <span style="font-weight:400;opacity:.6">Fiche opportunité</span></div>
-    <div class="tag">{{type_analyse}} · {{date_analyse}}</div>
-  </header>
-
-  <main class="sheet">
-    <section class="hero">
-      <div class="hero-main">
-        <div>
-          <div class="eyebrow">Analyse MDB · Annonce {{annonce_id}}</div>
-          <h1>Fiche d'opportunité marchand de biens</h1>
-          <p class="subtitle">{{qualification.nature_operation}} · Faisabilité : {{qualification.faisabilite}} · Complexité : {{qualification.complexite}}/5</p>
-        </div>
-        <div class="decision">
-          <span class="pill {{executive_summary.decision}}">{{executive_summary.decision}}</span>
-          <div class="date">Analysé le {{date_analyse}}</div>
-        </div>
-      </div>
-      <div class="kpis">
-        <div class="kpi"><div class="label">Marge nette base</div><div class="value">{{executive_summary.marge_nette_base_eur}} €</div><span>{{executive_summary.marge_nette_base_pct}} %</span></div>
-        <div class="kpi"><div class="label">Prix demandé</div><div class="value">{{executive_summary.prix_demande_eur}} €</div><span>Acquisition envisagée</span></div>
-        <div class="kpi"><div class="label">PMA</div><div class="value">{{executive_summary.prix_max_acquisition_eur}} €</div><span>Prix maximum d'acquisition</span></div>
-        <div class="kpi"><div class="label">Écart demandé / PMA</div><div class="value">{{executive_summary.ecart_prix_demande_pma_eur}} €</div><span>À négocier ou justifier</span></div>
-      </div>
-    </section>
-
-    <div class="content">
-      <div>
-        <section class="card">
-          <h2 class="section-title">Résumé exécutif</h2>
-          <div class="narrative">{{executive_summary.synthese}}</div>
-          <h2 class="section-title" style="margin-top:22px">Hypothèses de qualification</h2>
-          <ul class="list">{{#qualification.hypotheses}}<li>{{.}}</li>{{/qualification.hypotheses}}</ul>
-        </section>
-
-        <section class="card">
-          <h2 class="section-title">Bilan promoteur — scénarios</h2>
-          {{#bilan_promoteur.scenarios}}
-          <article class="scenario">
-            <h2>Scénario {{nom}}</h2>
-            <dl class="rows">
-              <div class="row"><dt>Valeur de sortie brute</dt><dd>{{valeur_sortie_brute_eur}} €</dd></div>
-              <div class="row"><dt>Prix d'acquisition</dt><dd>{{prix_acquisition_eur}} €</dd></div>
-              <div class="row"><dt>Frais d'acquisition</dt><dd>{{frais_acquisition_eur}} €</dd></div>
-              <div class="row"><dt>Travaux</dt><dd>{{travaux_eur}} €</dd></div>
-              <div class="row"><dt>Frais annexes</dt><dd>{{frais_annexes_eur}} €</dd></div>
-              <div class="row"><dt>Frais financiers</dt><dd>{{frais_financiers_eur}} €</dd></div>
-              <div class="row"><dt>Commercialisation</dt><dd>{{commercialisation_eur}} €</dd></div>
-              <div class="row total"><dt>Coût total</dt><dd>{{cout_total_eur}} €</dd></div>
-              <div class="row total"><dt>Marge nette</dt><dd>{{marge_nette_eur}} € · {{marge_nette_pct}} %</dd></div>
-              <div class="row total"><dt>Prix maximum d'acquisition</dt><dd>{{prix_max_acquisition_eur}} €</dd></div>
-            </dl>
-          </article>
-          {{/bilan_promoteur.scenarios}}
-        </section>
-
-        <section class="card">
-          <h2 class="section-title">Marché de sortie</h2>
-          <dl class="rows">
-            <div class="row"><dt>Prix cible</dt><dd>{{marche_sortie.prix_m2_cible_eur}} €/m²</dd></div>
-            <div class="row"><dt>Délai d'écoulement</dt><dd>{{marche_sortie.delai_ecoulement_mois}} mois</dd></div>
-            <div class="row"><dt>Acheteur cible</dt><dd>{{marche_sortie.acheteur_cible}}</dd></div>
-            <div class="row"><dt>Tendance</dt><dd>{{marche_sortie.tendance}}</dd></div>
-          </dl>
-          <h2 class="section-title" style="margin-top:22px">Sources marché</h2>
-          <ul class="list">{{#marche_sortie.sources}}<li>{{.}}</li>{{/marche_sortie.sources}}</ul>
-        </section>
-      </div>
-
-      <aside>
-        <section class="card">
-          <h2 class="section-title">Réglementation</h2>
-          <p><strong>PLU :</strong> {{reglementation.plu}}</p>
-          <p><strong>Permis :</strong> {{reglementation.permis}}</p>
-          <h2 class="section-title" style="margin-top:22px">Contraintes</h2>
-          <ul class="list">{{#reglementation.contraintes}}<li>{{.}}</li>{{/reglementation.contraintes}}</ul>
-          <h2 class="section-title" style="margin-top:22px">Points à vérifier</h2>
-          <ul class="list">{{#reglementation.points_a_verifier}}<li>{{.}}</li>{{/reglementation.points_a_verifier}}</ul>
-        </section>
-
-        <section class="card">
-          <h2 class="section-title">Planning</h2>
-          <dl class="rows">
-            <div class="row"><dt>Durée totale</dt><dd>{{planning.duree_totale_mois}} mois</dd></div>
-            <div class="row"><dt>Coût de portage</dt><dd>{{planning.cout_portage_eur}} €</dd></div>
-          </dl>
-          {{#planning.phases}}<div class="risk"><div class="risk-title">{{nom}} · {{duree_mois}} mois</div><div class="risk-action">{{commentaire}}</div></div>{{/planning.phases}}
-        </section>
-
-        <section class="card">
-          <h2 class="section-title">Avertissements</h2>
-          {{#avertissements}}<div class="notice">{{.}}</div>{{/avertissements}}
-        </section>
-      </aside>
-    </div>
-
-    <section class="card">
-      <h2 class="section-title">Risques et actions</h2>
-      <div class="table-wrap"><table><thead><tr><th>Criticité</th><th>Risque</th><th>Action</th><th>Impact marge</th></tr></thead><tbody>{{#risques}}<tr><td>{{criticite}}</td><td><strong>{{titre}}</strong></td><td>{{action}}</td><td>{{impact_marge_eur}} €</td></tr>{{/risques}}</tbody></table></div>
-    </section>
-
-    <section class="card">
-      <h2 class="section-title">Sources de l'analyse</h2>
-      <ul class="list">{{#sources}}<li>{{.}}</li>{{/sources}}</ul>
-    </section>
-    <footer class="footer">Fiche d'opportunité MDB · Analyse {{date_analyse}} · Annonce {{annonce_id}}</footer>
-  </main>
-</body>
-</html>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche opportunité MDB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f5f3ee;--surface:#fff;--card:#edeae3;--card-hi:#e4e1d8;--border:#d0ccc3;--border-hi:#a8a49b;--ink:#16150f;--ink-2:#5a5850;--ink-3:#9a9890;--go:#145a2e;--go-bg:#d6f0df;--go-border:#7ec99a;--cond:#7a4108;--cond-bg:#faefd5;--cond-border:#e0a84a;--nogo:#831515;--nogo-bg:#fce8e8;--nogo-border:#d97373;--font-d:'Space Grotesk',sans-serif;--font-b:'Inter',sans-serif;--font-m:'JetBrains Mono',monospace}body{background:var(--bg);color:var(--ink);font:13px/1.5 var(--font-b);min-height:100vh}#app.loading,#app.error{max-width:960px;margin:48px auto;padding:20px 32px;font:16px var(--font-d)}#app.error{color:var(--nogo)}.site-header{background:var(--ink);color:#f5f3ee;padding:18px 32px;display:flex;justify-content:space-between;align-items:center;gap:8px}.site-logo{font:600 14px var(--font-d)}.site-logo span{font-weight:300;opacity:.55}.site-header-right{display:flex;align-items:center;gap:16px}.site-back{font:10px var(--font-m);letter-spacing:.06em;text-transform:uppercase;color:rgba(245,243,238,.65);text-decoration:none;padding:4px 10px;border:1px solid rgba(245,243,238,.25);border-radius:3px}.site-tag{font:9px var(--font-m);letter-spacing:.14em;text-transform:uppercase;opacity:.45}.hero{background:var(--surface);padding:32px 32px 0;border-bottom:1px solid var(--border)}.hero-top{display:grid;grid-template-columns:136px 1fr auto;gap:24px;align-items:start;padding-bottom:24px}.property-main-image{display:block;width:136px;height:102px;object-fit:cover;border:1px solid var(--border);border-radius:3px;background:var(--card)}.property-thumbs{display:flex;gap:4px;overflow:auto;margin-top:6px}.property-thumb{flex:0 0 28px;width:28px;height:22px;border:1px solid var(--border);border-radius:2px;background:center/cover no-repeat;cursor:pointer}.property-thumb.active{border:2px solid var(--cond)}.hero-eyebrow,.hkpi-l,.stitle{font:9px var(--font-m);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}.hero-eyebrow{margin-bottom:10px}.hero-title{font:700 26px/1.2 var(--font-d);margin-bottom:5px}.hero-sub{color:var(--ink-2)}.verdict-block{text-align:right}.verdict-pill{display:inline-flex;gap:7px;align-items:center;padding:8px 16px;border:1.5px solid;border-radius:2px;font:700 11px var(--font-m);letter-spacing:.08em;text-transform:uppercase}.verdict-pill:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}.go{color:var(--go);border-color:var(--go-border);background:var(--go-bg)}.cond{color:var(--cond);border-color:var(--cond-border);background:var(--cond-bg)}.nogo{color:var(--nogo);border-color:var(--nogo-border);background:var(--nogo-bg)}.hero-date{font:9px var(--font-m);color:var(--ink-3);margin-top:8px}.hero-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)}.hkpi{padding:14px 16px;background:var(--card)}.hkpi-v{margin:5px 0 3px;font:700 17px var(--font-m)}.hkpi-s{font-size:11px;color:var(--ink-3)}.content{max-width:960px;margin:0 auto;padding:28px 32px}.section-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(250px,1fr);gap:20px}.card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:20px;margin-bottom:20px}.stitle{padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px}.narrative{background:var(--card);border-left:3px solid var(--cond);padding:14px 18px;color:var(--ink-2);line-height:1.7}.list{padding-left:18px;margin-top:10px}.list li{margin:6px 0}.scenario{border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-top:10px}.scenario h3{padding:10px 13px;background:var(--card);font:600 13px var(--font-d)}.row{display:flex;justify-content:space-between;gap:14px;padding:7px 13px;border-top:1px solid var(--border)}.row dt{color:var(--ink-2)}.row dd{margin:0;text-align:right;font:500 12px var(--font-m)}.row.total{background:var(--card-hi)}.risk{border-left:4px solid var(--border-hi);background:var(--card);padding:12px 14px;margin-top:9px}.notice{background:var(--cond-bg);border:1px solid var(--cond-border);color:var(--cond);padding:11px 13px;margin-top:8px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:580px}th{background:var(--card-hi);font:9px var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);text-align:left}th,td{padding:9px;border:1px solid var(--border)}td:last-child{text-align:right;font-family:var(--font-m)}.site-footer{border-top:1px solid var(--border);padding:16px 32px;font:9px var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}.recalculate-button{position:fixed;right:24px;bottom:24px;z-index:20;width:48px;height:48px;border:1px solid var(--cond-border);border-radius:50%;background:var(--cond-bg);color:var(--cond);font-size:25px;cursor:pointer;box-shadow:0 4px 14px rgba(22,21,15,.18)}.recalculate-button:disabled{cursor:wait;opacity:.7}.recalculate-modal{position:fixed;z-index:30;inset:0;display:grid;place-items:center;padding:20px;background:rgba(22,21,15,.42)}.recalculate-modal-box{width:min(440px,100%);padding:24px;background:var(--surface);border:1px solid var(--border-hi);border-radius:4px;box-shadow:0 16px 42px rgba(22,21,15,.25)}.recalculate-modal-box h2{font:20px var(--font-d);margin-bottom:8px}.recalculate-modal-box p{color:var(--ink-2)}.recalculate-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:20px}.recalculate-actions button{border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;background:var(--surface);font:500 12px var(--font-b);cursor:pointer}.recalculate-actions button[data-type]{background:var(--ink);border-color:var(--ink);color:#fff}@media(max-width:680px){.site-header,.hero,.content{padding-left:16px;padding-right:16px}.hero-top,.section-grid{grid-template-columns:1fr}.property-gallery{display:flex;gap:8px}.property-thumbs{align-self:center;margin:0}.verdict-block{text-align:left}.hero-kpis{grid-template-columns:1fr 1fr}}
+</style></head><body><main id="app" class="loading">Chargement de l’analyse…</main>
+<script id="fiche-template" type="x-template">
+<header class="site-header"><div class="site-logo">Analyse Marchand de Biens <span>· Fiche opportunité</span></div><div class="site-header-right"><a class="site-back" data-source-link href="../index.html">← Revenir à l’annonce</a><div class="site-tag">MDB · {{date_analyse}}</div></div></header>
+<div class="hero"><div class="hero-top"><div class="property-gallery" data-property-gallery><img class="property-main-image" data-gallery-main alt=""><div class="property-thumbs" data-gallery-thumbs></div></div><div><div class="hero-eyebrow">Analyse MDB · Annonce {{annonce_id}}</div><h1 class="hero-title">Fiche d’opportunité marchand de biens</h1><div class="hero-sub">{{qualification.nature_operation}} · Faisabilité : {{qualification.faisabilite}} · Complexité : {{qualification.complexite}}/5</div></div><div class="verdict-block"><span class="verdict-pill {{decisionClass}}">{{decisionLabel}}</span><div class="hero-date">Analysé le {{date_analyse}}</div></div></div><div class="hero-kpis"><div class="hkpi"><div class="hkpi-l">Marge nette base</div><div class="hkpi-v">{{executive_summary.marge_nette_base_eur}}</div><div class="hkpi-s">{{executive_summary.marge_nette_base_pct}} %</div></div><div class="hkpi"><div class="hkpi-l">Prix demandé</div><div class="hkpi-v">{{executive_summary.prix_demande_eur}}</div><div class="hkpi-s">Acquisition envisagée</div></div><div class="hkpi"><div class="hkpi-l">PMA</div><div class="hkpi-v">{{executive_summary.prix_max_acquisition_eur}}</div><div class="hkpi-s">Prix maximum d’acquisition</div></div><div class="hkpi"><div class="hkpi-l">Écart demandé / PMA</div><div class="hkpi-v">{{executive_summary.ecart_prix_demande_pma_eur}}</div><div class="hkpi-s">À négocier ou justifier</div></div></div></div>
+<div class="content"><div class="section-grid"><div><section class="card"><h2 class="stitle">Résumé exécutif</h2><div class="narrative">{{executive_summary.synthese}}</div><h2 class="stitle" style="margin-top:22px">Hypothèses de qualification</h2><ul class="list">{{#qualification.hypotheses}}<li>{{.}}</li>{{/qualification.hypotheses}}</ul></section><section class="card"><h2 class="stitle">Bilan promoteur — scénarios</h2>{{#bilan_promoteur.scenarios}}<article class="scenario"><h3>Scénario {{nom}}</h3><dl><div class="row"><dt>Valeur de sortie brute</dt><dd>{{valeur_sortie_brute_eur}}</dd></div><div class="row"><dt>Prix d’acquisition</dt><dd>{{prix_acquisition_eur}}</dd></div><div class="row"><dt>Frais d’acquisition</dt><dd>{{frais_acquisition_eur}}</dd></div><div class="row"><dt>Travaux</dt><dd>{{travaux_eur}}</dd></div><div class="row"><dt>Frais annexes</dt><dd>{{frais_annexes_eur}}</dd></div><div class="row"><dt>Frais financiers</dt><dd>{{frais_financiers_eur}}</dd></div><div class="row total"><dt>Coût total</dt><dd>{{cout_total_eur}}</dd></div><div class="row total"><dt>Marge nette</dt><dd>{{marge_nette_eur}} · {{marge_nette_pct}} %</dd></div><div class="row total"><dt>Prix maximum d’acquisition</dt><dd>{{prix_max_acquisition_eur}}</dd></div></dl></article>{{/bilan_promoteur.scenarios}}</section></div><aside><section class="card"><h2 class="stitle">Réglementation</h2><p><strong>PLU :</strong> {{reglementation.plu}}</p><p><strong>Permis :</strong> {{reglementation.permis}}</p><h2 class="stitle" style="margin-top:22px">Contraintes</h2><ul class="list">{{#reglementation.contraintes}}<li>{{.}}</li>{{/reglementation.contraintes}}</ul><h2 class="stitle" style="margin-top:22px">Points à vérifier</h2><ul class="list">{{#reglementation.points_a_verifier}}<li>{{.}}</li>{{/reglementation.points_a_verifier}}</ul></section><section class="card"><h2 class="stitle">Planning</h2><dl><div class="row"><dt>Durée totale</dt><dd>{{planning.duree_totale_mois}} mois</dd></div><div class="row"><dt>Coût de portage</dt><dd>{{planning.cout_portage_eur}}</dd></div></dl>{{#planning.phases}}<div class="risk"><strong>{{nom}} · {{duree_mois}} mois</strong><div>{{commentaire}}</div></div>{{/planning.phases}}</section><section class="card"><h2 class="stitle">Avertissements</h2>{{#avertissements}}<div class="notice">{{.}}</div>{{/avertissements}}</section></aside></div><section class="card"><h2 class="stitle">Risques et actions</h2><div class="table-wrap"><table><thead><tr><th>Criticité</th><th>Risque</th><th>Action</th><th>Impact marge</th></tr></thead><tbody>{{#risques}}<tr><td>{{criticite}}</td><td><strong>{{titre}}</strong></td><td>{{action}}</td><td>{{impact_marge_eur}}</td></tr>{{/risques}}</tbody></table></div></section><section class="card"><h2 class="stitle">Sources de l’analyse</h2><ul class="list">{{#sources}}<li>{{.}}</li>{{/sources}}</ul></section></div><footer class="site-footer">Fiche d’opportunité MDB · Analyse {{date_analyse}} · Annonce {{annonce_id}}</footer>
+</script><script src="js/fiche.js"></script></body></html>
