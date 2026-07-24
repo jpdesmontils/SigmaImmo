@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initViewer();
   initDeleteModal();
   initAnalysisModal();
+  initFicheChoiceModal();
   await loadData();
 });
 
@@ -283,8 +284,46 @@ function showFavorites() {
   if (typeof closeSidebar === 'function') closeSidebar();
 }
 
-function analysisType(item) { return item.analyses && item.analyses.locatif ? 'locatif' : (item.analyses && item.analyses.mdb ? 'mdb' : null); }
-function openFicheInApp(item) { const type = analysisType(item); if (!type) return; openInApp(type === 'mdb' ? 'fiche-mdb.html?id=' + encodeURIComponent(item.id) : 'templates/fiche-investissement-locatif.html?id=' + encodeURIComponent(item.id), null, item); }
+function availableAnalysisTypes(item) {
+  if (!item || !item.analyses) return [];
+  return ['locatif', 'mdb'].filter(type => item.analyses[type]);
+}
+
+function analysisType(item) { return availableAnalysisTypes(item)[0] || null; }
+
+function openFicheInApp(item, type) {
+  const selectedType = type || analysisType(item);
+  if (!item || !item.id || !selectedType) return;
+  // Les scripts des fiches sont exécutés dans index.html : leur URL ne contient
+  // donc pas le paramètre id de la ressource chargée par openInApp.
+  window.__immoAnalysisId = item.id;
+  openInApp(selectedType === 'mdb' ? 'fiche-mdb.html?id=' + encodeURIComponent(item.id) : 'templates/fiche-investissement-locatif.html?id=' + encodeURIComponent(item.id), null, item);
+}
+
+let ficheChoiceTarget = null;
+function initFicheChoiceModal() {
+  const modal = document.getElementById('fiche-choice-modal');
+  document.getElementById('fiche-choice-cancel').addEventListener('click', closeFicheChoiceModal);
+  modal.addEventListener('click', event => { if (event.target === modal) closeFicheChoiceModal(); });
+  modal.querySelectorAll('[data-fiche-type]').forEach(button => button.addEventListener('click', () => {
+    const item = ficheChoiceTarget;
+    closeFicheChoiceModal();
+    openFicheInApp(item, button.dataset.ficheType);
+  }));
+}
+
+function openFicheChoice(item) {
+  const types = availableAnalysisTypes(item);
+  if (types.length < 2) { openFicheInApp(item, types[0]); return; }
+  ficheChoiceTarget = item;
+  document.getElementById('fiche-choice-title').textContent = item.title || 'cette annonce';
+  document.getElementById('fiche-choice-modal').classList.add('open');
+}
+
+function closeFicheChoiceModal() {
+  ficheChoiceTarget = null;
+  document.getElementById('fiche-choice-modal').classList.remove('open');
+}
 
 // ── Vue switcher ──────────────────────────────────────────────
 function initViewSwitcher() {
@@ -336,7 +375,7 @@ function renderGallery() {
     });
   });
 
-  grid.querySelectorAll('.card-btn-fiche').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openFicheInApp(filtered[parseInt(btn.dataset.idx)]); }));
+  grid.querySelectorAll('.card-btn-fiche').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openFicheChoice(filtered[parseInt(btn.dataset.idx)]); }));
   grid.querySelectorAll('.card-btn-analyze').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openAnalysisModal(filtered[parseInt(btn.dataset.idx)]); }));
 
   // Boutons tag sélection
@@ -446,7 +485,7 @@ async function renderList() {
       : '<div class="list-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface2)">🏠</div>';
     var cp = item.postalCode ? '<br><small style="color:var(--muted)">' + esc(item.postalCode) + ' · ' + esc(getDept(item)) + '</small>' : '<br><small style="color:var(--muted)">' + esc(getDept(item)) + '</small>';
 
-    var ficheLink = item.analysisStatus === 'queued' ? '<span title="Analyse en attente" style="color:var(--muted);font-size:12px;">⌛ En attente</span>' : item.analysisStatus === 'running' ? '<span title="Analyse en cours côté LLM" style="color:var(--muted);font-size:12px;">◌ Analyse en cours</span>' : (analysisType(item) ? '<button type="button" onclick="event.stopPropagation();openFicheInApp(filtered[' + idx + '])" style="color:var(--go);font-size:12px;border:0;background:none;cursor:pointer;">📄 Fiche In App</button>' : (item.selection === 'invest' ? '<button type="button" onclick="event.stopPropagation();openAnalysisModal(filtered[' + idx + '])" style="color:var(--warn);font-size:12px;border:0;background:none;cursor:pointer;">🤖 Analyser</button>' : ''));
+    var ficheLink = item.analysisStatus === 'queued' ? '<span title="Analyse en attente" style="color:var(--muted);font-size:12px;">⌛ En attente</span>' : item.analysisStatus === 'running' ? '<span title="Analyse en cours côté LLM" style="color:var(--muted);font-size:12px;">◌ Analyse en cours</span>' : (analysisType(item) ? '<button type="button" onclick="event.stopPropagation();openFicheChoice(filtered[' + idx + '])" style="color:var(--go);font-size:12px;border:0;background:none;cursor:pointer;">📄 Fiche In App</button>' : (item.selection === 'invest' ? '<button type="button" onclick="event.stopPropagation();openAnalysisModal(filtered[' + idx + '])" style="color:var(--warn);font-size:12px;border:0;background:none;cursor:pointer;">🤖 Analyser</button>' : ''));
 
     return '<tr style="cursor:pointer" onclick="openViewer(' + idx + ')">'
       + '<td>' + thumb + '</td>'
@@ -820,7 +859,7 @@ function renderViewerInfo(item) {
   const ficheLink = document.getElementById('viewer-fiche-link');
   if (item.analysisStatus === 'queued') { ficheLink.removeAttribute('href'); ficheLink.textContent = '⌛ Analyse en attente'; ficheLink.onclick = null; ficheLink.hidden = false; ficheLink.style.opacity = '.65'; }
   else if (item.analysisStatus === 'running') { ficheLink.removeAttribute('href'); ficheLink.textContent = '◌ Analyse en cours'; ficheLink.onclick = null; ficheLink.hidden = false; ficheLink.style.opacity = '.65'; }
-  else if (type) { ficheLink.href = '#'; ficheLink.textContent = '📄 Fiche In App'; ficheLink.onclick = e => { e.preventDefault(); openFicheInApp(item); }; ficheLink.hidden = false; ficheLink.style.opacity = ''; }
+  else if (type) { ficheLink.href = '#'; ficheLink.textContent = '📄 Fiche In App'; ficheLink.onclick = e => { e.preventDefault(); openFicheChoice(item); }; ficheLink.hidden = false; ficheLink.style.opacity = ''; }
   else if (sel === 'invest') { ficheLink.href = '#'; ficheLink.textContent = '🤖 Analyser'; ficheLink.onclick = e => { e.preventDefault(); openAnalysisModal(item); }; ficheLink.hidden = false; ficheLink.style.opacity = ''; }
   else ficheLink.hidden = true;
 }
@@ -1081,4 +1120,5 @@ function debounce(fn, delay) {
 
 window.openViewer = openViewer;
 window.openFicheInApp = openFicheInApp;
+window.openFicheChoice = openFicheChoice;
 window.openAnalysisModal = openAnalysisModal;

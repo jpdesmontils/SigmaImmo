@@ -1038,6 +1038,19 @@
 
 <!-- Modale analyse -->
 <div class="delete-modal" id="analysis-modal"><div class="delete-modal-box"><h3>🤖 Analyser l’opportunité</h3><p id="analysis-modal-title"></p><p>Choisissez le type d’analyse à lancer.</p><div class="delete-modal-actions"><button class="btn-modal-cancel" id="analysis-modal-cancel">Annuler</button><button class="btn-modal-confirm" data-analysis-type="locatif">Locatif</button><button class="btn-modal-confirm" data-analysis-type="mdb">MDB</button></div></div></div>
+
+<!-- Modale de choix de fiche -->
+<div class="delete-modal" id="fiche-choice-modal" role="dialog" aria-modal="true" aria-labelledby="fiche-choice-heading">
+  <div class="delete-modal-box">
+    <h3 id="fiche-choice-heading">📄 Choisir la fiche à afficher</h3>
+    <p><span class="delete-modal-name" id="fiche-choice-title"></span> possède une analyse locative et une analyse marchand de biens.</p>
+    <div class="delete-modal-actions">
+      <button class="btn-modal-cancel" id="fiche-choice-cancel">Annuler</button>
+      <button class="btn-modal-confirm" data-fiche-type="locatif">Locatif</button>
+      <button class="btn-modal-confirm" data-fiche-type="mdb">Marchand de biens</button>
+    </div>
+  </div>
+</div>
 <script>
   var sidebarEl = document.querySelector('.sidebar');
   var overlayEl = document.getElementById('sidebar-overlay');
