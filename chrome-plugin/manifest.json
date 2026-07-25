@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ImmoAggregator — Green Acres",
-  "version": "1.0.1",
-  "description": "Capture vos annonces Green Acres dans une galerie personnelle",
+  "name": "ImmoAggregator",
+  "version": "1.1.0",
+  "description": "Capture et enrichit vos annonces immobilières dans une galerie personnelle",
   "permissions": [
     "storage",
     "activeTab",
@@ -24,6 +24,7 @@
         "https://www.green-acres.fr/fr/favorite/all*"
       ],
       "js": [
+        "extraction_utils.js",
         "content_greenacres_favorites.js"
       ],
       "run_at": "document_idle"
@@ -33,6 +34,7 @@
         "https://www.green-acres.fr/fr/*"
       ],
       "js": [
+        "extraction_utils.js",
         "content_greenacres_listing.js"
       ],
       "run_at": "document_idle"
@@ -42,6 +44,7 @@
         "<all_urls>"
       ],
       "js": [
+        "extraction_utils.js",
         "content_capture.js"
       ],
       "run_at": "document_idle"

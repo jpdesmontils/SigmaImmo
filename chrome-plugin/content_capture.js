@@ -73,6 +73,9 @@
       priceText:   '',
       surface:     null,
       surfaceText: '',
+      terrain:     null,
+      dpe:         '',
+      ges:         '',
       location:    '',
       description: '',
       imageUrl:    '',
@@ -129,6 +132,9 @@
     // Priorité 3 : premier prix trouvé dans le texte visible (pas le max)
     // On prend le PREMIER match significatif, pas le plus grand
     const allText = document.body.innerText;
+    const energyRatings = ImmoExtraction.extractEnergyRatingsFromDocument(document);
+    data.dpe = energyRatings.dpe;
+    data.ges = energyRatings.ges;
     if (!data.price) {
       const priceMatches = allText.match(/([\d][\d\s]{2,8})\s*€/g) || [];
       for (const m of priceMatches) {
@@ -149,8 +155,20 @@
     }
     const surfEl = document.querySelector('[itemprop="floorSize"], [class*="surface"], [class*="area"]');
     if (surfEl) {
-      const m = surfEl.textContent.match(/(\d+)/);
-      if (m) data.surface = parseInt(m[1]);
+      const parsedSurface = ImmoExtraction.parseSquareMeters(surfEl.textContent);
+      if (parsedSurface !== null) data.surface = parsedSurface;
+    }
+
+    // ── Terrain ────────────────────────────────────────────
+    const terrainEl = document.querySelector(
+      '[data-testid*="terrain"], [class*="terrain"], [id*="terrain"], ' +
+      '[data-testid*="land"], [class*="land-area"], [id*="land-area"]'
+    );
+    data.terrain = ImmoExtraction.extractTerrainSurface(
+      terrainEl ? terrainEl.textContent : allText
+    );
+    if (data.terrain === null && terrainEl) {
+      data.terrain = ImmoExtraction.parseSquareMeters(terrainEl.textContent);
     }
 
     // ── Localisation ───────────────────────────────────────
@@ -197,41 +215,17 @@
     thumbs.forEach(src => { if (src && !data.images.includes(src)) data.images.push(src); });
     if (!data.imageUrl && thumbs[0]) data.imageUrl = thumbs[0];
 
-    // ── Description — densité texte ────────────────────────
-    // Trouver le bloc avec le plus de texte pur
-    const candidates = [...document.querySelectorAll('p, div, section, article')];
-    let bestBlock = null;
-    let bestScore = 0;
-
-    candidates.forEach(el => {
-      const text = el.innerText || '';
-      const htmlLen = el.innerHTML.length;
-      if (text.length < 150 || htmlLen === 0) return;
-      // Ratio texte/html : plus c'est proche de 1, moins il y a de balises
-      const ratio = text.length / htmlLen;
-      const score = text.length * ratio;
-      if (score > bestScore && text.length < 3000) {
-        bestScore = score;
-        bestBlock = text;
-      }
-    });
-
-    // Vérifier aussi itemprop="description"
-    const descEl = document.querySelector('[itemprop="description"], [class*="description"]');
-    if (descEl && descEl.innerText.length > (bestBlock || '').length) {
-      bestBlock = descEl.innerText;
-    }
-
-    if (bestBlock) {
-      data.description = bestBlock.trim().slice(0, 600);
-    }
+    // ── Description complète et nettoyée ───────────────────
+    data.description = ImmoExtraction.extractDescription(document);
 
     // ── Score de confiance ─────────────────────────────────
     let confidence = 0;
     if (data.title && data.title.length > 5)       confidence += 25;
     if (data.price && data.price > 0)               confidence += 25;
     if (data.imageUrl)                              confidence += 25;
-    if (data.surface || data.location)              confidence += 25;
+    if (data.surface || data.location)              confidence += 15;
+    if (data.description)                            confidence += 5;
+    if (data.dpe || data.ges || data.terrain)        confidence += 5;
     data.confidence = confidence;
 
     return data;
@@ -302,12 +296,44 @@
           </div>
         </div>
 
-        <div style="margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">TERRAIN (m²)</label>
+            <input id="immo-f-terrain" type="number" min="0" step="any" value="${listing.terrain || ''}" style="
+              width:100%;background:#0f172a;border:1px solid #334155;
+              border-radius:6px;padding:7px 10px;color:#e2e8f0;font-size:13px;box-sizing:border-box;
+            ">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">DPE</label>
+            <input id="immo-f-dpe" maxlength="1" pattern="[A-Ga-g]" value="${escHtml(listing.dpe)}" style="
+              width:100%;background:#0f172a;border:1px solid #334155;text-transform:uppercase;
+              border-radius:6px;padding:7px 10px;color:#e2e8f0;font-size:13px;box-sizing:border-box;
+            ">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">GES</label>
+            <input id="immo-f-ges" maxlength="1" pattern="[A-Ga-g]" value="${escHtml(listing.ges)}" style="
+              width:100%;background:#0f172a;border:1px solid #334155;text-transform:uppercase;
+              border-radius:6px;padding:7px 10px;color:#e2e8f0;font-size:13px;box-sizing:border-box;
+            ">
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px;">
           <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">LOCALISATION</label>
           <input id="immo-f-location" value="${escHtml(listing.location)}" style="
             width:100%;background:#0f172a;border:1px solid #334155;
             border-radius:6px;padding:7px 10px;color:#e2e8f0;font-size:13px;box-sizing:border-box;
           ">
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">DESCRIPTION NETTOYÉE</label>
+          <textarea id="immo-f-description" rows="7" style="
+            width:100%;background:#0f172a;border:1px solid #334155;resize:vertical;
+            border-radius:6px;padding:7px 10px;color:#e2e8f0;font-size:12px;line-height:1.4;box-sizing:border-box;
+          ">${escHtml(listing.description)}</textarea>
         </div>
 
         <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -333,6 +359,10 @@
       listing.title    = document.getElementById('immo-f-title').value.trim();
       listing.price    = parseFloat(document.getElementById('immo-f-price').value) || null;
       listing.surface  = parseFloat(document.getElementById('immo-f-surface').value) || null;
+      listing.terrain  = parseFloat(document.getElementById('immo-f-terrain').value) || null;
+      listing.dpe      = ImmoExtraction.normalizeRating(document.getElementById('immo-f-dpe').value);
+      listing.ges      = ImmoExtraction.normalizeRating(document.getElementById('immo-f-ges').value);
+      listing.description = ImmoExtraction.cleanListingText(document.getElementById('immo-f-description').value);
       listing.location = document.getElementById('immo-f-location').value.trim();
       listing.scrapedAt = Date.now();
       listing.id = 'cap_' + Date.now();

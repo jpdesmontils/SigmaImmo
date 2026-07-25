@@ -164,7 +164,9 @@ function sanitizeListing($l) {
         'rooms'       => $l['rooms']       ?? '',
         'bedrooms'    => $l['bedrooms']    ?? '',
         'terrain'     => is_numeric($l['terrain'] ?? null) ? (float)$l['terrain'] : null,
-        'description' => substr(strip_tags($l['description'] ?? ''), 0, 500),
+        'dpe'         => sanitizeEnergyRating($l['dpe'] ?? ''),
+        'ges'         => sanitizeEnergyRating($l['ges'] ?? ''),
+        'description' => trim(strip_tags($l['description'] ?? '')),
         'features'    => is_array($l['features'] ?? null) ? $l['features'] : [],
         'agency'      => substr(strip_tags($l['agency'] ?? ''), 0, 150),
         'priceReduction' => substr(strip_tags($l['priceReduction'] ?? ''), 0, 50),
@@ -174,6 +176,11 @@ function sanitizeListing($l) {
         'scrapedAt'   => $l['scrapedAt']   ?? null,
         'source'      => $l['source']      ?? 'ga_favorite'
     ];
+}
+
+function sanitizeEnergyRating($value) {
+    $rating = strtoupper(trim((string)$value));
+    return preg_match('/^[A-G]$/', $rating) ? $rating : '';
 }
 
 // ── Utils ─────────────────────────────────────────────────────

@@ -889,6 +889,8 @@ function viewerStatsHTML(item) {
   const stats = [];
   if (item.surface)  stats.push(['📐 Surface',  item.surface + ' m²']);
   if (item.terrain)  stats.push(['🌳 Terrain',  item.terrain + ' m²']);
+  if (item.dpe)      stats.push(['⚡ DPE', item.dpe]);
+  if (item.ges)      stats.push(['🌍 GES', item.ges]);
   if (item.rooms)    stats.push(['🚪 Pièces',   item.rooms]);
   if (item.bedrooms) stats.push(['🛏 Chambres', item.bedrooms]);
 
