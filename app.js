@@ -321,9 +321,9 @@ function analysisType(item) { return availableAnalysisTypes(item)[0] || null; }
 function openFicheInApp(item, type) {
   const selectedType = type || analysisType(item);
   if (!item || !item.id || !selectedType) return;
-  // Les scripts des fiches sont exécutés dans index.html : leur URL ne contient
-  // donc pas le paramètre id de la ressource chargée par openInApp.
-  window.__immoAnalysisId = item.id;
+  // La fiche est injectée dans index.html : transmettons explicitement les deux
+  // paramètres, sans dépendre de location.search ou de document.currentScript.
+  window.__immoAnalysisContext = { id: item.id, type: selectedType };
   openInApp('templates/fiche-investissement-' + selectedType + '.html?id=' + encodeURIComponent(item.id), null, item);
 }
 

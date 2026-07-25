@@ -2,8 +2,10 @@
   const currentScript = document.currentScript;
   const scriptUrl = currentScript?.src || location.href;
   const apiUrl = new URL('../../api/', scriptUrl);
-  const type = currentScript?.dataset.analysisType || document.documentElement.dataset.analysisType;
-  const analysisId = new URLSearchParams(location.search).get('id') || new URLSearchParams(location.search).get('listing') || window.__immoAnalysisId;
+  const runtimeContext = window.__immoAnalysisContext || {};
+  const type = runtimeContext.type || currentScript?.dataset.analysisType || document.documentElement.dataset.analysisType;
+  const query = new URLSearchParams(location.search);
+  const analysisId = runtimeContext.id || query.get('id') || query.get('listing');
   const euro = value => typeof value === 'number' ? value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }) : '—';
   const percent = value => typeof value === 'number' ? `${value.toLocaleString('fr-FR')} %` : '—';
   const date = value => value ? new Intl.DateTimeFormat('fr-FR').format(new Date(`${value}T00:00:00`)) : '—';
