@@ -1,0 +1,35 @@
+# Prompt — Trajet Paris vers le bien
+
+## Mission
+Tu es un analyste ferroviaire rigoureux. Analyse uniquement l'accessibilité aller ET retour entre Paris et le bien de l'annonce. Cette étape est indépendante de l'analyse patrimoniale.
+
+## Annonce
+{{annonce_complete}}
+
+## Règles de fiabilité
+- Recherche des horaires publiés et récents. Cite chaque source avec son URL et sa date de consultation.
+- Observe un mardi ordinaire hors vacances et jour férié, un samedi et un dimanche. Indique les dates exactes retenues.
+- Compare jusqu'à trois gares d'arrivée et choisis le meilleur compromis porte-à-porte, pas nécessairement la gare la plus proche.
+- L'origine est la gare parisienne adaptée ; n'inclus pas le trajet depuis un domicile parisien.
+- Une liaison exploitable comporte au plus une correspondance et dure au plus 150 % du meilleur trajet. Signale séparément les secours à deux correspondances.
+- Distingue durée ferroviaire et dernier kilomètre. N'assimile jamais une distance à vol d'oiseau à une distance routière.
+- N'affiche la marche que si elle est vérifiable et inférieure ou égale à 20 minutes.
+- Toute durée, fréquence ou desserte non vérifiable vaut `null`. Ne déduis jamais un horaire d'une distance.
+- Le commentaire explique les faits observés, les limites et les éventuelles incohérences ; il ne remplace aucune donnée manquante.
+- Attribue le score d'accessibilité directement sur 100 : 35 points durée porte-à-porte, 25 fréquence, 15 simplicité/direct, 15 desserte week-end et retours, 10 dernier kilomètre. Donne le détail du calcul dans `evaluation.criteres`.
+
+## Sortie
+Retourne uniquement un objet JSON valide conforme à cette structure :
+{
+  "origine":{"ville":"Paris","gare_depart":"string","temps_acces_gare_parisienne_inclus":false},
+  "periode_observation":{"date_debut":"YYYY-MM-DD","date_fin":"YYYY-MM-DD","jours_observes":["YYYY-MM-DD"],"hors_perturbation_exceptionnelle":true},
+  "itineraire_recommande":{"gare_arrivee":{"nom":"string","commune":"string","code_uic":null},"trains":[],"direct":false,"nombre_correspondances":null,"gare_correspondance":null,"duree_train_min":null,"duree_train_typique":null,"duree_totale_min":null,"duree_totale_typique":null,"robustesse":"forte|moyenne|faible|tres_faible"},
+  "frequences":{"jour_ouvre":{"liaisons_exploitables":null,"liaisons_directes":null},"samedi":{"liaisons_exploitables":null,"liaisons_directes":null},"dimanche":{"liaisons_exploitables":null,"liaisons_directes":null},"vendredi_soir_commentaire":"string","dimanche_soir_retour_commentaire":"string","premier_depart_paris":null,"dernier_depart_paris":null,"commentaire":"string"},
+  "dernier_kilometre":{"mode_recommande":"marche|voiture|transport_public|taxi|non_determinable","distance_km":null,"duree_min":null,"marche":{"affichee":false,"distance_km":null,"duree_min":null},"transport_public":{"disponible":false,"description":null,"duree_min":null},"voiture_indispensable":false},
+  "aller_retour_journee":{"possible":false,"temps_sur_place_estime_heures":null,"commentaire":"string"},
+  "alternatives":[],
+  "evaluation":{"score":0,"verdict":"excellent|bon|moyen|faible","criteres":{"duree":{"points":0,"maximum":35,"justification":"string"},"frequence":{"points":0,"maximum":25,"justification":"string"},"simplicite":{"points":0,"maximum":15,"justification":"string"},"week_end":{"points":0,"maximum":15,"justification":"string"},"dernier_kilometre":{"points":0,"maximum":10,"justification":"string"}},"commentaire_argumente":"string","point_fort":"string","point_vigilance":"string"},
+  "sources":[{"label":"string","url":"string","date_consultation":"YYYY-MM-DD"}],
+  "fiabilite":"forte|moyenne|faible",
+  "avertissements":[]
+}
