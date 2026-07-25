@@ -18,7 +18,7 @@ try {
     if (!$apiKey) throw new RuntimeException('OPENAI_API_KEY est absente de api/.env.');
     $model = getenv('OPENAI_MODEL') ?: 'gpt-5.3-chat-latest';
     $listing = findFavorite($id);
-    if (!$listing || ($listing['selection'] ?? '') !== 'invest') throw new RuntimeException('Annonce Invest introuvable.');
+    if (!$listing) throw new RuntimeException('Annonce favorite introuvable.');
     markRunning($jobPath, $id, $type);
     $listingJson = json_encode($listing, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     if ($type === 'patrimonial') {
