@@ -1,12 +1,13 @@
 <?php
 /** Worker CLI : appelle OpenAI puis enregistre strictement le JSON produit. */
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/analysis_types.php';
 if (PHP_SAPI !== 'cli') exit(1);
 define('DATA_DIR', __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
 define('JOBS_DIR', DATA_DIR . 'analyses/jobs/');
 $id = $argv[1] ?? ''; $type = $argv[2] ?? '';
-if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) || !in_array($type, ['locatif', 'mdb'], true)) exit(1);
+if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) || !validAnalysisType($type)) exit(1);
 $jobPath = JOBS_DIR . $id . '.json';
 $job = json_decode(@file_get_contents($jobPath), true) ?: [];
 if (($job['status'] ?? '') !== 'queued' || ($job['type'] ?? '') !== $type) { aiLog('analysis.worker_skipped', ['id' => $id, 'type' => $type, 'status' => $job['status'] ?? null]); exit(1); }

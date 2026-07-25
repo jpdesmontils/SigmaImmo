@@ -6,6 +6,7 @@
 // ============================================================
 
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/analysis_types.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -45,10 +46,7 @@ $items = array_values(loadJson(FAVORITES_FILE, []));
 foreach ($items as &$item) {
     $id = isset($item['id']) ? (string)$item['id'] : '';
     $safeId = preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) ? $id : '';
-    $item['analyses'] = [
-        'locatif' => $safeId !== '' && is_file(DATA_DIR . 'analyses/locatif/' . $safeId . '.json'),
-        'mdb' => $safeId !== '' && is_file(DATA_DIR . 'analyses/mdb/' . $safeId . '.json')
-    ];
+    $item['analyses'] = $safeId !== '' ? analysisAvailability(DATA_DIR, $safeId) : array_fill_keys(analysisTypes(), false);
     $job = $safeId !== '' ? loadJson(ANALYSIS_JOBS_DIR . $safeId . '.json', []) : [];
     $item['analysisStatus'] = activeAnalysisStatus($job);
 }
