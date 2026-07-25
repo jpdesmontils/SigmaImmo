@@ -31,7 +31,6 @@ if (!validId($id) || !validAnalysisType($type)) jsonError(400, 'Paramètres d’
 
 $favorite = findFavorite($id);
 if (!$favorite) jsonError(404, 'Annonce favorite introuvable.');
-if (($favorite['selection'] ?? '') !== 'invest') jsonError(403, 'Seules les annonces taguées Invest peuvent être analysées.');
 if (!is_dir(JOBS_DIR) && !mkdir(JOBS_DIR, 0755, true) && !is_dir(JOBS_DIR)) jsonError(500, 'Création du répertoire de tâches impossible.');
 
 $path = jobPath($id);
