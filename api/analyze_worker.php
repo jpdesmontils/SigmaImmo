@@ -19,16 +19,22 @@ try {
     $model = getenv('OPENAI_MODEL') ?: 'gpt-5.3-chat-latest';
     $listing = findFavorite($id);
     if (!$listing || ($listing['selection'] ?? '') !== 'invest') throw new RuntimeException('Annonce Invest introuvable.');
-    $promptFile = DATA_DIR . 'prompts/ana_' . $type . '.txt';
-    $template = @file_get_contents($promptFile);
-    if (!$template) throw new RuntimeException('Prompt d’analyse introuvable ou vide.');
-    $prompt = str_replace('{{annonce_complete}}', json_encode($listing, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), $template);
     markRunning($jobPath, $id, $type);
-    aiLog('analysis.openai_request_started', ['id' => $id, 'type' => $type]);
-    $result = requestOpenAi($apiKey, $model, $prompt);
-    aiLog('analysis.openai_request_succeeded', ['id' => $id, 'type' => $type]);
-    $analysis = json_decode($result, true);
-    if (!is_array($analysis)) throw new RuntimeException('OpenAI n’a pas renvoyé de JSON valide.');
+    $listingJson = json_encode($listing, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    if ($type === 'patrimonial') {
+        $travel = runAnalysisStage($apiKey, $model, 'ana_trajet_paris', ['{{annonce_complete}}' => $listingJson], $id, $type);
+        applyTravelScore($travel);
+        $analysis = runAnalysisStage($apiKey, $model, 'ana_patrimonial', [
+            '{{annonce_complete}}' => $listingJson,
+            '{{analyse_trajet}}' => json_encode($travel, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+        ], $id, $type);
+        $analysis['accessibilite_depuis_paris'] = $travel;
+        $analysis['notation']['axes']['accessibilite']['score'] = $travel['evaluation']['score'] ?? null;
+        $analysis['sources'] = array_merge($analysis['sources'] ?? [], $travel['sources'] ?? []);
+        applyPatrimonialScore($analysis);
+    } else {
+        $analysis = runAnalysisStage($apiKey, $model, 'ana_' . $type, ['{{annonce_complete}}' => $listingJson], $id, $type);
+    }
     $dir = DATA_DIR . 'analyses/' . $type . '/';
     if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) throw new RuntimeException('Répertoire d’analyse inaccessible.');
     if (file_put_contents($dir . $id . '.json', json_encode($analysis, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) === false) throw new RuntimeException('Écriture du fichier d’analyse impossible.');
@@ -41,6 +47,50 @@ try {
 }
 function loadEnv($path) { if (!is_file($path)) return; foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) { $line = trim($line); if ($line === '' || $line[0] === '#') continue; $line = preg_replace('/^export\s+/', '', $line); if (!preg_match('/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/', $line, $m)) continue; $value = trim($m[2]); if (strlen($value) > 1 && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) $value = substr($value, 1, -1); putenv($m[1] . '=' . $value); $_ENV[$m[1]] = $value; } }
 function findFavorite($id) { $items = json_decode(@file_get_contents(FAVORITES_FILE), true) ?: []; foreach ($items as $item) if (isset($item['id']) && (string)$item['id'] === $id) return $item; return null; }
+function runAnalysisStage($apiKey, $model, $promptName, $replacements, $id, $type) {
+    $template = @file_get_contents(DATA_DIR . 'prompts/' . $promptName . '.txt');
+    if (!$template) throw new RuntimeException('Prompt d’analyse introuvable ou vide : ' . $promptName . '.');
+    $prompt = str_replace(array_keys($replacements), array_values($replacements), $template);
+    aiLog('analysis.openai_request_started', ['id' => $id, 'type' => $type, 'stage' => $promptName]);
+    $result = requestOpenAi($apiKey, $model, $prompt);
+    aiLog('analysis.openai_request_succeeded', ['id' => $id, 'type' => $type, 'stage' => $promptName]);
+    $decoded = json_decode($result, true);
+    if (!is_array($decoded)) throw new RuntimeException('OpenAI n’a pas renvoyé de JSON valide pour l’étape ' . $promptName . '.');
+    return $decoded;
+}
+function applyTravelScore(&$travel) {
+    $maximums = ['duree' => 35, 'frequence' => 25, 'simplicite' => 15, 'week_end' => 15, 'dernier_kilometre' => 10];
+    $criteria = $travel['evaluation']['criteres'] ?? null;
+    if (!is_array($criteria)) throw new RuntimeException('Le détail de la note d’accessibilité est absent.');
+    $total = 0.0;
+    foreach ($maximums as $code => $maximum) {
+        if (!is_numeric($criteria[$code]['points'] ?? null)) throw new RuntimeException('Note d’accessibilité absente pour le critère ' . $code . '.');
+        $points = max(0, min($maximum, (float)$criteria[$code]['points']));
+        $travel['evaluation']['criteres'][$code]['points'] = round($points, 1);
+        $travel['evaluation']['criteres'][$code]['maximum'] = $maximum;
+        $total += $points;
+    }
+    $travel['evaluation']['score'] = round($total);
+    $travel['evaluation']['verdict'] = $total >= 80 ? 'excellent' : ($total >= 65 ? 'bon' : ($total >= 45 ? 'moyen' : 'faible'));
+}
+function applyPatrimonialScore(&$analysis) {
+    $expectedWeights = ['emplacement_valeur' => 25, 'qualite_bati' => 15, 'liquidite_rarete' => 15, 'risques' => 15, 'financement' => 15, 'optimisations' => 10, 'accessibilite' => 5];
+    $axes = $analysis['notation']['axes'] ?? null;
+    if (!is_array($axes)) throw new RuntimeException('La grille de notation patrimoniale est absente.');
+    $total = 0.0;
+    foreach ($expectedWeights as $code => $weight) {
+        if (!isset($axes[$code]) || !is_array($axes[$code]) || !is_numeric($axes[$code]['score'] ?? null)) throw new RuntimeException('Score patrimonial absent pour l’axe ' . $code . '.');
+        $score = max(0, min(100, (float)$axes[$code]['score']));
+        $contribution = $score * $weight / 100;
+        $analysis['notation']['axes'][$code]['score'] = round($score, 1);
+        $analysis['notation']['axes'][$code]['poids_pct'] = $weight;
+        $analysis['notation']['axes'][$code]['contribution_points'] = round($contribution, 1);
+        $total += $contribution;
+    }
+    $analysis['notation']['score_global'] = round($total);
+    $analysis['decision']['score_global'] = $analysis['notation']['score_global'];
+    $analysis['qualite_patrimoniale']['score'] = round(($axes['emplacement_valeur']['score'] * 25 + $axes['qualite_bati']['score'] * 15 + $axes['liquidite_rarete']['score'] * 15) / 55);
+}
 function requestOpenAi($apiKey, $model, $prompt) {
     if (!function_exists('curl_init')) throw new RuntimeException('Extension PHP cURL indisponible.');
     $payload = ['model' => $model, 'input' => [['role' => 'user', 'content' => [['type' => 'input_text', 'text' => $prompt]]]], 'text' => ['format' => ['type' => 'json_object']]];
@@ -68,5 +118,5 @@ function openAiErrorDetails($body, $curlError) {
     }
     return 'réponse refusée sans détail exploitable';
 }
-function markRunning($path, $id, $type) { finish($path, ['id' => $id, 'type' => $type, 'status' => 'running', 'started_at' => gmdate('c'), 'lease_expires_at' => gmdate('c', time() + 310), 'finished_at' => null, 'error' => null]); }
+function markRunning($path, $id, $type) { finish($path, ['id' => $id, 'type' => $type, 'status' => 'running', 'started_at' => gmdate('c'), 'lease_expires_at' => gmdate('c', time() + 620), 'finished_at' => null, 'error' => null]); }
 function finish($path, $data) { $previous = json_decode(@file_get_contents($path), true) ?: []; file_put_contents($path, json_encode(array_merge($previous, $data), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX); }
