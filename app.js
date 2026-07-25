@@ -21,6 +21,7 @@ const filters = {
   priceMax:  null,
   surfMin:   null,
   surfMax:   null,
+  withoutScore: false,
   sort:      'date_desc'
 };
 
@@ -125,6 +126,13 @@ function initFilters() {
     applyFiltersAndRender();
   });
 
+  document.getElementById('f-without-score').addEventListener('click', e => {
+    filters.withoutScore = !filters.withoutScore;
+    e.currentTarget.classList.toggle('active', filters.withoutScore);
+    e.currentTarget.setAttribute('aria-pressed', String(filters.withoutScore));
+    applyFiltersAndRender();
+  });
+
   document.getElementById('btn-reset').addEventListener('click', resetFilters);
 
   document.querySelectorAll('[data-user-filter]').forEach(btn => {
@@ -166,16 +174,7 @@ function applyFiltersAndRender() {
 
   filtered = allListings.filter(item => listingMatchesFilters(item, filters));
 
-  const [sortField, sortOrder] = filters.sort.split('_');
-  filtered.sort((a, b) => {
-    let va, vb;
-    switch (sortField) {
-      case 'price':   va = a.price   || Infinity; vb = b.price   || Infinity; break;
-      case 'surface': va = a.surface || 0;        vb = b.surface || 0;        break;
-      default:        va = a.capturedAt || 0;     vb = b.capturedAt || 0;
-    }
-    return sortOrder === 'asc' ? va - vb : vb - va;
-  });
+  filtered.sort((a, b) => compareListings(a, b, filters.sort));
 
   console.log('[ImmoAgg] Filtré:', filtered.length, '/', allListings.length);
   document.getElementById('result-count').textContent = filtered.length;
@@ -190,12 +189,39 @@ function listingMatchesFilters(item, activeFilters) {
   const userKey = selection || 'untagged';
   if (activeFilters.userSelections.size && !activeFilters.userSelections.has(userKey)) return false;
   if (activeFilters.analysisTypes.size && !availableAnalysisTypes(item).some(type => activeFilters.analysisTypes.has(type))) return false;
+  if (activeFilters.withoutScore && hasScore(item)) return false;
   if (activeFilters.city && !getLoc(item).toLowerCase().includes(activeFilters.city)) return false;
   if (activeFilters.priceMin !== null && (item.price === null || item.price < activeFilters.priceMin)) return false;
   if (activeFilters.priceMax !== null && (item.price === null || item.price > activeFilters.priceMax)) return false;
   if (activeFilters.surfMin !== null && (item.surface === null || item.surface < activeFilters.surfMin)) return false;
   if (activeFilters.surfMax !== null && (item.surface === null || item.surface > activeFilters.surfMax)) return false;
   return true;
+}
+
+function hasScore(item) {
+  return Number.isFinite(Number(item.latestAnalysis?.score)) && item.latestAnalysis?.score !== null && item.latestAnalysis?.score !== '';
+}
+
+function compareListings(a, b, sort) {
+  const [sortField, sortOrder] = sort.split('_');
+
+  if (sortField === 'score') {
+    const aHasScore = hasScore(a);
+    const bHasScore = hasScore(b);
+    if (aHasScore !== bHasScore) return aHasScore ? -1 : 1;
+    if (!aHasScore) return 0;
+    return sortOrder === 'asc'
+      ? Number(a.latestAnalysis.score) - Number(b.latestAnalysis.score)
+      : Number(b.latestAnalysis.score) - Number(a.latestAnalysis.score);
+  }
+
+  let va, vb;
+  switch (sortField) {
+    case 'price':   va = a.price   || Infinity; vb = b.price   || Infinity; break;
+    case 'surface': va = a.surface || 0;        vb = b.surface || 0;        break;
+    default:        va = a.capturedAt || 0;     vb = b.capturedAt || 0;
+  }
+  return sortOrder === 'asc' ? va - vb : vb - va;
 }
 
 function resetFilters() {
@@ -206,6 +232,7 @@ function resetFilters() {
   filters.priceMax = null;
   filters.surfMin  = null;
   filters.surfMax  = null;
+  filters.withoutScore = false;
   filters.sort     = 'date_desc';
 
   document.getElementById('f-city').value      = '';
@@ -214,6 +241,8 @@ function resetFilters() {
   document.getElementById('f-surf-min').value  = '';
   document.getElementById('f-surf-max').value  = '';
   document.getElementById('f-sort').value      = 'date_desc';
+  document.getElementById('f-without-score').classList.remove('active');
+  document.getElementById('f-without-score').setAttribute('aria-pressed', 'false');
 
   syncFilterButtons();
 
