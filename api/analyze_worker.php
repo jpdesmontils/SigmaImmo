@@ -37,16 +37,28 @@ try {
     }
     $dir = DATA_DIR . 'analyses/' . $type . '/';
     if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) throw new RuntimeException('Répertoire d’analyse inaccessible.');
-    if (file_put_contents($dir . $id . '.json', json_encode($analysis, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) === false) throw new RuntimeException('Écriture du fichier d’analyse impossible.');
-    aiLog('analysis.result_written', ['id' => $id, 'type' => $type, 'path' => $dir . $id . '.json']);
+    $resultPath = $dir . $id . '.json';
+    if (file_put_contents($resultPath, json_encode($analysis, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) === false) throw new RuntimeException('Écriture du fichier d’analyse impossible.');
+    // Une suppression peut avoir lieu pendant l’appel OpenAI : ne jamais recréer
+    // une analyse orpheline une fois que l’annonce a disparu des favoris.
+    if (discardFilesForDeletedListing($id, $jobPath, $resultPath)) {
+        aiLog('analysis.result_discarded_deleted_listing', ['id' => $id, 'type' => $type]);
+        exit(0);
+    }
+    aiLog('analysis.result_written', ['id' => $id, 'type' => $type, 'path' => $resultPath]);
     finish($jobPath, ['id' => $id, 'type' => $type, 'status' => 'completed', 'finished_at' => gmdate('c'), 'error' => null]);
+    if (discardFilesForDeletedListing($id, $jobPath, $resultPath)) exit(0);
     aiLog('analysis.completed', ['id' => $id, 'type' => $type]);
 } catch (Throwable $error) {
     aiLog('analysis.failed', ['id' => $id, 'type' => $type, 'error' => $error->getMessage()]);
-    finish($jobPath, ['id' => $id, 'type' => $type, 'status' => 'failed', 'finished_at' => gmdate('c'), 'error' => $error->getMessage()]);
+    if (findFavorite($id)) {
+        finish($jobPath, ['id' => $id, 'type' => $type, 'status' => 'failed', 'finished_at' => gmdate('c'), 'error' => $error->getMessage()]);
+    }
+    discardFilesForDeletedListing($id, $jobPath);
 }
 function loadEnv($path) { if (!is_file($path)) return; foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) { $line = trim($line); if ($line === '' || $line[0] === '#') continue; $line = preg_replace('/^export\s+/', '', $line); if (!preg_match('/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/', $line, $m)) continue; $value = trim($m[2]); if (strlen($value) > 1 && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) $value = substr($value, 1, -1); putenv($m[1] . '=' . $value); $_ENV[$m[1]] = $value; } }
 function findFavorite($id) { $items = json_decode(@file_get_contents(FAVORITES_FILE), true) ?: []; foreach ($items as $item) if (isset($item['id']) && (string)$item['id'] === $id) return $item; return null; }
+function discardFilesForDeletedListing($id, $jobPath, $resultPath = null) { if (findFavorite($id)) return false; if ($resultPath) @unlink($resultPath); @unlink($jobPath); return true; }
 function runAnalysisStage($apiKey, $model, $promptName, $replacements, $id, $type) {
     $template = @file_get_contents(DATA_DIR . 'prompts/' . $promptName . '.txt');
     if (!$template) throw new RuntimeException('Prompt d’analyse introuvable ou vide : ' . $promptName . '.');
