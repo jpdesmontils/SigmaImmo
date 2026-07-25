@@ -7,7 +7,7 @@
   console.log('[ImmoAgg] Scraping favoris Green Acres…');
 
   // Attendre que les cartes soient présentes
-  await waitForEl('.announce-card', 5000);
+  await ImmoExtraction.waitForElement(document, '.announce-card', 5000);
 
   const listings = scrapeCards();
 
@@ -143,19 +143,6 @@ function parseSurface(text) {
   const match = text.match(/([\d\s]+)\s*(m²|m2)/i);
   if (match) return parseFloat(match[1].replace(/\s/g, ''));
   return null;
-}
-
-function waitForEl(selector, timeout = 5000) {
-  return new Promise(resolve => {
-    if (document.querySelector(selector)) return resolve(true);
-    const start = Date.now();
-    const check = () => {
-      if (document.querySelector(selector)) return resolve(true);
-      if (Date.now() - start > timeout) return resolve(false);
-      requestAnimationFrame(check);
-    };
-    check();
-  });
 }
 
 function injectBadge(text) {

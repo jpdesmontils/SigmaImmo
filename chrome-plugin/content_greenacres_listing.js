@@ -11,7 +11,7 @@
 
   if (!isListing) return;
 
-  await waitForEl('h1, .property-title, [class*="detail"]', 3000);
+  await ImmoExtraction.waitForElement(document, 'h1, .property-title, [class*="detail"]', 3000);
 
   const data = extractDetailPage();
   if (!data) return;
@@ -38,7 +38,7 @@ function extractDetailPage() {
 
   // Surface
   const surfaceEl = document.querySelector('[class*="surface"], [class*="area"]');
-  const surface = surfaceEl ? parseSurface(surfaceEl.textContent) : null;
+  const surface = surfaceEl ? ImmoExtraction.parseSquareMeters(surfaceEl.textContent) : null;
 
   // Adresse / localisation — le plus précis disponible
   const addressEl = document.querySelector(
@@ -58,11 +58,10 @@ function extractDetailPage() {
     .map(i => i.dataset.src || i.dataset.lazy || i.src)
     .filter(src => src && src.startsWith('http') && !src.includes('placeholder'));
 
-  // Description
-  const descEl = document.querySelector(
-    '[class*="description"], [itemprop="description"], .detail-description'
-  );
-  const description = descEl ? descEl.textContent.trim().slice(0, 500) : '';
+  // Description complète nettoyée et diagnostics énergétiques
+  const description = ImmoExtraction.extractDescription(document);
+  const { dpe, ges } = ImmoExtraction.extractEnergyRatingsFromDocument(document);
+  const terrain = ImmoExtraction.extractTerrainSurface(document.body.innerText);
 
   // Caractéristiques
   const features = {};
@@ -73,7 +72,7 @@ function extractDetailPage() {
       if (key && val) features[key] = val;
     });
 
-  return { url, title, price, priceText, surface, address, coords, images, description, features };
+  return { url, title, price, priceText, surface, terrain, dpe, ges, address, coords, images, description, features };
 }
 
 function extractCoords() {
@@ -111,22 +110,4 @@ function parsePrice(text) {
   const clean = text.replace(/\s/g, '').replace(',', '.').replace(/[^\d.]/g, '');
   const n = parseFloat(clean);
   return isNaN(n) ? null : n;
-}
-
-function parseSurface(text) {
-  const match = text.match(/(\d+[\d,.]*)[\s]*(m²|m2|sqm)/i);
-  if (match) return parseFloat(match[1].replace(',', '.'));
-  return null;
-}
-
-function waitForEl(selector, timeout = 3000) {
-  return new Promise(resolve => {
-    const start = Date.now();
-    const check = () => {
-      if (document.querySelector(selector)) return resolve(true);
-      if (Date.now() - start > timeout) return resolve(false);
-      requestAnimationFrame(check);
-    };
-    check();
-  });
 }
