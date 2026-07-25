@@ -1,6 +1,7 @@
 <?php
 /** Lance et suit les analyses OpenAI sans bloquer la requête HTTP. */
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/analysis_types.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -26,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError(405, 'Method not allowed');
 $payload = json_decode(file_get_contents('php://input'), true);
 $id = isset($payload['id']) ? (string)$payload['id'] : '';
 $type = isset($payload['type']) ? (string)$payload['type'] : '';
-if (!validId($id) || !in_array($type, ['locatif', 'mdb'], true)) jsonError(400, 'Paramètres d’analyse invalides.');
+if (!validId($id) || !validAnalysisType($type)) jsonError(400, 'Paramètres d’analyse invalides.');
 
 $favorite = findFavorite($id);
 if (!$favorite) jsonError(404, 'Annonce favorite introuvable.');
@@ -75,7 +76,7 @@ echo json_encode(['ok' => true, 'job' => $job], JSON_UNESCAPED_UNICODE);
 
 function validId($id) { return is_string($id) && preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id); }
 function jobPath($id) { return JOBS_DIR . $id . '.json'; }
-function analysisFiles($id) { return ['locatif' => is_file(DATA_DIR . 'analyses/locatif/' . $id . '.json'), 'mdb' => is_file(DATA_DIR . 'analyses/mdb/' . $id . '.json')]; }
+function analysisFiles($id) { return analysisAvailability(DATA_DIR, $id); }
 function findFavorite($id) { foreach (readJson(FAVORITES_FILE, []) as $item) if (isset($item['id']) && (string)$item['id'] === $id) return $item; return null; }
 function readJson($path, $default = null) { if (!is_file($path)) return $default; $value = json_decode(file_get_contents($path), true); return is_array($value) ? $value : $default; }
 function writeJson($path, $value) { file_put_contents($path, json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX); }
