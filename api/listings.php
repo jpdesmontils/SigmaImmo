@@ -46,7 +46,8 @@ $items = array_values(loadJson(FAVORITES_FILE, []));
 foreach ($items as &$item) {
     $id = isset($item['id']) ? (string)$item['id'] : '';
     $safeId = preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) ? $id : '';
-    $item['analyses'] = $safeId !== '' ? analysisAvailability(DATA_DIR, $safeId) : array_fill_keys(analysisTypes(), false);
+    $item['analyses'] = $safeId !== '' ? analysisSummaries(DATA_DIR, $safeId) : array_fill_keys(analysisTypes(), false);
+    $item['latestAnalysis'] = latestAnalysisSummary($item['analyses']);
     $job = $safeId !== '' ? loadJson(ANALYSIS_JOBS_DIR . $safeId . '.json', []) : [];
     $item['analysisStatus'] = activeAnalysisStatus($job);
 }

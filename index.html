@@ -221,7 +221,6 @@
     }
     .selection-btn.sel-shortlist { color: var(--go); }
     .selection-btn.sel-ecartee   { color: var(--danger); }
-    .selection-btn.sel-invest    { color: var(--warn); }
     /* Sélecteur renforcé pour toujours l'emporter sur les couleurs sémantiques ci-dessus */
     .selection-btns .selection-btn.active {
       border-color: var(--text);
@@ -312,12 +311,14 @@
       font-size: 32px;
       color: var(--muted);
     }
+    .card-media { position:relative; }
 
     .card-body { padding: 12px 14px 14px; }
 
     .card-tags {
       display: flex;
       gap: 6px;
+      flex-wrap: wrap;
       margin-bottom: 8px;
     }
     .tag {
@@ -329,9 +330,9 @@
       text-transform: uppercase;
       letter-spacing: .06em;
     }
-    .tag-fav    { background: var(--text);    color: var(--bg); }
-    .tag-invest { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
-    .tag-fiche  { background: var(--go-bg);   color: var(--go);   border: 1px solid var(--go-border); }
+    .tag-locatif { background:#e7f0fb;color:#245987;border:1px solid #b9d0e8; }
+    .tag-patrimonial { background:#eee9f8;color:#62448a;border:1px solid #cfc1e6; }
+    .tag-mdb { background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border); }
 
     .card-title {
       font-size: 14px;
@@ -390,7 +391,6 @@
     .app-toast.success{background:var(--go)} .app-toast.error{background:var(--danger)}
     .tag-shortlist-active { background: var(--go-bg)     !important; color: var(--go)     !important; border-color: var(--go-border)     !important; }
     .tag-ecartee-active   { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: var(--danger-border) !important; }
-    .tag-invest-active    { background: var(--warn-bg)   !important; color: var(--warn)   !important; border-color: var(--warn-border)   !important; }
 
     /* ── Badge sélection sur vignette ─────────────────────────── */
     .card { position: relative; overflow: hidden; }
@@ -409,7 +409,12 @@
     }
     .badge-shortlist { background: var(--go);      color: var(--bg); }
     .badge-ecartee   { background: var(--danger);  color: var(--bg); }
-    .badge-invest    { background: var(--warn);    color: var(--bg); }
+    .card-analysis-tags { position:absolute;top:8px;right:8px;z-index:9;display:flex;flex-direction:column;align-items:flex-end;gap:4px; }
+    .card-score { position:absolute;right:10px;bottom:10px;z-index:9;width:58px;height:58px;border-radius:50%;background:rgba(245,243,238,.96);box-shadow:0 2px 10px #16150f55;display:grid;place-items:center; }
+    .card-score svg { position:absolute;inset:0;transform:rotate(-90deg); }
+    .card-score-inner { position:relative;display:flex;flex-direction:column;align-items:center;font-family:var(--font-m);font-weight:700;line-height:1; }
+    .card-score-value { font-size:16px; }
+    .card-score-denom { font-size:8px;color:var(--muted);margin-top:2px; }
 
     /* ── Modale suppression ──────────────────────────────────── */
     .delete-modal {
@@ -863,6 +868,12 @@
       }
       .sidebar.open { transform: translateX(0); }
       .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+      .card-analysis-tags { top:6px;right:6px;gap:3px; }
+      .card-analysis-tags .tag { font-size:8px;padding:2px 5px; }
+      .card-score { width:50px;height:50px;right:7px;bottom:7px; }
+      .card-score svg { width:50px;height:50px; }
+      .card-score-value { font-size:14px; }
+      .selection-btn { min-height:44px; }
       .header-stats { display: none; }
     }
   </style>
@@ -915,7 +926,8 @@
     <div class="filter-group"><h3>Prix (€)</h3><div class="range-row"><input class="filter-input" id="f-price-min" type="number" placeholder="Min"><input class="filter-input" id="f-price-max" type="number" placeholder="Max"></div></div>
     <div class="filter-group"><h3>Surface (m²)</h3><div class="range-row"><input class="filter-input" id="f-surf-min" type="number" placeholder="Min"><input class="filter-input" id="f-surf-max" type="number" placeholder="Max"></div></div>
     <div class="filter-group"><h3>Tri</h3><select class="sort-select" id="f-sort"><option value="date_desc">Plus récent</option><option value="date_asc">Plus ancien</option><option value="price_asc">Prix croissant</option><option value="price_desc">Prix décroissant</option><option value="surface_desc">Surface décroissante</option><option value="surface_asc">Surface croissante</option></select></div>
-    <div class="filter-group"><h3>Sélection</h3><div class="selection-btns"><button class="selection-btn active" data-selection="all">Toutes</button><button class="selection-btn sel-shortlist" data-selection="shortlist">⭐ ShortList</button><button class="selection-btn sel-ecartee" data-selection="ecartee">✕ Écartées</button><button class="selection-btn sel-invest" data-selection="invest">$ Invest</button></div></div>
+    <div class="filter-group"><h3>Classement</h3><div class="selection-btns" data-filter-group="user"><button class="selection-btn active" data-user-filter="all" aria-pressed="true">Tous</button><button class="selection-btn" data-user-filter="untagged" aria-pressed="false">Sans tag</button><button class="selection-btn sel-shortlist" data-user-filter="shortlist" aria-pressed="false">⭐ ShortList</button><button class="selection-btn sel-ecartee" data-user-filter="ecartee" aria-pressed="false">✕ Écartés</button></div></div>
+    <div class="filter-group"><h3>Types d’analyse</h3><div class="selection-btns" data-filter-group="analysis"><button class="selection-btn" data-analysis-filter="patrimonial" aria-pressed="false">Patrimonial</button><button class="selection-btn" data-analysis-filter="locatif" aria-pressed="false">Locatif</button><button class="selection-btn" data-analysis-filter="mdb" aria-pressed="false">Marchand de biens</button></div></div>
     <button class="btn-reset" id="btn-reset">↺ Réinitialiser les filtres</button>
 
 	
@@ -1066,6 +1078,6 @@
   if (overlayEl) overlayEl.addEventListener('click', closeSidebar);
 </script>
 <!-- La version évite de combiner ce HTML, dont les choix sont dynamiques, avec un ancien app.js en cache. -->
-<script src="app.js?v=20260725-patrimonial"></script>
+<script src="app.js?v=20260725-gallery-tags"></script>
 </body>
 </html>

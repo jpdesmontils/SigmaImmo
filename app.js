@@ -14,7 +14,8 @@ let markers     = null;
 let currentView = 'gallery';
 
 const filters = {
-  selection: 'all',
+  userSelections: new Set(),
+  analysisTypes:  new Set(),
   city:      '',
   priceMin:  null,
   priceMax:  null,
@@ -126,13 +127,35 @@ function initFilters() {
 
   document.getElementById('btn-reset').addEventListener('click', resetFilters);
 
-  document.querySelectorAll('.selection-btn').forEach(btn => {
+  document.querySelectorAll('[data-user-filter]').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.selection-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      filters.selection = btn.dataset.selection;
+      const value = btn.dataset.userFilter;
+      if (value === 'all') filters.userSelections.clear();
+      else if (filters.userSelections.has(value)) filters.userSelections.delete(value);
+      else filters.userSelections.add(value);
+      syncFilterButtons();
       applyFiltersAndRender();
     });
+  });
+  document.querySelectorAll('[data-analysis-filter]').forEach(btn => btn.addEventListener('click', () => {
+    const value = btn.dataset.analysisFilter;
+    if (filters.analysisTypes.has(value)) filters.analysisTypes.delete(value);
+    else filters.analysisTypes.add(value);
+    syncFilterButtons();
+    applyFiltersAndRender();
+  }));
+}
+
+function syncFilterButtons() {
+  document.querySelectorAll('[data-user-filter]').forEach(btn => {
+    const active = btn.dataset.userFilter === 'all' ? filters.userSelections.size === 0 : filters.userSelections.has(btn.dataset.userFilter);
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  });
+  document.querySelectorAll('[data-analysis-filter]').forEach(btn => {
+    const active = filters.analysisTypes.has(btn.dataset.analysisFilter);
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', String(active));
   });
 }
 
@@ -141,15 +164,7 @@ function applyFiltersAndRender() {
   // actuellement affiché est un guide ou une fiche chargée dans l'application.
   if (document.getElementById('view-in-app').classList.contains('active')) showFavorites({ render: false });
 
-  filtered = allListings.filter(item => {
-    if (filters.selection !== 'all' && item.selection !== filters.selection) return false;
-    if (filters.city && !getLoc(item).toLowerCase().includes(filters.city)) return false;
-    if (filters.priceMin !== null && (item.price === null || item.price < filters.priceMin)) return false;
-    if (filters.priceMax !== null && (item.price === null || item.price > filters.priceMax)) return false;
-    if (filters.surfMin  !== null && (item.surface === null || item.surface < filters.surfMin))  return false;
-    if (filters.surfMax  !== null && (item.surface === null || item.surface > filters.surfMax))  return false;
-    return true;
-  });
+  filtered = allListings.filter(item => listingMatchesFilters(item, filters));
 
   const [sortField, sortOrder] = filters.sort.split('_');
   filtered.sort((a, b) => {
@@ -170,8 +185,22 @@ function applyFiltersAndRender() {
   if (currentView === 'map')     renderMap();
 }
 
+function listingMatchesFilters(item, activeFilters) {
+  const selection = normalizedSelection(item.selection);
+  const userKey = selection || 'untagged';
+  if (activeFilters.userSelections.size && !activeFilters.userSelections.has(userKey)) return false;
+  if (activeFilters.analysisTypes.size && !availableAnalysisTypes(item).some(type => activeFilters.analysisTypes.has(type))) return false;
+  if (activeFilters.city && !getLoc(item).toLowerCase().includes(activeFilters.city)) return false;
+  if (activeFilters.priceMin !== null && (item.price === null || item.price < activeFilters.priceMin)) return false;
+  if (activeFilters.priceMax !== null && (item.price === null || item.price > activeFilters.priceMax)) return false;
+  if (activeFilters.surfMin !== null && (item.surface === null || item.surface < activeFilters.surfMin)) return false;
+  if (activeFilters.surfMax !== null && (item.surface === null || item.surface > activeFilters.surfMax)) return false;
+  return true;
+}
+
 function resetFilters() {
-  filters.selection = 'all';
+  filters.userSelections.clear();
+  filters.analysisTypes.clear();
   filters.city      = '';
   filters.priceMin = null;
   filters.priceMax = null;
@@ -186,8 +215,7 @@ function resetFilters() {
   document.getElementById('f-surf-max').value  = '';
   document.getElementById('f-sort').value      = 'date_desc';
 
-  document.querySelectorAll('.selection-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.selection-btn[data-selection="all"]').classList.add('active');
+  syncFilterButtons();
 
   applyFiltersAndRender();
 }
@@ -313,10 +341,44 @@ const ANALYSIS_TYPES = {
 
 function availableAnalysisTypes(item) {
   if (!item || !item.analyses) return [];
-  return Object.keys(ANALYSIS_TYPES).filter(type => item.analyses[type]);
+  return Object.keys(ANALYSIS_TYPES).filter(type => item.analyses[type] && item.analyses[type].available !== false);
 }
 
 function analysisType(item) { return availableAnalysisTypes(item)[0] || null; }
+
+function normalizedSelection(selection) {
+  return selection === 'shortlist' || selection === 'ecartee' ? selection : '';
+}
+
+function analysisTagsHTML(item, className = '') {
+  const labels = { locatif: 'Locatif', patrimonial: 'Patrimonial', mdb: 'MDB' };
+  const tags = availableAnalysisTypes(item).map(type =>
+    `<span class="tag tag-${type}" title="${esc(ANALYSIS_TYPES[type])}">${labels[type]}</span>`
+  ).join('');
+  return className && tags ? `<div class="${className}">${tags}</div>` : tags;
+}
+
+function latestAnalysis(item) {
+  if (item && item.latestAnalysis) return item.latestAnalysis;
+  return availableAnalysisTypes(item).map(type => ({ type, ...(item.analyses[type] || {}) }))
+    .sort((a, b) => String(b.analyzedAt || '').localeCompare(String(a.analyzedAt || '')))[0] || null;
+}
+
+function scoreColor(score) { return score >= 70 ? '#145a2e' : score >= 50 ? '#7a4108' : '#831515'; }
+
+function scoreCircleHTML(item) {
+  const latest = latestAnalysis(item);
+  if (!latest || typeof latest.score !== 'number') return '';
+  const score = Math.max(0, Math.min(100, latest.score));
+  const offset = (150.8 * (1 - score / 100)).toFixed(1);
+  const label = `${ANALYSIS_TYPES[latest.type] || 'Analyse'}, score ${score} sur 100`;
+  return `<div class="card-score" role="img" aria-label="${esc(label)}" title="${esc(label)}"><svg width="58" height="58" viewBox="0 0 58 58" aria-hidden="true"><circle cx="29" cy="29" r="24" fill="none" stroke="#d8d4cb" stroke-width="4"/><circle cx="29" cy="29" r="24" fill="none" stroke="${scoreColor(score)}" stroke-width="4" stroke-dasharray="150.8" stroke-dashoffset="${offset}" stroke-linecap="round"/></svg><span class="card-score-inner"><span class="card-score-value" style="color:${scoreColor(score)}">${score}</span><span class="card-score-denom">/100</span></span></div>`;
+}
+
+function scoreTextHTML(item) {
+  const latest = latestAnalysis(item);
+  return latest && typeof latest.score === 'number' ? `<span class="tag tag-${latest.type}" title="Score de la dernière analyse">${latest.score}/100</span>` : '';
+}
 
 function openFicheInApp(item, type) {
   const selectedType = type || analysisType(item);
@@ -435,13 +497,11 @@ function cardHTML(item, idx) {
     : '';
   const placeholder = `<div class="card-img-placeholder" style="${imgSrc ? 'display:none' : ''}">🏠</div>`;
 
-  const sel = item.selection || '';
+  const sel = normalizedSelection(item.selection);
   const badge = selectionBadgeHTML(sel);
 
   const btnShort = selectionButtonHTML(idx, 'shortlist', 'card-btn-tag');
   const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag');
-  const btnInvest = selectionButtonHTML(idx, 'invest', 'card-btn-tag');
-
   const hasFiche = !!analysisType(item);
   const btnFiche = hasFiche ? `<button class="card-btn-fiche" data-idx="${idx}" title="Voir la fiche d'investissement">📄</button>` : '';
   // Une analyse existante se relance depuis sa fiche locative, pas depuis la liste.
@@ -454,10 +514,10 @@ function cardHTML(item, idx) {
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
       ${badge}
-      ${imgEl}${placeholder}
+      <div class="card-media">${imgEl}${placeholder}${analysisTagsHTML(item, 'card-analysis-tags')}${scoreCircleHTML(item)}</div>
       <div class="card-body">
         <div class="card-tags">
-          <span class="tag tag-fav">⭐ Favori</span>${selectionTagHTML(sel)}${hasFiche ? '<span class="tag tag-fiche">📄 Fiche</span>' : ''}
+          ${selectionTagHTML(sel)}${analysisTagsHTML(item)}
         </div>
         <div class="card-title">${esc(item.title || 'Annonce immobilière')}</div>
         <div class="card-meta">
@@ -469,7 +529,6 @@ function cardHTML(item, idx) {
         <div class="card-actions">
           ${btnShort}
           ${btnEcart}
-          ${btnInvest}
           <button class="card-btn-map" data-idx="${idx}" title="Voir sur la carte">🗺</button>
           ${btnFiche}${btnAnalyze}
           <button class="card-btn-delete" data-idx="${idx}" title="Supprimer">🗑</button>
@@ -522,7 +581,7 @@ async function renderList() {
       + '<td>' + (item.price ? formatPrice(item.price) : '—') + '</td>'
       + '<td>' + (item.surface ? item.surface + ' m²' : '—') + '</td>'
       + '<td>' + esc(getLoc(item)) + cp + '</td>'
-      + '<td><span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(item.selection) + '</td>'
+      + '<td>' + selectionTagHTML(normalizedSelection(item.selection)) + analysisTagsHTML(item) + '</td>'
       + '<td style="display:flex;gap:10px;align-items:center;">'
       +   (item.url ? '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--text);font-size:12px;">Voir →</a>' : '')
       +   ficheLink
@@ -670,27 +729,24 @@ async function renderMap() {
 
 function popupHTML(item, idx) {
   const imgSrc = getImageUrl(item);
-  const sel = item.selection || '';
+  const sel = normalizedSelection(item.selection);
 
   const btnStyle = 'flex:1;padding:6px 4px;border-radius:3px;cursor:pointer;font-size:11px;font-weight:600;text-align:center;border:1px solid';
   const shortActive = sel === 'shortlist';
   const ecartActive = sel === 'ecartee';
 
-  const investActive = sel === 'invest';
-
   const btnShort = `<button data-popup-tag="shortlist" data-popup-idx="${idx}" style="${btnStyle} ${shortActive ? '#7ec99a;background:#d6f0df;color:#145a2e' : '#d0ccc3;background:#edeae3;color:#5a5850'}">⭐ ShortList</button>`;
   const btnEcart = `<button data-popup-tag="ecartee"   data-popup-idx="${idx}" style="${btnStyle} ${ecartActive ? '#d97373;background:#fce8e8;color:#831515'   : '#d0ccc3;background:#edeae3;color:#5a5850'}">✕ Écarter</button>`;
-  const btnInvest = `<button data-popup-tag="invest" data-popup-idx="${idx}" style="${btnStyle} ${investActive ? '#e0a84a;background:#faefd5;color:#7a4108' : '#d0ccc3;background:#edeae3;color:#5a5850'}">$ Invest</button>`;
 
   return `
     <div style="font-family:Inter,sans-serif;font-size:13px;min-width:220px;color:#16150f;">
       ${imgSrc ? `<img src="${esc(imgSrc)}" style="width:100%;height:110px;object-fit:cover;border-radius:3px;margin-bottom:8px;" loading="lazy">` : ''}
       <div style="font-weight:600;margin-bottom:4px;line-height:1.3;">${esc(item.title || 'Annonce')}</div>
-      ${selectionTagHTML(sel)}
+      ${selectionTagHTML(sel)}${analysisTagsHTML(item)}${scoreTextHTML(item)}
       ${item.price ? `<div style="font-family:'JetBrains Mono',monospace;color:#7a4108;font-weight:700;margin-bottom:2px;">${formatPrice(item.price)}</div>` : ''}
       ${item.surface ? `<div style="color:#9a9890;font-size:12px;margin-bottom:6px;">${item.surface} m²</div>` : ''}
       <div style="display:flex;gap:5px;margin-bottom:6px;">
-        ${btnShort}${btnEcart}${btnInvest}
+        ${btnShort}${btnEcart}
       </div>
       <div style="display:flex;gap:5px;">
         <button data-open-viewer="${idx}" style="${btnStyle} #16150f;background:#16150f;color:#f5f3ee;flex:1;">🖼 Voir l'annonce</button>
@@ -833,7 +889,7 @@ function updateActiveThumb() {
 // ── Panneau d'informations ──────────────────────────────────────
 function renderViewerInfo(item) {
   const idx = viewer.listingIndex;
-  const sel = item.selection || '';
+  const sel = normalizedSelection(item.selection);
 
   const eyebrow = [item.agency || sourceLabel(item.source), item.reference, getLoc(item)]
     .filter(Boolean)
@@ -841,7 +897,7 @@ function renderViewerInfo(item) {
   document.getElementById('viewer-eyebrow').textContent = eyebrow || 'Annonce sauvegardée';
 
   const type = analysisType(item);
-  document.getElementById('viewer-tags').innerHTML = '<span class="tag tag-fav">⭐ Favori</span>' + selectionTagHTML(sel) + (type ? '<span class="tag tag-fiche">📄 Fiche</span>' : '');
+  document.getElementById('viewer-tags').innerHTML = selectionTagHTML(sel) + analysisTagsHTML(item) + scoreTextHTML(item);
 
   document.getElementById('viewer-title').textContent = item.title || 'Annonce immobilière';
 
@@ -923,8 +979,7 @@ function viewerMetaHTML(item) {
 function viewerSelectionButtonsHTML(idx, sel) {
   const options = [
     { key: 'shortlist', label: '⭐ ShortList' },
-    { key: 'ecartee',   label: '✕ Écarter' },
-    { key: 'invest',    label: '$ Investissement' }
+    { key: 'ecartee',   label: '✕ Écarter' }
   ];
   return options.map(o =>
     `<button class="viewer-sel-btn${sel === o.key ? ` tag-${o.key}-active` : ''}" data-sel="${o.key}" data-idx="${idx}">${o.label}</button>`
@@ -971,21 +1026,21 @@ async function toggleSelection(idx, sel) {
 }
 
 function selectionTagHTML(selection) {
-  return selection === 'invest' ? '<span class="tag tag-invest">$ Invest</span>' : '';
+  if (selection === 'shortlist') return '<span class="tag badge-shortlist">⭐ ShortList</span>';
+  if (selection === 'ecartee') return '<span class="tag badge-ecartee">✕ Écarté</span>';
+  return '';
 }
 
 function selectionBadgeHTML(selection) {
   if (selection === 'shortlist') return '<div class="card-selection-badge badge-shortlist">⭐ ShortList</div>';
   if (selection === 'ecartee') return '<div class="card-selection-badge badge-ecartee">✕ Écartée</div>';
-  if (selection === 'invest') return '<div class="card-selection-badge badge-invest">$ Invest</div>';
   return '';
 }
 
 function selectionButtonHTML(idx, selection, className) {
   const labels = {
     shortlist: { label: '⭐', title: 'ShortList' },
-    ecartee: { label: '✕', title: 'Écarter' },
-    invest: { label: '$', title: 'Marquer comme investissement locatif' }
+    ecartee: { label: '✕', title: 'Écarter' }
   };
   const option = labels[selection];
   const active = filtered[idx].selection === selection ? ` tag-${selection}-active` : '';
@@ -1084,7 +1139,7 @@ async function startAnalysis(type) {
   closeAnalysisModal(); showToast('Analyse mise en attente : vous serez notifié à la fin.', 'info');
   try { const r = await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:item.id,type})}); const data=await r.json(); if(!r.ok) throw Error(data.error||'Démarrage impossible'); item.analysisStatus = data.job.status; applyFiltersAndRender(); pollAnalysis(item, type); } catch(e) { showToast('Échec : '+e.message, 'error'); }
 }
-function pollAnalysis(item, type) { clearInterval(analysisPoll); analysisPoll=setInterval(async () => { try { const r=await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php?id='+encodeURIComponent(item.id)); const d=await r.json(), job=d.job||{}; item.analysisStatus = job.status === 'queued' || job.status === 'running' ? job.status : null; if(job.status==='completed'){clearInterval(analysisPoll); item.analyses=d.analyses; showToast('Analyse terminée avec succès.', 'success'); applyFiltersAndRender();} if(job.status==='failed'){clearInterval(analysisPoll); applyFiltersAndRender(); showToast('Échec de l’analyse : '+(job.error||'erreur inconnue'), 'error');} } catch(e) {} }, 2500); }
+function pollAnalysis(item, type) { clearInterval(analysisPoll); analysisPoll=setInterval(async () => { try { const r=await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php?id='+encodeURIComponent(item.id)); const d=await r.json(), job=d.job||{}; item.analysisStatus = job.status === 'queued' || job.status === 'running' ? job.status : null; if(job.status==='completed'){clearInterval(analysisPoll); item.analyses=d.analyses; item.latestAnalysis=d.latestAnalysis; showToast('Analyse terminée avec succès.', 'success'); applyFiltersAndRender();} if(job.status==='failed'){clearInterval(analysisPoll); applyFiltersAndRender(); showToast('Échec de l’analyse : '+(job.error||'erreur inconnue'), 'error');} } catch(e) {} }, 2500); }
 function showToast(message, kind) { const el=document.createElement('div'); el.className='app-toast '+kind; el.textContent=message; document.body.append(el); setTimeout(()=>el.remove(), 6000); }
 
 // ── Helpers ───────────────────────────────────────────────────

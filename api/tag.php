@@ -28,7 +28,7 @@ $id  = $data['id'];
 $sel = isset($data['selection']) ? $data['selection'] : null;
 
 // Valider la valeur
-if ($sel !== null && !in_array($sel, ['shortlist', 'ecartee', 'invest'], true)) {
+if ($sel !== null && !in_array($sel, ['shortlist', 'ecartee'], true)) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid selection value']);
     exit;
