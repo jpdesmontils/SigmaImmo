@@ -871,17 +871,19 @@
 
 <!-- ── Header ──────────────────────────────────────────────── -->
 <header class="header">
+<button class="btn-filters-mobile" id="btn-filters-mobile">☰ </button>
   <div class="header-logo">Immo<span>Agg</span></div>
   <div class="header-stats">
     <span>⭐ <b id="hdr-fav">—</b> favoris</span>
   </div>
   <div class="spacer"></div>
-  <button class="btn-filters-mobile" id="btn-filters-mobile">☰ Navigation</button>
+  
   <div class="view-switcher" id="view-switcher">
     <button class="view-btn active" data-view="gallery" title="Galerie">⊞</button>
     <button class="view-btn" data-view="list" title="Liste">≡</button>
     <button class="view-btn" data-view="map" title="Carte">🌐</button>
   </div>
+  
 </header>
 
 <!-- ── Layout ─────────────────────────────────────────────── -->
@@ -890,16 +892,8 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" aria-label="Navigation et filtres">
-    <div class="filter-group">
-      <h3>Ville</h3><input class="filter-input" id="f-city" type="text" placeholder="Ex: Paris, Lyon…">
-    </div>
-    <div class="filter-group"><h3>Prix (€)</h3><div class="range-row"><input class="filter-input" id="f-price-min" type="number" placeholder="Min"><input class="filter-input" id="f-price-max" type="number" placeholder="Max"></div></div>
-    <div class="filter-group"><h3>Surface (m²)</h3><div class="range-row"><input class="filter-input" id="f-surf-min" type="number" placeholder="Min"><input class="filter-input" id="f-surf-max" type="number" placeholder="Max"></div></div>
-    <div class="filter-group"><h3>Tri</h3><select class="sort-select" id="f-sort"><option value="date_desc">Plus récent</option><option value="date_asc">Plus ancien</option><option value="price_asc">Prix croissant</option><option value="price_desc">Prix décroissant</option><option value="surface_desc">Surface décroissante</option><option value="surface_asc">Surface croissante</option></select></div>
-    <div class="filter-group"><h3>Sélection</h3><div class="selection-btns"><button class="selection-btn active" data-selection="all">Toutes</button><button class="selection-btn sel-shortlist" data-selection="shortlist">⭐ ShortList</button><button class="selection-btn sel-ecartee" data-selection="ecartee">✕ Écartées</button><button class="selection-btn sel-invest" data-selection="invest">$ Invest</button></div></div>
-    <button class="btn-reset" id="btn-reset">↺ Réinitialiser les filtres</button>
-    <hr class="in-app-nav-separator">
-    <nav class="in-app-nav" aria-label="Navigation">
+    
+	<nav class="in-app-nav" aria-label="Navigation">
       <button class="in-app-nav-group-toggle" id="guides-toggle" aria-expanded="true" aria-controls="guides-list">
         <span class="in-app-nav-title">Guides disponibles</span>
         <span class="in-app-nav-chevron" aria-hidden="true">▾</span>
@@ -908,9 +902,23 @@
         <button class="in-app-nav-btn" data-in-app-url="guide-mdb-division-parcellaire.html">Guide opérationnel — Marchand de biens<small>Division parcellaire · 100 k€ d'apport</small></button>
         <button class="in-app-nav-btn" data-in-app-url="guide-investissement-locatif.html">Guide opérationnel — Investissement locatif<small>Sélection à mise en location · 125 k€ d'apport</small></button>
       </div>
-      <hr class="in-app-nav-separator">
-      <button class="in-app-nav-btn active" data-in-app-favorites>🖼 Galerie<small>Galerie des annonces sauvegardées</small></button>
+      <!-- <hr class="in-app-nav-separator"> -->
+     <!-- <button class="in-app-nav-btn active" data-in-app-favorites>🖼 Galerie<small>Galerie des annonces sauvegardées</small></button>  -->
+	 <div  data-in-app-favorites/>
     </nav>
+
+    <hr class="in-app-nav-separator">
+
+    <div class="filter-group">
+      <h3>Ville</h3><input class="filter-input" id="f-city" type="text" placeholder="Ex: Paris, Lyon…">
+    </div>
+    <div class="filter-group"><h3>Prix (€)</h3><div class="range-row"><input class="filter-input" id="f-price-min" type="number" placeholder="Min"><input class="filter-input" id="f-price-max" type="number" placeholder="Max"></div></div>
+    <div class="filter-group"><h3>Surface (m²)</h3><div class="range-row"><input class="filter-input" id="f-surf-min" type="number" placeholder="Min"><input class="filter-input" id="f-surf-max" type="number" placeholder="Max"></div></div>
+    <div class="filter-group"><h3>Tri</h3><select class="sort-select" id="f-sort"><option value="date_desc">Plus récent</option><option value="date_asc">Plus ancien</option><option value="price_asc">Prix croissant</option><option value="price_desc">Prix décroissant</option><option value="surface_desc">Surface décroissante</option><option value="surface_asc">Surface croissante</option></select></div>
+    <div class="filter-group"><h3>Sélection</h3><div class="selection-btns"><button class="selection-btn active" data-selection="all">Toutes</button><button class="selection-btn sel-shortlist" data-selection="shortlist">⭐ ShortList</button><button class="selection-btn sel-ecartee" data-selection="ecartee">✕ Écartées</button><button class="selection-btn sel-invest" data-selection="invest">$ Invest</button></div></div>
+    <button class="btn-reset" id="btn-reset">↺ Réinitialiser les filtres</button>
+
+	
   </aside>
 
   <!-- Main -->
