@@ -305,9 +305,15 @@ function showFavorites({ render = true } = {}) {
   if (typeof closeSidebar === 'function') closeSidebar();
 }
 
+const ANALYSIS_TYPES = {
+  locatif: 'Locatif',
+  mdb: 'Marchand de biens',
+  patrimonial: 'Patrimonial optimisé'
+};
+
 function availableAnalysisTypes(item) {
   if (!item || !item.analyses) return [];
-  return ['locatif', 'mdb'].filter(type => item.analyses[type]);
+  return Object.keys(ANALYSIS_TYPES).filter(type => item.analyses[type]);
 }
 
 function analysisType(item) { return availableAnalysisTypes(item)[0] || null; }
@@ -315,9 +321,9 @@ function analysisType(item) { return availableAnalysisTypes(item)[0] || null; }
 function openFicheInApp(item, type) {
   const selectedType = type || analysisType(item);
   if (!item || !item.id || !selectedType) return;
-  // Les scripts des fiches sont exécutés dans index.html : leur URL ne contient
-  // donc pas le paramètre id de la ressource chargée par openInApp.
-  window.__immoAnalysisId = item.id;
+  // La fiche est injectée dans index.html : transmettons explicitement les deux
+  // paramètres, sans dépendre de location.search ou de document.currentScript.
+  window.__immoAnalysisContext = { id: item.id, type: selectedType };
   openInApp('templates/fiche-investissement-' + selectedType + '.html?id=' + encodeURIComponent(item.id), null, item);
 }
 
@@ -326,6 +332,8 @@ function initFicheChoiceModal() {
   const modal = document.getElementById('fiche-choice-modal');
   document.getElementById('fiche-choice-cancel').addEventListener('click', closeFicheChoiceModal);
   modal.addEventListener('click', event => { if (event.target === modal) closeFicheChoiceModal(); });
+  const actions = document.getElementById('fiche-choice-actions');
+  Object.entries(ANALYSIS_TYPES).forEach(([type, text]) => actions.insertAdjacentHTML('beforeend', `<button class="btn-modal-confirm" data-fiche-type="${type}">${text}</button>`));
   modal.querySelectorAll('[data-fiche-type]').forEach(button => button.addEventListener('click', () => {
     const item = ficheChoiceTarget;
     closeFicheChoiceModal();
@@ -338,6 +346,7 @@ function openFicheChoice(item) {
   if (types.length < 2) { openFicheInApp(item, types[0]); return; }
   ficheChoiceTarget = item;
   document.getElementById('fiche-choice-title').textContent = item.title || 'cette annonce';
+  document.querySelectorAll('[data-fiche-type]').forEach(button => { button.hidden = !types.includes(button.dataset.ficheType); });
   document.getElementById('fiche-choice-modal').classList.add('open');
 }
 
@@ -1061,6 +1070,8 @@ let analysisTarget = null, analysisPoll = null;
 function initAnalysisModal() {
   document.getElementById('analysis-modal-cancel').addEventListener('click', closeAnalysisModal);
   document.getElementById('analysis-modal').addEventListener('click', e => { if (e.target.id === 'analysis-modal') closeAnalysisModal(); });
+  const actions = document.getElementById('analysis-modal-actions');
+  Object.entries(ANALYSIS_TYPES).forEach(([type, text]) => actions.insertAdjacentHTML('beforeend', `<button class="btn-modal-confirm" data-analysis-type="${type}">${text}</button>`));
   document.querySelectorAll('[data-analysis-type]').forEach(btn => btn.addEventListener('click', () => startAnalysis(btn.dataset.analysisType)));
 }
 function openAnalysisModal(item) {
