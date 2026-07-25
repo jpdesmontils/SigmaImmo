@@ -1065,6 +1065,7 @@
   if (btnFilters) btnFilters.addEventListener('click', function() { sidebarEl.classList.add('open'); overlayEl.classList.add('open'); });
   if (overlayEl) overlayEl.addEventListener('click', closeSidebar);
 </script>
-<script src="app.js"></script>
+<!-- La version évite de combiner ce HTML, dont les choix sont dynamiques, avec un ancien app.js en cache. -->
+<script src="app.js?v=20260725-patrimonial"></script>
 </body>
 </html>
