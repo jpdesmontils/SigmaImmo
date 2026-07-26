@@ -139,10 +139,36 @@
     button.addEventListener('click', () => openRecalculationModal(button)); document.body.append(button);
   }
 
+  function openModal({ title, message, actions }) {
+    const modal = document.createElement('div');
+    modal.className = 'recalculate-modal';
+    const box = document.createElement('div'); box.className = 'recalculate-modal-box'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+    const heading = document.createElement('h2'); heading.textContent = title; heading.id = `modal-title-${Date.now()}`; box.setAttribute('aria-labelledby', heading.id);
+    const description = document.createElement('p'); description.textContent = message;
+    const actionList = document.createElement('div'); actionList.className = 'recalculate-actions';
+    const close = () => { modal.remove(); document.removeEventListener('keydown', handleKeydown); };
+    const handleKeydown = event => { if (event.key === 'Escape') close(); };
+    actions.forEach(action => {
+      const actionButton = document.createElement('button'); actionButton.type = 'button'; actionButton.textContent = action.label;
+      if (action.type) actionButton.dataset.type = action.type;
+      actionButton.addEventListener('click', () => { close(); action.onClick?.(); }); actionList.append(actionButton);
+    });
+    box.append(heading, description, actionList); modal.append(box);
+    modal.addEventListener('click', event => { if (event.target === modal) close(); }); document.addEventListener('keydown', handleKeydown);
+    document.body.append(modal); actionList.querySelector('button')?.focus();
+  }
+
   function openRecalculationModal(button) {
-    const modal = document.createElement('div'); modal.className = 'recalculate-modal'; modal.innerHTML = '<div class="recalculate-modal-box" role="dialog" aria-modal="true" aria-labelledby="recalculate-title"><h2 id="recalculate-title">Recalculer l’analyse</h2><p>Choisissez le type de calcul à relancer pour cette annonce.</p><div class="recalculate-actions"><button type="button" data-action="cancel">Annuler</button><button type="button" data-type="locatif">Locatif</button><button type="button" data-type="mdb">Marchand de biens</button><button type="button" data-type="patrimonial">Patrimonial optimisé</button></div></div>';
-    const close = () => modal.remove(); modal.addEventListener('click', event => { if (event.target === modal) close(); }); modal.querySelector('[data-action="cancel"]').addEventListener('click', close);
-    modal.querySelectorAll('[data-type]').forEach(choice => choice.addEventListener('click', () => { close(); startRecalculation(button, choice.dataset.type); })); document.body.append(modal); modal.querySelector('[data-type]')?.focus();
+    openModal({ title: 'Recalculer l’analyse', message: 'Choisissez le type de calcul à relancer pour cette annonce.', actions: [
+      { label: 'Annuler' },
+      { label: 'Locatif', type: 'locatif', onClick: () => startRecalculation(button, 'locatif') },
+      { label: 'Marchand de biens', type: 'mdb', onClick: () => startRecalculation(button, 'mdb') },
+      { label: 'Patrimonial optimisé', type: 'patrimonial', onClick: () => startRecalculation(button, 'patrimonial') }
+    ] });
+  }
+
+  function showRecalculationError(message) {
+    openModal({ title: 'Recalcul impossible', message, actions: [{ label: 'Fermer', type: 'close' }] });
   }
 
   async function startRecalculation(button, selectedType) {
@@ -150,8 +176,8 @@
     try {
       const response = await fetch(new URL('analyze.php', apiUrl), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: activeAnalysisId, type: selectedType }) });
       const payload = await response.json(); if (!response.ok) throw new Error(payload.error || 'Démarrage du recalcul impossible');
-      const poll = setInterval(async () => { try { const statusResponse = await fetch(`${new URL('analyze.php', apiUrl)}?id=${encodeURIComponent(activeAnalysisId)}`); const statusPayload = await statusResponse.json(); if (statusPayload.job?.status === 'completed') { clearInterval(poll); location.reload(); } if (statusPayload.job?.status === 'failed') { clearInterval(poll); resetButton(button); alert(`Recalcul impossible : ${statusPayload.job.error || 'erreur inconnue'}`); } } catch (_) {} }, 2500);
-    } catch (error) { resetButton(button); alert(`Recalcul impossible : ${error.message}`); }
+      const poll = setInterval(async () => { try { const statusResponse = await fetch(`${new URL('analyze.php', apiUrl)}?id=${encodeURIComponent(activeAnalysisId)}`); const statusPayload = await statusResponse.json(); if (statusPayload.job?.status === 'completed') { clearInterval(poll); location.reload(); } if (statusPayload.job?.status === 'failed') { clearInterval(poll); resetButton(button); showRecalculationError(statusPayload.job.error || 'Une erreur inconnue est survenue.'); } } catch (_) {} }, 2500);
+    } catch (error) { resetButton(button); showRecalculationError(error.message); }
   }
   function resetButton(button) { button.disabled = false; button.textContent = '↻'; button.title = 'Recalculer l’analyse'; }
 
