@@ -5,6 +5,7 @@
 
 // ── Config ────────────────────────────────────────────────────
 const API_URL = 'https://solenis-studio.fr/sigma-immo/api/listings.php';
+const GALLERY_STATE_KEY = 'immoagg.gallery.state';
 
 // ── État global ───────────────────────────────────────────────
 let allListings = [];
@@ -12,6 +13,7 @@ let filtered    = [];
 let map         = null;
 let markers     = null;
 let currentView = 'gallery';
+let pendingGalleryScroll = null;
 
 const filters = {
   userSelections: new Set(),
@@ -37,10 +39,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('header-logo').addEventListener('click', showFavorites);
   initInAppNavigation();
   initFilters();
+  restoreGalleryState();
   initViewer();
   initDeleteModal();
-  initAnalysisModal();
-  initFicheChoiceModal();
   await loadData();
 });
 
@@ -175,6 +176,24 @@ function applyFiltersAndRender() {
   if (currentView === 'gallery') renderGallery();
   if (currentView === 'list')    renderList();
   if (currentView === 'map')     renderMap();
+  persistGalleryState();
+  if (pendingGalleryScroll !== null) { const target = pendingGalleryScroll; pendingGalleryScroll = null; requestAnimationFrame(() => scrollTo(0, target)); }
+}
+
+function persistGalleryState() {
+  try { localStorage.setItem(GALLERY_STATE_KEY, JSON.stringify({ city: filters.city, priceMin: filters.priceMin, priceMax: filters.priceMax, surfMin: filters.surfMin, surfMax: filters.surfMax, sort: filters.sort, userSelections: [...filters.userSelections], analysisTypes: [...filters.analysisTypes], listingIds: filtered.map(item => item.id), view: currentView, scrollY: window.scrollY })); } catch (_) {}
+}
+
+function restoreGalleryState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(GALLERY_STATE_KEY) || 'null');
+    if (!saved) return;
+    filters.city = saved.city || ''; filters.priceMin = saved.priceMin ?? null; filters.priceMax = saved.priceMax ?? null; filters.surfMin = saved.surfMin ?? null; filters.surfMax = saved.surfMax ?? null; filters.sort = saved.sort || 'date_desc';
+    filters.userSelections = new Set(saved.userSelections || []); filters.analysisTypes = new Set(saved.analysisTypes || []); currentView = ['gallery','list','map'].includes(saved.view) ? saved.view : 'gallery';
+    const values = {'f-city':filters.city,'f-price-min':filters.priceMin,'f-price-max':filters.priceMax,'f-surf-min':filters.surfMin,'f-surf-max':filters.surfMax,'f-sort':filters.sort}; Object.entries(values).forEach(([key,value])=>{const input=document.getElementById(key);if(input)input.value=value??''}); syncFilterButtons();
+    document.querySelectorAll('.view-btn').forEach(button=>button.classList.toggle('active',button.dataset.view===currentView)); ['gallery','list','map'].forEach(view=>document.getElementById('view-'+view).classList.toggle('active',view===currentView));
+    pendingGalleryScroll = Number(saved.scrollY) || 0;
+  } catch (_) {}
 }
 
 function listingMatchesFilters(item, activeFilters) {
@@ -377,8 +396,6 @@ function availableAnalysisTypes(item) {
   return Object.keys(ANALYSIS_TYPES).filter(type => item.analyses[type] && item.analyses[type].available !== false);
 }
 
-function analysisType(item) { return availableAnalysisTypes(item)[0] || null; }
-
 function normalizedSelection(selection) {
   return selection === 'shortlist' || selection === 'ecartee' ? selection : '';
 }
@@ -399,6 +416,8 @@ function latestAnalysis(item) {
 
 function scoreColor(score) { return score >= 70 ? '#145a2e' : score >= 50 ? '#7a4108' : '#831515'; }
 
+// Conservé comme formateur pur pour les vues qui souhaitent afficher un score
+// sans réintroduire cet indicateur sur les vignettes de la galerie.
 function scoreCircleHTML(item) {
   const latest = latestAnalysis(item);
   if (!latest || typeof latest.score !== 'number') return '';
@@ -413,42 +432,8 @@ function scoreTextHTML(item) {
   return latest && typeof latest.score === 'number' ? `<span class="tag tag-${latest.type}" title="Score de la dernière analyse">${latest.score}/100</span>` : '';
 }
 
-function openFicheInApp(item, type) {
-  const selectedType = type || analysisType(item);
-  if (!item || !item.id || !selectedType) return;
-  // La fiche est injectée dans index.html : transmettons explicitement les deux
-  // paramètres, sans dépendre de location.search ou de document.currentScript.
-  window.__immoAnalysisContext = { id: item.id, type: selectedType };
-  openInApp('templates/fiche-investissement-' + selectedType + '.html?id=' + encodeURIComponent(item.id), null, item);
-}
-
-let ficheChoiceTarget = null;
-function initFicheChoiceModal() {
-  const modal = document.getElementById('fiche-choice-modal');
-  document.getElementById('fiche-choice-cancel').addEventListener('click', closeFicheChoiceModal);
-  modal.addEventListener('click', event => { if (event.target === modal) closeFicheChoiceModal(); });
-  const actions = document.getElementById('fiche-choice-actions');
-  Object.entries(ANALYSIS_TYPES).forEach(([type, text]) => actions.insertAdjacentHTML('beforeend', `<button class="btn-modal-confirm" data-fiche-type="${type}">${text}</button>`));
-  modal.querySelectorAll('[data-fiche-type]').forEach(button => button.addEventListener('click', () => {
-    const item = ficheChoiceTarget;
-    closeFicheChoiceModal();
-    openFicheInApp(item, button.dataset.ficheType);
-  }));
-}
-
-function openFicheChoice(item) {
-  const types = availableAnalysisTypes(item);
-  if (types.length < 2) { openFicheInApp(item, types[0]); return; }
-  ficheChoiceTarget = item;
-  document.getElementById('fiche-choice-title').textContent = item.title || 'cette annonce';
-  document.querySelectorAll('[data-fiche-type]').forEach(button => { button.hidden = !types.includes(button.dataset.ficheType); });
-  document.getElementById('fiche-choice-modal').classList.add('open');
-}
-
-function closeFicheChoiceModal() {
-  ficheChoiceTarget = null;
-  document.getElementById('fiche-choice-modal').classList.remove('open');
-}
+function propertyUrl(item) { return `fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
+function openProperty(item) { if (item?.id) { persistGalleryState(); window.open(propertyUrl(item), '_blank', 'noopener'); } }
 
 // ── Vue switcher ──────────────────────────────────────────────
 function initViewSwitcher() {
@@ -465,6 +450,7 @@ function initViewSwitcher() {
       if (currentView === 'gallery') renderGallery();
       if (currentView === 'list')    renderList();
       if (currentView === 'map')     renderMap();
+      persistGalleryState();
     });
   });
 }
@@ -486,8 +472,8 @@ function renderGallery() {
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
       // Ne pas ouvrir la visionneuse si clic sur un bouton action
-      if (e.target.closest('.card-btn-delete') || e.target.closest('.card-btn-map') || e.target.closest('.card-btn-tag') || e.target.closest('.card-btn-fiche') || e.target.closest('.card-btn-analyze')) return;
-      openViewer(parseInt(card.dataset.idx));
+      if (e.target.closest('.card-btn-delete') || e.target.closest('.card-btn-map') || e.target.closest('.card-btn-tag')) return;
+      openProperty(filtered[parseInt(card.dataset.idx)]);
     });
   });
 
@@ -500,8 +486,6 @@ function renderGallery() {
     });
   });
 
-  grid.querySelectorAll('.card-btn-fiche').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openFicheChoice(filtered[parseInt(btn.dataset.idx)]); }));
-  grid.querySelectorAll('.card-btn-analyze').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openAnalysisModal(filtered[parseInt(btn.dataset.idx)]); }));
 
   // Boutons tag sélection
   grid.querySelectorAll('.card-btn-tag').forEach(btn => {
@@ -535,19 +519,11 @@ function cardHTML(item, idx) {
 
   const btnShort = selectionButtonHTML(idx, 'shortlist', 'card-btn-tag');
   const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag');
-  const hasFiche = !!analysisType(item);
-  const btnFiche = hasFiche ? `<button class="card-btn-fiche" data-idx="${idx}" title="Voir la fiche d'investissement">📄</button>` : '';
-  // Une analyse existante se relance depuis sa fiche locative, pas depuis la liste.
-  const btnAnalyze = !hasFiche ? (item.analysisStatus === 'queued'
-    ? `<button class="card-btn-analyze card-btn-analysis-queued" disabled title="Analyse en attente">⌛</button>`
-    : item.analysisStatus === 'running'
-    ? `<button class="card-btn-analyze card-btn-analysis-running" disabled title="Analyse en cours côté LLM"><span class="analysis-progress" aria-label="Analyse en cours"></span></button>`
-    : `<button class="card-btn-analyze" data-idx="${idx}" title="Analyser l'opportunité">🤖</button>`) : '';
 
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
       ${badge}
-      <div class="card-media">${imgEl}${placeholder}${analysisTagsHTML(item, 'card-analysis-tags')}${scoreCircleHTML(item)}</div>
+      <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}</div>
       <div class="card-body">
         <div class="card-tags">
           ${selectionTagHTML(sel)}
@@ -563,8 +539,7 @@ function cardHTML(item, idx) {
           ${btnShort}
           ${btnEcart}
           <button class="card-btn-map" data-idx="${idx}" title="Voir sur la carte">🗺</button>
-          ${btnFiche}${btnAnalyze}
-          <button class="card-btn-delete" data-idx="${idx}" title="Supprimer">🗑</button>
+          <button class="card-btn-delete" data-idx="${idx}" title="Plus d’options · supprimer">•••</button>
         </div>
       </div>
     </div>`;
@@ -606,9 +581,7 @@ async function renderList() {
       : '<div class="list-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface2)">🏠</div>';
     var cp = item.postalCode ? '<br><small style="color:var(--muted)">' + esc(item.postalCode) + ' · ' + esc(getDept(item)) + '</small>' : '<br><small style="color:var(--muted)">' + esc(getDept(item)) + '</small>';
 
-    var ficheLink = item.analysisStatus === 'queued' ? '<span title="Analyse en attente" style="color:var(--muted);font-size:12px;">⌛ En attente</span>' : item.analysisStatus === 'running' ? '<span title="Analyse en cours côté LLM" style="color:var(--muted);font-size:12px;">◌ Analyse en cours</span>' : (analysisType(item) ? '<button type="button" onclick="event.stopPropagation();openFicheChoice(filtered[' + idx + '])" style="color:var(--go);font-size:12px;border:0;background:none;cursor:pointer;">📄 Fiche In App</button>' : '<button type="button" onclick="event.stopPropagation();openAnalysisModal(filtered[' + idx + '])" style="color:var(--warn);font-size:12px;border:0;background:none;cursor:pointer;">🤖 Analyser</button>');
-
-    return '<tr style="cursor:pointer" onclick="openViewer(' + idx + ')">'
+    return '<tr style="cursor:pointer" onclick="openProperty(filtered[' + idx + '])">'
       + '<td>' + thumb + '</td>'
       + '<td>' + esc(item.title || '—') + '</td>'
       + '<td>' + (item.price ? formatPrice(item.price) : '—') + '</td>'
@@ -617,7 +590,6 @@ async function renderList() {
       + '<td>' + selectionTagHTML(normalizedSelection(item.selection)) + analysisTagsHTML(item) + '</td>'
       + '<td style="display:flex;gap:10px;align-items:center;">'
       +   (item.url ? '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--text);font-size:12px;">Voir →</a>' : '')
-      +   ficheLink
       + '</td>'
       + '</tr>';
   }).join('');
@@ -940,7 +912,6 @@ function renderViewerInfo(item) {
     .join(' · ');
   document.getElementById('viewer-eyebrow').textContent = eyebrow || 'Annonce sauvegardée';
 
-  const type = analysisType(item);
   document.getElementById('viewer-tags').innerHTML = selectionTagHTML(sel) + analysisTagsHTML(item) + scoreTextHTML(item);
 
   document.getElementById('viewer-title').textContent = item.title || 'Annonce immobilière';
@@ -984,12 +955,12 @@ function renderViewerInfo(item) {
   if (linkUrl) { link.href = linkUrl; link.style.display = ''; }
   else { link.style.display = 'none'; }
 
-  // La fiche s'ouvre dans le cadre de l'application, jamais dans un nouvel onglet.
   const ficheLink = document.getElementById('viewer-fiche-link');
-  if (item.analysisStatus === 'queued') { ficheLink.removeAttribute('href'); ficheLink.textContent = '⌛ Analyse en attente'; ficheLink.onclick = null; ficheLink.hidden = false; ficheLink.style.opacity = '.65'; }
-  else if (item.analysisStatus === 'running') { ficheLink.removeAttribute('href'); ficheLink.textContent = '◌ Analyse en cours'; ficheLink.onclick = null; ficheLink.hidden = false; ficheLink.style.opacity = '.65'; }
-  else if (type) { ficheLink.href = '#'; ficheLink.textContent = '📄 Fiche In App'; ficheLink.onclick = e => { e.preventDefault(); openFicheChoice(item); }; ficheLink.hidden = false; ficheLink.style.opacity = ''; }
-  else { ficheLink.href = '#'; ficheLink.textContent = '🤖 Analyser'; ficheLink.onclick = e => { e.preventDefault(); openAnalysisModal(item); }; ficheLink.hidden = false; ficheLink.style.opacity = ''; }
+  ficheLink.href = propertyUrl(item);
+  ficheLink.target = '_blank';
+  ficheLink.rel = 'noopener';
+  ficheLink.textContent = 'Fiche du bien ↗';
+  ficheLink.hidden = false;
 }
 
 function viewerStatsHTML(item) {
@@ -1148,30 +1119,6 @@ async function confirmDelete() {
   applyFiltersAndRender();
 }
 
-// ── Analyse OpenAI ─────────────────────────────────────────────
-let analysisTarget = null, analysisPoll = null;
-function initAnalysisModal() {
-  document.getElementById('analysis-modal-cancel').addEventListener('click', closeAnalysisModal);
-  document.getElementById('analysis-modal').addEventListener('click', e => { if (e.target.id === 'analysis-modal') closeAnalysisModal(); });
-  const actions = document.getElementById('analysis-modal-actions');
-  Object.entries(ANALYSIS_TYPES).forEach(([type, text]) => actions.insertAdjacentHTML('beforeend', `<button class="btn-modal-confirm" data-analysis-type="${type}">${text}</button>`));
-  document.querySelectorAll('[data-analysis-type]').forEach(btn => btn.addEventListener('click', () => startAnalysis(btn.dataset.analysisType)));
-}
-function openAnalysisModal(item) {
-  if (!item || item.analysisStatus || analysisType(item)) return;
-  analysisTarget = item;
-  document.getElementById('analysis-modal-title').textContent = item.title || 'cette annonce';
-  document.getElementById('analysis-modal').classList.add('open');
-}
-function closeAnalysisModal() { analysisTarget = null; document.getElementById('analysis-modal').classList.remove('open'); }
-async function startAnalysis(type) {
-  const item = analysisTarget; if (!item) return;
-  closeAnalysisModal(); showToast('Analyse mise en attente : vous serez notifié à la fin.', 'info');
-  try { const r = await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:item.id,type})}); const data=await r.json(); if(!r.ok) throw Error(data.error||'Démarrage impossible'); item.analysisStatus = data.job.status; applyFiltersAndRender(); pollAnalysis(item, type); } catch(e) { showToast('Échec : '+e.message, 'error'); }
-}
-function pollAnalysis(item, type) { clearInterval(analysisPoll); analysisPoll=setInterval(async () => { try { const r=await fetch('https://solenis-studio.fr/sigma-immo/api/analyze.php?id='+encodeURIComponent(item.id)); const d=await r.json(), job=d.job||{}; item.analysisStatus = job.status === 'queued' || job.status === 'running' ? job.status : null; if(job.status==='completed'){clearInterval(analysisPoll); item.analyses=d.analyses; item.latestAnalysis=d.latestAnalysis; showToast('Analyse terminée avec succès.', 'success'); applyFiltersAndRender();} if(job.status==='failed'){clearInterval(analysisPoll); applyFiltersAndRender(); showToast('Échec de l’analyse : '+(job.error||'erreur inconnue'), 'error');} } catch(e) {} }, 2500); }
-function showToast(message, kind) { const el=document.createElement('div'); el.className='app-toast '+kind; el.textContent=message; document.body.append(el); setTimeout(()=>el.remove(), 6000); }
-
 // ── Helpers ───────────────────────────────────────────────────
 function getImageUrl(item) {
   if (item.imageUrl)    return item.imageUrl;
@@ -1236,6 +1183,4 @@ function debounce(fn, delay) {
 }
 
 window.openViewer = openViewer;
-window.openFicheInApp = openFicheInApp;
-window.openFicheChoice = openFicheChoice;
-window.openAnalysisModal = openAnalysisModal;
+window.openProperty = openProperty;

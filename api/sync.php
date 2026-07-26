@@ -86,6 +86,11 @@ function processFavorites($incoming) {
             // Merge : ne pas écraser les coords déjà présentes
             $existing = $store[$key];
             $merged = array_merge($existing, sanitizeListing($listing));
+            // Les corrections saisies dans la fiche sont canoniques et ne doivent
+            // pas être effacées par une capture ultérieure moins précise.
+            foreach (['address', 'location', 'price', 'surface', 'rooms', 'terrain'] as $editableField) {
+                if (isset($existing[$editableField]) && $existing[$editableField] !== '') $merged[$editableField] = $existing[$editableField];
+            }
             if (!empty($existing['coords']) && empty($listing['coords'])) {
                 $merged['coords'] = $existing['coords'];
             }

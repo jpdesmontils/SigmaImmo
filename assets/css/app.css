@@ -316,7 +316,7 @@
       margin-top: 8px;
     }
     /* Boutons uniformes sur les cartes */
-    .card-btn-map, .card-btn-delete, .card-btn-tag, .card-btn-fiche, .card-btn-analyze {
+    .card-btn-map, .card-btn-delete, .card-btn-tag {
       flex: 1;
       padding: 5px 0;
       border-radius: 3px;
@@ -334,15 +334,6 @@
     .card-btn-map:hover    { background: var(--text);      color: var(--bg);     border-color: var(--text); }
     .card-btn-delete:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
     .card-btn-tag:hover    { background: var(--surface3);  color: var(--text); }
-    .card-btn-fiche        { background: var(--go-bg); color: var(--go); border-color: var(--go-border); }
-    .card-btn-fiche:hover  { background: var(--go); color: var(--bg); border-color: var(--go); }
-    .card-btn-analyze { background:var(--warn-bg); color:var(--warn); border-color:var(--warn-border); }
-    .card-btn-analysis-queued { cursor:wait; opacity:.7; }
-    .card-btn-analysis-running { cursor:wait; opacity:.7; }
-    .analysis-progress { display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:middle;animation:analysis-spin .75s linear infinite; }
-    @keyframes analysis-spin { to { transform:rotate(360deg); } }
-    .app-toast { position:fixed;right:20px;bottom:20px;z-index:3000;padding:12px 16px;border-radius:4px;background:var(--text);color:var(--bg);box-shadow:0 8px 24px #0004; }
-    .app-toast.success{background:var(--go)} .app-toast.error{background:var(--danger)}
     .tag-shortlist-active { background: var(--go-bg)     !important; color: var(--go)     !important; border-color: var(--go-border)     !important; }
     .tag-ecartee-active   { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: var(--danger-border) !important; }
 
@@ -363,12 +354,6 @@
     }
     .badge-shortlist { background: var(--go);      color: var(--bg); }
     .badge-ecartee   { background: var(--danger);  color: var(--bg); }
-    .card-analysis-tags { position:absolute;top:8px;right:8px;z-index:9;display:flex;flex-direction:column;align-items:flex-end;gap:4px; }
-    .card-score { position:absolute;right:10px;bottom:10px;z-index:9;width:58px;height:58px;border-radius:50%;background:rgba(245,243,238,.96);box-shadow:0 2px 10px #16150f55;display:grid;place-items:center; }
-    .card-score svg { position:absolute;inset:0;transform:rotate(-90deg); }
-    .card-score-inner { position:relative;display:flex;flex-direction:column;align-items:center;font-family:var(--font-m);font-weight:700;line-height:1; }
-    .card-score-value { font-size:16px; }
-    .card-score-denom { font-size:8px;color:var(--muted);margin-top:2px; }
 
     /* ── Modale suppression ──────────────────────────────────── */
     .delete-modal {
@@ -822,13 +807,6 @@
       }
       .sidebar.open { transform: translateX(0); }
       .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-      .card-analysis-tags { top:6px;right:6px;gap:3px; }
-      .card-analysis-tags .tag { font-size:8px;padding:2px 5px; }
-      .card-score { width:50px;height:50px;right:7px;bottom:7px; }
-      .card-score svg { width:50px;height:50px; }
-      .card-score-value { font-size:14px; }
       .selection-btn { min-height:44px; }
       .header-stats { display: none; }
     }
-
-
