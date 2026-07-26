@@ -21,7 +21,6 @@ const filters = {
   priceMax:  null,
   surfMin:   null,
   surfMax:   null,
-  withoutScore: false,
   sort:      'date_desc'
 };
 
@@ -35,6 +34,7 @@ const viewer = {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('[ImmoAgg] DOM prêt, init...');
   initViewSwitcher();
+  document.getElementById('header-logo').addEventListener('click', showFavorites);
   initInAppNavigation();
   initFilters();
   initViewer();
@@ -123,13 +123,6 @@ function initFilters() {
   });
   document.getElementById('f-sort').addEventListener('change', e => {
     filters.sort = e.target.value;
-    applyFiltersAndRender();
-  });
-
-  document.getElementById('f-without-score').addEventListener('click', e => {
-    filters.withoutScore = !filters.withoutScore;
-    e.currentTarget.classList.toggle('active', filters.withoutScore);
-    e.currentTarget.setAttribute('aria-pressed', String(filters.withoutScore));
     applyFiltersAndRender();
   });
 
@@ -232,7 +225,6 @@ function resetFilters() {
   filters.priceMax = null;
   filters.surfMin  = null;
   filters.surfMax  = null;
-  filters.withoutScore = false;
   filters.sort     = 'date_desc';
 
   document.getElementById('f-city').value      = '';
@@ -241,9 +233,6 @@ function resetFilters() {
   document.getElementById('f-surf-min').value  = '';
   document.getElementById('f-surf-max').value  = '';
   document.getElementById('f-sort').value      = 'date_desc';
-  document.getElementById('f-without-score').classList.remove('active');
-  document.getElementById('f-without-score').setAttribute('aria-pressed', 'false');
-
   syncFilterButtons();
 
   applyFiltersAndRender();
@@ -356,7 +345,9 @@ function showFavorites({ render = true } = {}) {
   document.querySelector('.main').classList.remove('in-app-mode');
   currentView = 'gallery';
   document.querySelectorAll('.view-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === 'gallery'));
-  document.getElementById('view-gallery').classList.add('active');
+  ['gallery', 'list', 'map'].forEach(view => {
+    document.getElementById('view-' + view).classList.toggle('active', view === 'gallery');
+  });
   document.querySelectorAll('.in-app-nav-btn').forEach(btn => btn.classList.toggle('active', btn.hasAttribute('data-in-app-favorites')));
   if (render) renderGallery();
   if (typeof closeSidebar === 'function') closeSidebar();
@@ -620,7 +611,7 @@ async function renderList() {
 }
 
 // ── Vue Carte ─────────────────────────────────────────────────
-async function renderMap() {
+async function renderMap(focusedItem = null) {
   console.log('[ImmoAgg] renderMap:', filtered.length, 'items');
 
   if (!map) {
@@ -678,6 +669,7 @@ async function renderMap() {
   var minPrice = prices.length ? Math.min.apply(null, prices) : 0;
   var maxPrice = prices.length ? Math.max.apply(null, prices) : 1;
   var bounds = [];
+  var focusedMarker = null;
 
   withCoords.forEach(function(item, idx) {
     var lat = item.coords.lat;
@@ -702,10 +694,20 @@ async function renderMap() {
     var marker = L.marker([lat, lng], { icon: icon });
     marker.bindPopup(popupHTML(item, idx), { maxWidth: 280 });
     markers.addLayer(marker);
+    if (item === focusedItem) focusedMarker = marker;
     bounds.push([lat, lng]);
   });
 
-  if (bounds.length > 0) { map.fitBounds(bounds, { padding: [40, 40] }); }
+  if (focusedMarker) {
+    var focusedLatLng = focusedMarker.getLatLng();
+    map.setView(focusedLatLng, 13);
+    markers.zoomToShowLayer(focusedMarker, function() {
+      map.setView(focusedLatLng, 13);
+      focusedMarker.openPopup();
+    });
+  } else if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
 
   // Villes de référence — hors cluster, directement sur map
   var refCities = [
@@ -1091,21 +1093,7 @@ async function showOnMap(idx) {
     document.getElementById('view-' + v).classList.toggle('active', v === 'map');
   });
 
-  await renderMap();
-
-  // Centrer sur cet item et ouvrir son popup
-  if (item.coords && item.coords.lat) {
-    map.setView([item.coords.lat, item.coords.lng], 13);
-    // Trouver le marker correspondant et ouvrir son popup
-    markers.eachLayer(function(layer) {
-      if (layer.getLatLng) {
-        var ll = layer.getLatLng();
-        if (Math.abs(ll.lat - item.coords.lat) < 0.001 && Math.abs(ll.lng - item.coords.lng) < 0.001) {
-          layer.openPopup();
-        }
-      }
-    });
-  }
+  await renderMap(item);
 }
 
 // ── Modale suppression ────────────────────────────────────────
