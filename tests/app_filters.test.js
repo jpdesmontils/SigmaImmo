@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync(require.resolve('../app.js'), 'utf8');
 const context = { console, URL, window: {}, document: { addEventListener() {} } };
 vm.createContext(context);
-vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, compareListings };`, context);
+vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, renderCard: item => { filtered = [item]; return cardHTML(item, 0); }, compareListings };`, context);
 
 const baseFilters = overrides => ({
   userSelections: new Set(), analysisTypes: new Set(), city: '', priceMin: null,
@@ -35,6 +35,19 @@ test('traite les anciens investissements comme sans tag', () => {
 test('n’affiche pas de cercle sans score mais conserve zéro sur cent', () => {
   assert.equal(context.testApi.scoreCircleHTML({ analyses: { locatif: true }, latestAnalysis: { type: 'locatif', score: null } }), '');
   assert.match(context.testApi.scoreCircleHTML({ analyses: { locatif: true }, latestAnalysis: { type: 'locatif', score: 0 } }), />0<\/span>/);
+});
+
+test('superpose le cercle du score de la dernière analyse sur la vignette', () => {
+  const html = context.testApi.renderCard({
+    id: 'bien-note', title: 'Bien analysé', analyses: {
+      locatif: { available: true }, patrimonial: { available: true }, mdb: { available: true },
+    },
+    latestAnalysis: { type: 'locatif', score: 72 },
+  });
+  assert.match(html, /<div class="card-media"[^>]*>.*<div class="card-score"/s);
+  assert.match(html, />72<\/span>/);
+  assert.match(html, /class="card-analysis-tags"/);
+  assert.match(html, />Patrimonial<\/span>.*>Locatif<\/span>.*>Marchands de biens<\/span>/s);
 });
 
 test('le filtre sans note se combine avec les filtres de classement', () => {
