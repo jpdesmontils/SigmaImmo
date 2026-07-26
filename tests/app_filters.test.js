@@ -39,11 +39,15 @@ test('n’affiche pas de cercle sans score mais conserve zéro sur cent', () => 
 
 test('superpose le cercle du score de la dernière analyse sur la vignette', () => {
   const html = context.testApi.renderCard({
-    id: 'bien-note', title: 'Bien analysé', analyses: { locatif: { available: true } },
+    id: 'bien-note', title: 'Bien analysé', analyses: {
+      locatif: { available: true }, patrimonial: { available: true }, mdb: { available: true },
+    },
     latestAnalysis: { type: 'locatif', score: 72 },
   });
   assert.match(html, /<div class="card-media"[^>]*>.*<div class="card-score"/s);
   assert.match(html, />72<\/span>/);
+  assert.match(html, /class="card-analysis-tags"/);
+  assert.match(html, />Patrimonial<\/span>.*>Locatif<\/span>.*>Marchands de biens<\/span>/s);
 });
 
 test('le filtre sans note se combine avec les filtres de classement', () => {

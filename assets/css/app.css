@@ -267,8 +267,9 @@
     }
     .card-media { position:relative; }
 
-    .card-score { position:absolute;right:10px;bottom:10px;z-index:9;width:58px;height:58px;border-radius:50%;background:rgba(245,243,238,.96);box-shadow:0 2px 10px #16150f55;display:grid;place-items:center; }
-    .card-score svg { position:absolute;inset:0;transform:rotate(-90deg); }
+    .card-analysis-tags { position:absolute;top:8px;right:8px;z-index:9;display:flex;flex-direction:column;align-items:flex-end;gap:4px; }
+    .card-score { position:absolute;right:10px;bottom:10px;z-index:9;width:52px;height:52px;border-radius:50%;background:rgba(245,243,238,.96);box-shadow:0 2px 10px #16150f55;display:grid;place-items:center; }
+    .card-score svg { position:absolute;inset:0;width:52px;height:52px;transform:rotate(-90deg); }
     .card-score-inner { position:relative;display:flex;flex-direction:column;align-items:center;font-family:var(--font-m);font-weight:700;line-height:1; }
     .card-score-value { font-size:16px; }
     .card-score-denom { font-size:8px;color:var(--muted);margin-top:2px; }
@@ -813,8 +814,10 @@
       }
       .sidebar.open { transform: translateX(0); }
       .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-      .card-score { width:50px;height:50px;right:7px;bottom:7px; }
-      .card-score svg { width:50px;height:50px; }
+      .card-analysis-tags { top:6px;right:6px;gap:3px; }
+      .card-analysis-tags .tag { font-size:8px;padding:2px 5px; }
+      .card-score { width:45px;height:45px;right:7px;bottom:7px; }
+      .card-score svg { width:45px;height:45px; }
       .card-score-value { font-size:14px; }
       .selection-btn { min-height:44px; }
       .header-stats { display: none; }

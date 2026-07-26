@@ -386,9 +386,9 @@ function showFavorites({ render = true } = {}) {
 }
 
 const ANALYSIS_TYPES = {
+  patrimonial: 'Patrimonial optimisé',
   locatif: 'Locatif',
-  mdb: 'Marchand de biens',
-  patrimonial: 'Patrimonial optimisé'
+  mdb: 'Marchand de biens'
 };
 
 function availableAnalysisTypes(item) {
@@ -401,7 +401,7 @@ function normalizedSelection(selection) {
 }
 
 function analysisTagsHTML(item, className = '') {
-  const labels = { locatif: 'Locatif', patrimonial: 'Patrimonial', mdb: 'MDB' };
+  const labels = { locatif: 'Locatif', patrimonial: 'Patrimonial', mdb: 'Marchands de biens' };
   const tags = availableAnalysisTypes(item).map(type =>
     `<span class="tag tag-${type}" title="${esc(ANALYSIS_TYPES[type])}">${labels[type]}</span>`
   ).join('');
@@ -522,7 +522,7 @@ function cardHTML(item, idx) {
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
       ${badge}
-      <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}${scoreCircleHTML(item)}</div>
+      <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}${analysisTagsHTML(item, 'card-analysis-tags')}${scoreCircleHTML(item)}</div>
       <div class="card-body">
         <div class="card-tags">
           ${selectionTagHTML(sel)}
