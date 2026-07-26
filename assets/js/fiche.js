@@ -5,6 +5,7 @@
   const runtimeContext = window.__immoAnalysisContext || {};
   const type = runtimeContext.type || currentScript?.dataset.analysisType || document.documentElement.dataset.analysisType;
   const query = new URLSearchParams(location.search);
+  const embedded = query.get('embedded') === '1';
   const analysisId = runtimeContext.id || query.get('id') || query.get('listing');
   const euro = value => typeof value === 'number' ? value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }) : '—';
   const percent = value => typeof value === 'number' ? `${value.toLocaleString('fr-FR')} %` : '—';
@@ -160,7 +161,7 @@
       const context = contexts[type](payload.analysis);
       const titles = { locatif: 'investissement locatif', mdb: 'MDB', patrimonial: 'Patrimonial optimisé' };
       document.title = `Fiche ${titles[type]} — ${context.reference || context.annonce_id || analysisId}`;
-      app.className = ''; app.innerHTML = renderTemplate(document.getElementById('fiche-template').innerHTML, context); setupTabs(app); setupFinanceEditor(app); setupGallery(payload.listing, context.listingUrl); addRecalculateButton();
+      app.className = ''; app.innerHTML = renderTemplate(document.getElementById('fiche-template').innerHTML, context); if (embedded) app.querySelector('.site-header')?.remove(); setupTabs(app); setupFinanceEditor(app); setupGallery(payload.listing, context.listingUrl); if (!embedded) addRecalculateButton();
     } catch (error) { app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
   }
   render();
