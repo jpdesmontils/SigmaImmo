@@ -1,0 +1,39 @@
+/* Design system commun à la galerie, aux guides et aux fiches d'analyse. */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f3ee;
+  --surface: #ffffff;
+  --surface2: #edeae3;
+  --surface3: #e4e1d8;
+  --card: var(--surface2);
+  --card-hi: var(--surface3);
+  --border: #d0ccc3;
+  --border-hi: #a8a49b;
+  --text: #16150f;
+  --text-2: #5a5850;
+  --muted: #9a9890;
+  --ink: var(--text);
+  --ink-2: var(--text-2);
+  --ink-3: var(--muted);
+  --accent: var(--text);
+  --go: #145a2e;
+  --go-bg: #d6f0df;
+  --go-border: #7ec99a;
+  --warn: #7a4108;
+  --warn-bg: #faefd5;
+  --warn-border: #e0a84a;
+  --cond: var(--warn);
+  --cond-bg: var(--warn-bg);
+  --cond-border: var(--warn-border);
+  --danger: #831515;
+  --danger-bg: #fce8e8;
+  --danger-border: #d97373;
+  --nogo: var(--danger);
+  --nogo-bg: var(--danger-bg);
+  --nogo-border: var(--danger-border);
+  --font: 'Inter', sans-serif;
+  --font-b: var(--font);
+  --font-d: 'Space Grotesk', sans-serif;
+  --font-m: 'JetBrains Mono', monospace;
+}
