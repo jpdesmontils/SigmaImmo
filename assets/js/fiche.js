@@ -106,7 +106,11 @@
     const sourceLink = root.querySelector('[data-source-link]');
     if (sourceLink && (listing?.url || fallbackUrl)) sourceLink.href = listing?.url || fallbackUrl;
     const images = [...new Set((listing?.images || []).filter(Boolean))];
-    if (!images.length) { gallery.hidden = true; return; }
+    if (!images.length) {
+      gallery.hidden = true;
+      gallery.closest('.hero-top')?.classList.add('hero-top-no-gallery');
+      return;
+    }
     const main = gallery.querySelector('[data-gallery-main]');
     const thumbs = gallery.querySelector('[data-gallery-thumbs]');
     const select = index => { main.src = images[index]; main.alt = `Photo ${index + 1} du bien`; [...thumbs.children].forEach((button, i) => button.classList.toggle('active', i === index)); };
@@ -169,6 +173,7 @@
       const template = options.template || document.getElementById('fiche-template')?.innerHTML;
       if (!template) throw new Error('Modèle de fiche introuvable');
       if (!embedded) app.className = '';
+      if (embedded) app.dataset.ui = `fiche-${type}`;
       app.innerHTML = renderTemplate(template, context); if (embedded) app.querySelector('.site-header')?.remove(); setupTabs(app); setupFinanceEditor(app); setupGallery(app, payload.listing, context.listingUrl); if (!embedded) addRecalculateButton();
     } catch (error) { if (!embedded) app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
   }
