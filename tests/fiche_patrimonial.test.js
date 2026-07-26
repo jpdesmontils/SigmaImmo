@@ -42,3 +42,34 @@ test('prépare les deux blocs de négociation à partir de données complètes',
 test('masque les blocs lorsque les anciennes analyses sont incomplètes', () => {
   assert.equal(context.window.testApi.negotiationContext({ prix_recommande_eur: 220000 }).negotiationAvailable, false);
 });
+
+test('conserve les données disponibles et explicite les valeurs non déterminées', () => {
+  const result = context.window.testApi.negotiationContext({
+    echelle_valeur: {
+      valeur_prudente_min_eur: null,
+      valeur_prudente_max_eur: null,
+      offre_recommandee_min_eur: 230000,
+      offre_recommandee_max_eur: 255000,
+      prix_demande_eur: 272000,
+      cout_total_eur: 378760,
+      argumentaire: 'Décote justifiée par les travaux.',
+    },
+    coherence_prix: {
+      prix_demande_m2_eur: 1591,
+      surface_reference_m2: 171,
+      reference_commune: { prix_m2_eur: null, ecart_pct: null, source: 'non_determinable', date: null },
+      reference_quartier: { prix_m2_eur: null, ecart_pct: null, source: 'non_determinable', date: null },
+      references_marche: [],
+      bien_analyse: { type_bien: 'maison avec division interne', prix_m2_eur: 1591, date: '2026-07' },
+    },
+  });
+
+  assert.equal(result.negotiationAvailable, true);
+  assert.equal(result.scaleAvailable, false);
+  assert.equal(result.prudentRange, 'Non déterminé');
+  assert.match(result.offerRange, /230[^–]+–[^2]+255/);
+  assert.equal(result.communeGap, 'Non déterminé');
+  assert.equal(result.communeReference, 'Non déterminé · Non déterminé · Non déterminé');
+  assert.equal(result.marketRows.length, 1);
+  assert.equal(result.marketRows[0].source, 'Bien analysé');
+});
