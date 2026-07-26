@@ -432,7 +432,7 @@ function scoreTextHTML(item) {
 }
 
 function propertyUrl(item) { return `fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
-function openProperty(item) { if (item?.id) { persistGalleryState(); window.open(propertyUrl(item), '_blank', 'noopener'); } }
+function openProperty(item) { if (item?.id) { persistGalleryState(); location.href = propertyUrl(item); } }
 
 // ── Vue switcher ──────────────────────────────────────────────
 function initViewSwitcher() {
@@ -956,9 +956,9 @@ function renderViewerInfo(item) {
 
   const ficheLink = document.getElementById('viewer-fiche-link');
   ficheLink.href = propertyUrl(item);
-  ficheLink.target = '_blank';
-  ficheLink.rel = 'noopener';
-  ficheLink.textContent = 'Fiche du bien ↗';
+  ficheLink.removeAttribute('target');
+  ficheLink.removeAttribute('rel');
+  ficheLink.textContent = 'Fiche du bien →';
   ficheLink.hidden = false;
 }
 
