@@ -16,7 +16,7 @@
 	"https://solenis-studio.fr/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "assets/js/background.js"
   },
   "content_scripts": [
     {
@@ -24,8 +24,8 @@
         "https://www.green-acres.fr/fr/favorite/all*"
       ],
       "js": [
-        "extraction_utils.js",
-        "content_greenacres_favorites.js"
+        "assets/js/extraction_utils.js",
+        "assets/js/content_greenacres_favorites.js"
       ],
       "run_at": "document_idle"
     },
@@ -34,8 +34,8 @@
         "https://www.green-acres.fr/fr/*"
       ],
       "js": [
-        "extraction_utils.js",
-        "content_greenacres_listing.js"
+        "assets/js/extraction_utils.js",
+        "assets/js/content_greenacres_listing.js"
       ],
       "run_at": "document_idle"
     },
@@ -44,8 +44,8 @@
         "<all_urls>"
       ],
       "js": [
-        "extraction_utils.js",
-        "content_capture.js"
+        "assets/js/extraction_utils.js",
+        "assets/js/content_capture.js"
       ],
       "run_at": "document_idle"
     }

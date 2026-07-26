@@ -1,0 +1,172 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e3a5f, #0f172a);
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo-icon { font-size: 22px; }
+    .logo h1 { font-size: 15px; font-weight: 700; color: #fff; }
+    .logo small { font-size: 10px; color: #64748b; display: block; margin-top: 1px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 14px 16px;
+    }
+
+    .stat {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-number { font-size: 24px; font-weight: 800; color: #38bdf8; line-height: 1; }
+    .stat-label  { font-size: 10px; color: #64748b; margin-top: 3px; text-transform: uppercase; letter-spacing: .5px; }
+
+
+    .sync-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px 14px;
+    }
+
+    .last-sync {
+      font-size: 11px;
+      color: #475569;
+    }
+
+    .btn-sync {
+      background: #0ea5e9;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-sync:hover { background: #0284c7; }
+    .btn-sync:disabled { background: #334155; color: #64748b; cursor: default; }
+
+    .actions {
+      padding: 0 16px 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 8px;
+      border-radius: 7px;
+      border: 1px solid #1e293b;
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+    }
+    .btn-action:hover { background: #0f172a; color: #e2e8f0; border-color: #334155; }
+    .btn-action .icon { display: block; font-size: 18px; margin-bottom: 3px; }
+
+    .config-section {
+      padding: 12px 16px;
+      border-top: 1px solid #1e293b;
+      display: none;
+    }
+    .config-section.open { display: block; }
+
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 11px; color: #64748b; margin-bottom: 4px; }
+    .field input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: #e2e8f0;
+      font-size: 12px;
+    }
+    .field input:focus { outline: none; border-color: #0ea5e9; }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .toggle {
+      width: 32px; height: 18px;
+      background: #334155;
+      border-radius: 9px;
+      position: relative;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle.on { background: #0ea5e9; }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 14px; height: 14px;
+      background: white;
+      border-radius: 50%;
+      transition: left .2s;
+    }
+    .toggle.on::after { left: 16px; }
+
+    .btn-save {
+      width: 100%;
+      margin-top: 10px;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-save:hover { background: #0284c7; }
+
+    .status-bar {
+      padding: 6px 16px;
+      font-size: 11px;
+      color: #22c55e;
+      background: #0f2617;
+      border-top: 1px solid #14532d;
+      min-height: 28px;
+    }
+    .status-bar.error { color: #f87171; background: #2d1212; border-color: #7f1d1d; }
+    .status-bar.idle  { color: #475569; background: transparent; border-top-color: #1e293b; }
+
+    .btn-gallery {
+      display: block;
+      width: calc(100% - 32px);
+      margin: 0 16px 14px;
+      padding: 10px;
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
