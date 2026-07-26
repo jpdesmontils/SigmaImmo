@@ -416,8 +416,7 @@ function latestAnalysis(item) {
 
 function scoreColor(score) { return score >= 70 ? '#145a2e' : score >= 50 ? '#7a4108' : '#831515'; }
 
-// Conservé comme formateur pur pour les vues qui souhaitent afficher un score
-// sans réintroduire cet indicateur sur les vignettes de la galerie.
+// Cercle de score partagé par les vignettes de la galerie.
 function scoreCircleHTML(item) {
   const latest = latestAnalysis(item);
   if (!latest || typeof latest.score !== 'number') return '';
@@ -523,7 +522,7 @@ function cardHTML(item, idx) {
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
       ${badge}
-      <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}</div>
+      <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}${scoreCircleHTML(item)}</div>
       <div class="card-body">
         <div class="card-tags">
           ${selectionTagHTML(sel)}
