@@ -93,6 +93,11 @@
       letter-spacing: -.3px;
       color: var(--header-text);
       white-space: nowrap;
+      appearance: none;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
     }
     .header-logo span { color: var(--highlight); font-weight: 500; }
 
@@ -883,7 +888,7 @@
 <!-- ── Header ──────────────────────────────────────────────── -->
 <header class="header">
 <button class="btn-filters-mobile" id="btn-filters-mobile">☰ </button>
-  <div class="header-logo">Immo<span>Agg</span></div>
+  <button class="header-logo" id="header-logo" type="button" title="Afficher la galerie" aria-label="Afficher la galerie">Immo<span>Agg</span></button>
   <div class="header-stats">
     <span>⭐ <b id="hdr-fav">—</b> favoris</span>
   </div>
@@ -927,7 +932,6 @@
     <div class="filter-group"><h3>Surface (m²)</h3><div class="range-row"><input class="filter-input" id="f-surf-min" type="number" placeholder="Min"><input class="filter-input" id="f-surf-max" type="number" placeholder="Max"></div></div>
     <div class="filter-group"><h3>Tri</h3><select class="sort-select" id="f-sort"><option value="date_desc">Plus récent</option><option value="date_asc">Plus ancien</option><option value="price_asc">Prix croissant</option><option value="price_desc">Prix décroissant</option><option value="surface_desc">Surface décroissante</option><option value="surface_asc">Surface croissante</option><option value="score_desc">Note décroissante</option><option value="score_asc">Note croissante</option></select></div>
     <div class="filter-group"><h3>Classement</h3><div class="selection-btns" data-filter-group="user"><button class="selection-btn active" data-user-filter="all" aria-pressed="true">Tous</button><button class="selection-btn" data-user-filter="untagged" aria-pressed="false">Sans tag</button><button class="selection-btn sel-shortlist" data-user-filter="shortlist" aria-pressed="false">⭐ ShortList</button><button class="selection-btn sel-ecartee" data-user-filter="ecartee" aria-pressed="false">✕ Écartés</button></div></div>
-    <div class="filter-group"><h3>Note</h3><div class="selection-btns"><button class="selection-btn" id="f-without-score" aria-pressed="false">Sans note</button></div></div>
     <div class="filter-group"><h3>Types d’analyse</h3><div class="selection-btns" data-filter-group="analysis"><button class="selection-btn" data-analysis-filter="patrimonial" aria-pressed="false">Patrimonial</button><button class="selection-btn" data-analysis-filter="locatif" aria-pressed="false">Locatif</button><button class="selection-btn" data-analysis-filter="mdb" aria-pressed="false">Marchand de biens</button></div></div>
     <button class="btn-reset" id="btn-reset">↺ Réinitialiser les filtres</button>
 
@@ -1079,6 +1083,6 @@
   if (overlayEl) overlayEl.addEventListener('click', closeSidebar);
 </script>
 <!-- La version évite de combiner ce HTML, dont les choix sont dynamiques, avec un ancien app.js en cache. -->
-<script src="app.js?v=20260725-gallery-tags"></script>
+<script src="app.js?v=20260726-gallery-map-focus"></script>
 </body>
 </html>
