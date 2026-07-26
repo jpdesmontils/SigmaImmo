@@ -181,7 +181,7 @@ function applyFiltersAndRender() {
 }
 
 function persistGalleryState() {
-  try { localStorage.setItem(GALLERY_STATE_KEY, JSON.stringify({ city: filters.city, priceMin: filters.priceMin, priceMax: filters.priceMax, surfMin: filters.surfMin, surfMax: filters.surfMax, sort: filters.sort, userSelections: [...filters.userSelections], analysisTypes: [...filters.analysisTypes], view: currentView, scrollY: window.scrollY })); } catch (_) {}
+  try { localStorage.setItem(GALLERY_STATE_KEY, JSON.stringify({ city: filters.city, priceMin: filters.priceMin, priceMax: filters.priceMax, surfMin: filters.surfMin, surfMax: filters.surfMax, sort: filters.sort, userSelections: [...filters.userSelections], analysisTypes: [...filters.analysisTypes], listingIds: filtered.map(item => item.id), view: currentView, scrollY: window.scrollY })); } catch (_) {}
 }
 
 function restoreGalleryState() {

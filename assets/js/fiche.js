@@ -3,10 +3,10 @@
   const scriptUrl = currentScript?.src || location.href;
   const apiUrl = new URL('../../api/', scriptUrl);
   const runtimeContext = window.__immoAnalysisContext || {};
-  const type = runtimeContext.type || currentScript?.dataset.analysisType || document.documentElement.dataset.analysisType;
+  const defaultType = runtimeContext.type || currentScript?.dataset.analysisType || document.documentElement.dataset.analysisType;
   const query = new URLSearchParams(location.search);
-  const embedded = query.get('embedded') === '1';
-  const analysisId = runtimeContext.id || query.get('id') || query.get('listing');
+  const defaultAnalysisId = runtimeContext.id || query.get('id') || query.get('listing');
+  let activeAnalysisId = defaultAnalysisId;
   const euro = value => typeof value === 'number' ? value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }) : '—';
   const percent = value => typeof value === 'number' ? `${value.toLocaleString('fr-FR')} %` : '—';
   const signedPercent = value => typeof value === 'number' ? `${value > 0 ? '+' : ''}${value.toLocaleString('fr-FR')} %` : '—';
@@ -100,10 +100,10 @@
     };
   }
 
-  function setupGallery(listing, fallbackUrl) {
-    const gallery = document.querySelector('[data-property-gallery]');
+  function setupGallery(root, listing, fallbackUrl) {
+    const gallery = root.querySelector('[data-property-gallery]');
     if (!gallery) return;
-    const sourceLink = document.querySelector('[data-source-link]');
+    const sourceLink = root.querySelector('[data-source-link]');
     if (sourceLink && (listing?.url || fallbackUrl)) sourceLink.href = listing?.url || fallbackUrl;
     const images = [...new Set((listing?.images || []).filter(Boolean))];
     if (!images.length) { gallery.hidden = true; return; }
@@ -144,15 +144,20 @@
   async function startRecalculation(button, selectedType) {
     button.disabled = true; button.textContent = '⌛'; button.title = 'Recalcul en cours';
     try {
-      const response = await fetch(new URL('analyze.php', apiUrl), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: analysisId, type: selectedType }) });
+      const response = await fetch(new URL('analyze.php', apiUrl), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: activeAnalysisId, type: selectedType }) });
       const payload = await response.json(); if (!response.ok) throw new Error(payload.error || 'Démarrage du recalcul impossible');
-      const poll = setInterval(async () => { try { const statusResponse = await fetch(`${new URL('analyze.php', apiUrl)}?id=${encodeURIComponent(analysisId)}`); const statusPayload = await statusResponse.json(); if (statusPayload.job?.status === 'completed') { clearInterval(poll); location.reload(); } if (statusPayload.job?.status === 'failed') { clearInterval(poll); resetButton(button); alert(`Recalcul impossible : ${statusPayload.job.error || 'erreur inconnue'}`); } } catch (_) {} }, 2500);
+      const poll = setInterval(async () => { try { const statusResponse = await fetch(`${new URL('analyze.php', apiUrl)}?id=${encodeURIComponent(activeAnalysisId)}`); const statusPayload = await statusResponse.json(); if (statusPayload.job?.status === 'completed') { clearInterval(poll); location.reload(); } if (statusPayload.job?.status === 'failed') { clearInterval(poll); resetButton(button); alert(`Recalcul impossible : ${statusPayload.job.error || 'erreur inconnue'}`); } } catch (_) {} }, 2500);
     } catch (error) { resetButton(button); alert(`Recalcul impossible : ${error.message}`); }
   }
   function resetButton(button) { button.disabled = false; button.textContent = '↻'; button.title = 'Recalculer l’analyse'; }
 
-  async function render() {
-    const app = document.getElementById('app');
+  async function render(options = {}) {
+    const app = options.target || (typeof document.getElementById === 'function' ? document.getElementById('app') : null);
+    if (!app) return;
+    const type = options.type || defaultType;
+    const analysisId = options.id || defaultAnalysisId;
+    activeAnalysisId = analysisId;
+    const embedded = Boolean(options.target);
     const contexts = { locatif: locatifContext, mdb: mdbContext, patrimonial: patrimonialContext };
     if (!analysisId || !contexts[type]) { app.className = 'error'; app.textContent = 'Identifiant ou type d’analyse manquant.'; return; }
     try {
@@ -161,8 +166,12 @@
       const context = contexts[type](payload.analysis);
       const titles = { locatif: 'investissement locatif', mdb: 'MDB', patrimonial: 'Patrimonial optimisé' };
       document.title = `Fiche ${titles[type]} — ${context.reference || context.annonce_id || analysisId}`;
-      app.className = ''; app.innerHTML = renderTemplate(document.getElementById('fiche-template').innerHTML, context); if (embedded) app.querySelector('.site-header')?.remove(); setupTabs(app); setupFinanceEditor(app); setupGallery(payload.listing, context.listingUrl); if (!embedded) addRecalculateButton();
-    } catch (error) { app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
+      const template = options.template || document.getElementById('fiche-template')?.innerHTML;
+      if (!template) throw new Error('Modèle de fiche introuvable');
+      if (!embedded) app.className = '';
+      app.innerHTML = renderTemplate(template, context); if (embedded) app.querySelector('.site-header')?.remove(); setupTabs(app); setupFinanceEditor(app); setupGallery(app, payload.listing, context.listingUrl); if (!embedded) addRecalculateButton();
+    } catch (error) { if (!embedded) app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
   }
+  window.ImmoAnalysisRenderer = { render };
   render();
 })();
