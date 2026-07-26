@@ -151,6 +151,7 @@
 .recalculate-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:20px}
 .recalculate-actions button{border:1px solid var(--border-hi);border-radius:3px;padding:9px 12px;background:var(--surface);font:500 12px var(--font-b);cursor:pointer}
 .recalculate-actions button[data-type]{background:var(--ink);border-color:var(--ink);color:#fff}
+.recalculate-actions button[data-type="delete"]{background:var(--nogo);border-color:var(--nogo);color:#fff}
 @media(max-width:680px){
 .hero{padding:20px 16px 0}
 }
