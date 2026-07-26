@@ -203,6 +203,7 @@
       app.innerHTML = renderTemplate(template, context); if (embedded) app.querySelector('.site-header')?.remove(); setupTabs(app); setupFinanceEditor(app); setupGallery(app, payload.listing, context.listingUrl); if (!embedded) addRecalculateButton();
     } catch (error) { if (!embedded) app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
   }
+  window.ImmoModal = { open: openModal };
   window.ImmoAnalysisRenderer = { render };
   render();
 })();
