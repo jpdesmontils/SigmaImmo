@@ -1,28 +1,47 @@
 <?php
 /** Fonctions d'accès et de calcul DVF, compatibles PHP 7.0. */
+require_once __DIR__ . '/logger.php';
 
 function dvfHttpJson($url) {
-    $context = stream_context_create(['http' => ['timeout' => 12, 'ignore_errors' => true, 'header' => "Accept: application/json\r\nUser-Agent: SigmaImmo/1.0\r\n"]]);
-    $body = @file_get_contents($url, false, $context);
-    if ($body === false) throw new RuntimeException('Le service public de données immobilières ne répond pas.');
-    $status = 0;
-    if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $match)) $status = (int)$match[1];
+    $response = dvfHttpResponse($url, 12, "Accept: application/json\r\nUser-Agent: SigmaImmo/1.0\r\n", 'Le service public de données immobilières ne répond pas.');
+    $body = $response['body'];
+    $status = $response['status'];
     if ($status < 200 || $status >= 300) throw new RuntimeException('Le service public de données immobilières est temporairement indisponible.');
     $decoded = json_decode($body, true);
     if (!is_array($decoded)) throw new RuntimeException('La réponse du service public est inexploitable.');
     return $decoded;
 }
 
-function dvfCache($key, $ttl, $loader) {
+function dvfHttpResponse($url, $timeout, $headers, $transportError) {
+    $context = stream_context_create(['http' => ['timeout' => $timeout, 'ignore_errors' => true, 'header' => $headers]]);
+    $body = @file_get_contents($url, false, $context);
+    $status = dvfHttpStatus(isset($http_response_header) ? $http_response_header : []);
+    if ($body === false) throw new RuntimeException($transportError);
+    return ['body' => $body, 'status' => $status];
+}
+
+function dvfHttpStatus($responseHeaders) {
+    $status = 0;
+    foreach ($responseHeaders as $header) {
+        if (preg_match('/^HTTP\/\S+\s+(\d{3})\b/i', $header, $match)) $status = (int)$match[1];
+    }
+    return $status;
+}
+
+function dvfCache($key, $ttl, $loader, $observer = null) {
     $directory = __DIR__ . '/../data/cache/dvf/';
     if (!is_dir($directory)) @mkdir($directory, 0775, true);
     $file = $directory . preg_replace('/[^a-z0-9_-]/i', '_', $key) . '.json';
     if (is_file($file) && filemtime($file) >= time() - $ttl) {
         $cached = json_decode(file_get_contents($file), true);
-        if (is_array($cached)) return $cached;
+        if (is_array($cached)) {
+            if ($observer) call_user_func($observer, 'hit', $cached);
+            return $cached;
+        }
     }
     $value = call_user_func($loader);
     if (is_dir($directory) && is_writable($directory)) @file_put_contents($file, json_encode($value, JSON_UNESCAPED_UNICODE), LOCK_EX);
+    if ($observer) call_user_func($observer, 'miss', $value);
     return $value;
 }
 
@@ -116,7 +135,7 @@ function dvfWriteAnalysis($id, $dataDirectory, $analysis) {
 /**
  * Le jeu de données « demandes-de-valeurs-foncieres-geolocalisees » n'expose pas
  * ses millésimes comme des ressources CSV interrogeables via l'API tabulaire :
- * il est distribué sous forme d'un fichier CSV.GZ statique par commune et par
+ * il est distribué sous forme d'un fichier CSV statique par commune et par
  * année, publié par le projet geo-dvf sur files.data.gouv.fr.
  */
 function dvfDepartmentCode($cityCode) {
@@ -127,17 +146,7 @@ function dvfDepartmentCode($cityCode) {
 }
 
 function dvfCommuneCsvUrl($cityCode, $department, $year) {
-    return 'https://files.data.gouv.fr/geo-dvf/latest/csv/' . $year . '/communes/' . rawurlencode($department) . '/' . rawurlencode($cityCode) . '.csv.gz';
-}
-
-function dvfGunzip($data) {
-    if (function_exists('gzdecode')) {
-        $result = @gzdecode($data);
-        if ($result !== false) return $result;
-    }
-    if (strlen($data) < 18) return false;
-    $result = @gzinflate(substr($data, 10, -8));
-    return $result === false ? false : $result;
+    return 'https://files.data.gouv.fr/geo-dvf/latest/csv/' . $year . '/communes/' . rawurlencode($department) . '/' . rawurlencode($cityCode) . '.csv';
 }
 
 function dvfParseCsv($text) {
@@ -158,36 +167,44 @@ function dvfParseCsv($text) {
 
 function dvfFetchCommuneYearRows($cityCode, $department, $year) {
     $url = dvfCommuneCsvUrl($cityCode, $department, $year);
-    $context = stream_context_create(['http' => ['timeout' => 20, 'ignore_errors' => true, 'header' => "User-Agent: SigmaImmo/1.0\r\n"]]);
-    $body = @file_get_contents($url, false, $context);
-    if ($body === false) return [];
-    $status = 0;
-    if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $match)) $status = (int)$match[1];
+    $response = dvfHttpResponse($url, 20, "Accept: text/csv\r\nUser-Agent: SigmaImmo/1.0\r\n", 'Le service public de données foncières (geo-dvf) ne répond pas.');
+    $body = $response['body'];
+    $status = $response['status'];
     if ($status === 404) return [];
     if ($status < 200 || $status >= 300) throw new RuntimeException('Le service public de données foncières (geo-dvf) est temporairement indisponible.');
-    $csv = dvfGunzip($body);
-    if ($csv === false) return [];
-    return dvfParseCsv($csv);
+    return dvfParseCsv($body);
 }
 
-function dvfRowsForCommune($cityCode) {
+function dvfRowsForCommune($cityCode, $logContext = []) {
     $department = dvfDepartmentCode($cityCode);
     if ($department === '') throw new RuntimeException('Le code commune ne permet pas d’identifier le département.');
     $currentYear = (int)gmdate('Y');
+    return dvfLoadCommuneYears($currentYear, function($year) use ($cityCode, $department, $logContext) {
+        try {
+            return dvfCache('rows_' . $cityCode . '_' . $year, 86400, function() use ($cityCode, $department, $year) {
+                return dvfFetchCommuneYearRows($cityCode, $department, $year);
+            }, function($cacheStatus, $rows) use ($cityCode, $year, $logContext) {
+                appLog('app', 'dvf.year_loaded', $logContext + ['city_code' => $cityCode, 'year' => $year, 'cache_status' => $cacheStatus, 'row_count' => count($rows)]);
+            });
+        } catch (RuntimeException $error) {
+            appLog('app', 'dvf.year_failed', $logContext + ['city_code' => $cityCode, 'year' => $year, 'error' => $error->getMessage()]);
+            throw $error;
+        }
+    });
+}
+
+function dvfLoadCommuneYears($currentYear, $loader) {
     $all = [];
     $yearsWithData = 0;
     $lastError = null;
     for ($year = $currentYear; $year >= $currentYear - 10 && $yearsWithData < 4; $year--) {
         try {
-            $rows = dvfCache('rows_' . $cityCode . '_' . $year, 86400, function() use ($cityCode, $department, $year) {
-                return dvfFetchCommuneYearRows($cityCode, $department, $year);
-            });
+            $rows = call_user_func($loader, $year);
         } catch (RuntimeException $error) {
             $lastError = $error;
             continue;
         }
         if ($rows) { $all = array_merge($all, $rows); $yearsWithData++; }
-        if (count($all) >= 400) break;
     }
     if (!$all) {
         if ($lastError && $yearsWithData === 0) throw $lastError;
@@ -248,6 +265,32 @@ function dvfNormalizeTransactions($rows, $origin) {
     }
     usort($transactions, function($a, $b) { return strcmp($b['date'], $a['date']); });
     return $transactions;
+}
+
+function dvfTransactionDiagnostics($transactions) {
+    $types = [];
+    $withoutDistance = 0;
+    $minimumDistance = null;
+    $maximumDistance = null;
+    foreach ($transactions as $transaction) {
+        $type = isset($transaction['type']) ? (string)$transaction['type'] : '';
+        $types[$type] = isset($types[$type]) ? $types[$type] + 1 : 1;
+        $distance = isset($transaction['distance_km']) ? $transaction['distance_km'] : null;
+        if ($distance === null) {
+            $withoutDistance++;
+            continue;
+        }
+        $minimumDistance = $minimumDistance === null ? $distance : min($minimumDistance, $distance);
+        $maximumDistance = $maximumDistance === null ? $distance : max($maximumDistance, $distance);
+    }
+    ksort($types);
+    return [
+        'transaction_count' => count($transactions),
+        'type_counts' => $types,
+        'without_distance_count' => $withoutDistance,
+        'minimum_distance_km' => $minimumDistance === null ? null : round($minimumDistance, 3),
+        'maximum_distance_km' => $maximumDistance === null ? null : round($maximumDistance, 3),
+    ];
 }
 
 function dvfSelectComparables($transactions, $propertyType, $surface, $limit) {

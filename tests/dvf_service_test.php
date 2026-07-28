@@ -14,6 +14,15 @@ function dvfAssert($expected, $actual, $message) {
 
 echo "=== dvf_service_test ===\n";
 
+echo "-- Statut HTTP final après redirection vers le stockage geo-dvf\n";
+dvfAssert(200, dvfHttpStatus([
+    'HTTP/1.1 302 Found',
+    'Location: https://geo-dvf.s3.sbg.io.cloud.ovh.net/latest/csv/2025/communes/11/11106.csv',
+    'HTTP/1.1 200 OK',
+    'Content-Type: text/csv',
+]), 'Le statut final 200 doit remplacer le statut 302 de la redirection suivie par PHP.');
+dvfAssert(404, dvfHttpStatus(['HTTP/1.1 302 Found', 'HTTP/2 404']), 'Le statut final 404 doit rester identifiable après une redirection.');
+
 echo "-- Regroupement des mutations et calcul du prix au m²\n";
 $origin = ['latitude' => 48.8566, 'longitude' => 2.3522];
 $rows = [
@@ -27,6 +36,9 @@ $transactions = dvfNormalizeTransactions($rows, $origin);
 dvfAssert(2, count($transactions), 'Les ventes doivent être regroupées par mutation et les donations exclues.');
 dvfAssert(60.0, $transactions[0]['surface'], 'Les surfaces des lots d’une mutation doivent être additionnées.');
 dvfAssert(5000.0, $transactions[0]['price_per_sqm'], 'Le prix au mètre carré doit utiliser la mutation regroupée.');
+$diagnostics = dvfTransactionDiagnostics($transactions);
+dvfAssert(['Appartement' => 1, 'Maison' => 1], $diagnostics['type_counts'], 'Le diagnostic doit compter les transactions normalisées par type de bien.');
+dvfAssert(0, $diagnostics['without_distance_count'], 'Le diagnostic doit signaler les transactions sans distance calculable.');
 
 echo "-- Sélection des comparables par périmètre\n";
 $selection = dvfSelectComparables($transactions, 'Appartement ancien', 60, 10);
@@ -68,23 +80,30 @@ dvfAssert('972', dvfDepartmentCode('97209'), 'Fort-de-France (97209) doit être 
 dvfAssert('', dvfDepartmentCode('1234'), 'Un code commune trop court doit être rejeté plutôt que tronqué silencieusement.');
 dvfAssert('', dvfDepartmentCode(''), 'Un code commune vide ne doit pas produire de faux département.');
 
-echo "-- Construction de l’URL geo-dvf (fichier CSV.GZ statique par commune et par année)\n";
+echo "-- Construction de l’URL geo-dvf (fichier CSV statique par commune et par année)\n";
 dvfAssert(
-    'https://files.data.gouv.fr/geo-dvf/latest/csv/2025/communes/11/11106.csv.gz',
+    'https://files.data.gouv.fr/geo-dvf/latest/csv/2025/communes/11/11106.csv',
     dvfCommuneCsvUrl('11106', '11', 2025),
-    'L’URL doit pointer vers le fichier CSV.GZ par commune de geo-dvf, pas vers l’API tabulaire du dataset.'
+    'L’URL doit pointer vers le fichier CSV non compressé par commune de geo-dvf, pas vers l’API tabulaire du dataset.'
 );
 
-echo "-- Décompression gzip et analyse CSV d’un flux geo-dvf simulé\n";
+echo "-- Analyse CSV d’un flux communal geo-dvf simulé\n";
 $csvSample = "id_mutation,date_mutation,nature_mutation,valeur_fonciere,type_local,surface_reelle_bati,nombre_pieces_principales,adresse_nom_voie,latitude,longitude\n"
     . "2024-1,2024-03-12,Vente,287000,Maison,117,5,\"RUE DE LA, MAIRIE\",43.2347407,3.0585293\n";
-$gzipped = gzencode($csvSample);
-$decoded = dvfGunzip($gzipped);
-dvfAssert($csvSample, $decoded, 'dvfGunzip doit restituer exactement le CSV source d’un fichier .csv.gz geo-dvf.');
-$parsedRows = dvfParseCsv($decoded);
+$parsedRows = dvfParseCsv($csvSample);
 dvfAssert(1, count($parsedRows), 'Une ligne de données doit produire une transaction.');
 dvfAssert('287000', $parsedRows[0]['valeur_fonciere'], 'La colonne valeur_fonciere doit être lue depuis l’en-tête CSV.');
 dvfAssert('RUE DE LA, MAIRIE', $parsedRows[0]['adresse_nom_voie'], 'Une virgule entre guillemets ne doit pas casser le parsing CSV.');
+
+echo "-- Chargement de quatre millésimes complets, indépendamment du nombre de lignes\n";
+$loadedYears = [];
+$historicalRows = dvfLoadCommuneYears(2025, function($year) use (&$loadedYears) {
+    $loadedYears[] = $year;
+    $count = $year === 2025 ? 401 : 1;
+    return array_fill(0, $count, ['date_mutation' => (string)$year]);
+});
+dvfAssert([2025, 2024, 2023, 2022], $loadedYears, 'Quatre années avec données doivent être chargées même si le premier millésime dépasse 400 lignes.');
+dvfAssert(404, count($historicalRows), 'Toutes les lignes des quatre millésimes doivent être conservées.');
 
 echo "-- Test avec l’exemple fourni : favorites.json / annonce A91obcjachbl6ue3 (Coursan)\n";
 $favoriteExample = [
