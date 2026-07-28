@@ -9,14 +9,34 @@ const guides = [
   'guide-mdb-division-parcellaire.html',
   'guide-investissement-locatif.html',
 ];
+const dataUis = ['guide-mdb', 'guide-locatif'];
 
-test('affiche le contenu actif après le masquage propre aux guides', () => {
-  const hiddenRule = styles.lastIndexOf('.tab-content{display:none');
-  const activeRule = styles.lastIndexOf('.tab-content.active{display:block}');
+// Spécificité CSS (id, classes/attributs/pseudo-classes, éléments), cf. https://www.w3.org/TR/selectors/#specificity
+function specificity(selector) {
+  let s = selector.trim();
+  const ids = (s.match(/#[\w-]+/g) || []).length;
+  const classesAttrsPseudo = (s.match(/\.[\w-]+|\[[^\]]*\]|:[\w-]+/g) || []).length;
+  s = s.replace(/#[\w-]+/g, '').replace(/\.[\w-]+/g, '').replace(/\[[^\]]*\]/g, '').replace(/:[\w-]+/g, '');
+  const types = (s.match(/[a-zA-Z][\w-]*/g) || []).length;
+  return [ids, classesAttrsPseudo, types];
+}
 
-  assert.notEqual(hiddenRule, -1);
-  assert.ok(activeRule > hiddenRule, 'la règle active doit suivre les règles qui masquent les onglets');
-});
+function compare([a1, a2, a3], [b1, b2, b3]) {
+  return a1 - b1 || a2 - b2 || a3 - b3;
+}
+
+for (const dataUi of dataUis) {
+  test(`la règle .active de ${dataUi} l'emporte sur le masquage des onglets (spécificité CSS)`, () => {
+    const hideSelector = `html[data-ui="${dataUi}"] .tab-content`;
+    const activeSelector = 'html[data-ui] .tab-content.active';
+
+    assert.ok(styles.includes(`${hideSelector}{display:none`) || styles.includes(`${hideSelector},`),
+      `la règle de masquage pour ${dataUi} doit exister`);
+    assert.ok(styles.includes(activeSelector), 'la règle active générique doit exister');
+    assert.ok(compare(specificity(activeSelector), specificity(hideSelector)) > 0,
+      'la règle active doit avoir une spécificité CSS supérieure à la règle de masquage, quel que soit son ordre dans le fichier');
+  });
+}
 
 for (const guide of guides) {
   test(`${guide} active son premier onglet au chargement`, () => {
