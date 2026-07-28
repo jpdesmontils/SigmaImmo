@@ -22,11 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     if (!is_array($payload)) respond(400, ['ok' => false, 'error' => 'Corps JSON invalide.']);
     // Les compléments enrichissent les champs canoniques : aucun second objet
     // de paramètres n'est créé et une synchronisation conserve ces valeurs.
-    $fields = ['address' => 'text', 'location' => 'text', 'price' => 'number', 'surface' => 'number', 'rooms' => 'text', 'terrain' => 'number'];
+    $fields = ['address' => 'text', 'location' => 'text', 'price' => 'number', 'surface' => 'number', 'rooms' => 'text', 'terrain' => 'number', 'dpe' => 'energy', 'ges' => 'energy'];
     foreach ($fields as $field => $kind) if (array_key_exists($field, $payload)) {
         $value = $payload[$field];
         if ($kind === 'number') $favorites[$key][$field] = $value === '' || $value === null ? null : max(0, (float)$value);
-        else $favorites[$key][$field] = mb_substr(trim(strip_tags((string)$value)), 0, 300);
+        elseif ($kind === 'energy') {
+            $energy = strtoupper(trim((string)$value));
+            if (!preg_match('/^[A-G]$/', $energy)) respond(400, ['ok' => false, 'error' => 'La note énergétique doit être comprise entre A et G.']);
+            $favorites[$key][$field] = $energy;
+        } else $favorites[$key][$field] = mb_substr(trim(strip_tags((string)$value)), 0, 300);
     }
     $favorites[$key]['updatedAt'] = time() * 1000;
     writeJson(FAVORITES_FILE, $favorites);

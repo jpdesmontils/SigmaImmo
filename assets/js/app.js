@@ -76,6 +76,12 @@ async function loadData() {
 
     updateHeaderStats();
     applyFiltersAndRender();
+    const initialNavigation = new URLSearchParams(location.search);
+    const focusedListingId = initialNavigation.get('listing');
+    if (initialNavigation.get('view') === 'map' && focusedListingId) {
+      const focusedIndex = filtered.findIndex(item => String(item.id) === focusedListingId);
+      if (focusedIndex !== -1) await showOnMap(focusedIndex);
+    }
 
   } catch (e) {
     console.error('[ImmoAgg] Erreur chargement:', e);
@@ -431,7 +437,7 @@ function scoreTextHTML(item) {
   return latest && typeof latest.score === 'number' ? `<span class="tag tag-${latest.type}" title="Score de la dernière analyse">${latest.score}/100</span>` : '';
 }
 
-function propertyUrl(item) { return `fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
+function propertyUrl(item) { return `/fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
 function openProperty(item) { if (item?.id) { persistGalleryState(); location.href = propertyUrl(item); } }
 
 // ── Vue switcher ──────────────────────────────────────────────
