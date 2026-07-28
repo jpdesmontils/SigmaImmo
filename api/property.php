@@ -1,5 +1,6 @@
 <?php
 /** Lecture et mise à jour de la fiche mutualisée d'une annonce. */
+require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/analysis_types.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -50,7 +51,9 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'PATCH'], true)) respond(405, 
 
 $listing = $favorites[$key];
 $summaries = analysisSummaries(DATA_DIR, $id);
-$job = readJson(DATA_DIR . 'analyses/jobs/' . $id . '.json', null);
+$jobPath = DATA_DIR . 'analyses/jobs/' . $id . '.json';
+$job = readJson($jobPath, null);
+if ($job) expireStaleJob($jobPath, $job);
 respond(200, ['ok' => true, 'listing' => $listing, 'analyses' => $summaries, 'job' => $job, 'requirements' => analysisRequirements($listing)]);
 
 function analysisRequirements($listing) {
