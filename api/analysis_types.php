@@ -61,3 +61,21 @@ function analysisScoreValue($analysis, $type) {
     if ($score < 0 || $score > 100) return null;
     return round($score, 1);
 }
+
+/** Un job en file d'attente est toujours actif ; un job en cours ne l'est que tant que son bail n'a pas expiré. */
+function jobIsActive($job) {
+    if (($job['status'] ?? '') === 'queued') return true;
+    if (($job['status'] ?? '') !== 'running') return false;
+    $expiresAt = isset($job['lease_expires_at']) ? strtotime($job['lease_expires_at']) : false;
+    return $expiresAt !== false && $expiresAt > time();
+}
+
+/** Bascule en échec un job dont le worker n'a pas répondu avant l'expiration de son bail. */
+function expireStaleJob($path, &$job) {
+    if (!is_array($job) || ($job['status'] ?? '') !== 'running' || jobIsActive($job)) return;
+    $job['status'] = 'failed';
+    $job['finished_at'] = gmdate('c');
+    $job['error'] = 'Le worker ne répond plus ou le délai de réponse du LLM a expiré.';
+    file_put_contents($path, json_encode($job, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX);
+    if (function_exists('aiLog')) aiLog('analysis.worker_expired', ['id' => $job['id'] ?? null, 'type' => $job['type'] ?? null]);
+}
