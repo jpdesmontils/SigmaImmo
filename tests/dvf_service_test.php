@@ -36,6 +36,9 @@ $transactions = dvfNormalizeTransactions($rows, $origin);
 dvfAssert(2, count($transactions), 'Les ventes doivent être regroupées par mutation et les donations exclues.');
 dvfAssert(60.0, $transactions[0]['surface'], 'Les surfaces des lots d’une mutation doivent être additionnées.');
 dvfAssert(5000.0, $transactions[0]['price_per_sqm'], 'Le prix au mètre carré doit utiliser la mutation regroupée.');
+$diagnostics = dvfTransactionDiagnostics($transactions);
+dvfAssert(['Appartement' => 1, 'Maison' => 1], $diagnostics['type_counts'], 'Le diagnostic doit compter les transactions normalisées par type de bien.');
+dvfAssert(0, $diagnostics['without_distance_count'], 'Le diagnostic doit signaler les transactions sans distance calculable.');
 
 echo "-- Sélection des comparables par périmètre\n";
 $selection = dvfSelectComparables($transactions, 'Appartement ancien', 60, 10);
