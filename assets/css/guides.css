@@ -24,7 +24,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1
 .tab-btn{font-family:var(--font-b);font-size:13px;font-weight:500;color:var(--ink-3);padding:14px 20px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s}
 .tab-btn:hover{color:var(--ink)}
 .tab-btn.active{color:var(--ink);border-bottom-color:var(--ink)}
-.tab-content.active{display:block}
+html[data-ui] .tab-content.active,
+#view-in-app[data-ui] .tab-content.active{display:block}
 .stitle{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:18px;margin-top:32px}
 .stitle:first-child{margin-top:0}
 .narrative.go{border-left-color:var(--go)}

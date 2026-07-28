@@ -44,6 +44,77 @@ function dvfGeocode($address) {
     ];
 }
 
+function dvfReverseGeocode($latitude, $longitude) {
+    $url = 'https://api-adresse.data.gouv.fr/reverse/?limit=1&lat=' . rawurlencode($latitude) . '&lon=' . rawurlencode($longitude);
+    $payload = dvfHttpJson($url);
+    $feature = isset($payload['features'][0]) ? $payload['features'][0] : null;
+    if (!is_array($feature)) throw new InvalidArgumentException('Les coordonnées du bien ne correspondent à aucune commune connue.');
+    $properties = isset($feature['properties']) ? $feature['properties'] : [];
+    return [
+        'longitude' => (float)$longitude,
+        'latitude' => (float)$latitude,
+        'city_code' => isset($properties['citycode']) ? (string)$properties['citycode'] : '',
+        'city' => isset($properties['city']) ? (string)$properties['city'] : '',
+        'label' => isset($properties['label']) ? (string)$properties['label'] : ((string)$latitude . ', ' . (string)$longitude),
+    ];
+}
+
+function dvfListingNumber($listing, $numericKey, $textKey) {
+    if (isset($listing[$numericKey]) && is_numeric($listing[$numericKey]) && (float)$listing[$numericKey] > 0) return (float)$listing[$numericKey];
+    $text = isset($listing[$textKey]) ? (string)$listing[$textKey] : '';
+    $pattern = $textKey === 'surfaceText' ? '/([0-9][0-9\s]*(?:[,.][0-9]+)?)\s*m(?:²|2)/iu' : '/([0-9][0-9\s]*(?:[,.][0-9]+)?)\s*€/u';
+    if (preg_match($pattern, $text, $match)) {
+        $number = (float)str_replace([' ', ','], ['', '.'], $match[1]);
+        if ($number > 0) return $number;
+    }
+    return 0.0;
+}
+
+function dvfListingContext($listing) {
+    $address = trim((string)($listing['address'] ?? ''));
+    $location = trim((string)($listing['location'] ?? ''));
+    $coords = isset($listing['coords']) && is_array($listing['coords']) ? $listing['coords'] : [];
+    $latitude = isset($coords['lat']) && is_numeric($coords['lat']) ? (float)$coords['lat'] : null;
+    $longitude = isset($coords['lng']) && is_numeric($coords['lng']) ? (float)$coords['lng'] : null;
+    return [
+        'query' => $address !== '' ? $address : $location,
+        'latitude' => $latitude,
+        'longitude' => $longitude,
+        'surface' => dvfListingNumber($listing, 'surface', 'surfaceText'),
+        'price' => dvfListingNumber($listing, 'price', 'priceText'),
+        'type' => (string)($listing['propertyType'] ?? $listing['type'] ?? $listing['title'] ?? $listing['description'] ?? ''),
+    ];
+}
+
+function dvfResolveLocation($context) {
+    if ($context['latitude'] !== null && $context['longitude'] !== null) return dvfReverseGeocode($context['latitude'], $context['longitude']);
+    return dvfGeocode($context['query']);
+}
+
+function dvfAnalysisFile($id, $dataDirectory) {
+    if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id)) throw new InvalidArgumentException('Identifiant invalide.');
+    return rtrim($dataDirectory, '/') . '/analyses/prix/' . $id . '.json';
+}
+
+function dvfReadAnalysis($id, $dataDirectory) {
+    $file = dvfAnalysisFile($id, $dataDirectory);
+    if (!is_file($file)) return null;
+    $analysis = json_decode(file_get_contents($file), true);
+    return is_array($analysis) && isset($analysis['result']) && is_array($analysis['result']) ? $analysis : null;
+}
+
+function dvfWriteAnalysis($id, $dataDirectory, $analysis) {
+    $file = dvfAnalysisFile($id, $dataDirectory);
+    $directory = dirname($file);
+    if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) throw new RuntimeException('Le répertoire des analyses Prix ne peut pas être créé.');
+    $temporary = $file . '.tmp.' . uniqid('', true);
+    $json = json_encode($analysis, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    if ($json === false || file_put_contents($temporary, $json, LOCK_EX) === false || !rename($temporary, $file)) {
+        if (is_file($temporary)) @unlink($temporary);
+        throw new RuntimeException('L’analyse Prix ne peut pas être enregistrée.');
+    }
+}
+
 function dvfResources() {
     $payload = dvfHttpJson('https://www.data.gouv.fr/api/1/datasets/' . DVF_DATASET . '/');
     $resources = isset($payload['resources']) && is_array($payload['resources']) ? $payload['resources'] : [];
