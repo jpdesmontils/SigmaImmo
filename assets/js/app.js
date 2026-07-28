@@ -339,7 +339,7 @@ async function runInAppScripts(content, templateUrl) {
     const script = document.createElement('script');
     const source = oldScript.getAttribute('src');
     for (const attr of oldScript.attributes) if (attr.name !== 'src') script.setAttribute(attr.name, attr.value);
-    // Le contenu est injecté dans index.html : un chemin relatif doit donc être
+    // Le contenu est injecté dans app.html : un chemin relatif doit donc être
     // résolu depuis la template téléchargée et non depuis la SPA hôte.
     if (source) script.src = new URL(source, templateUrl).href;
     script.textContent = oldScript.textContent;

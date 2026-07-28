@@ -32,7 +32,7 @@
     const listing = data.listing, locationText = listing.location || listing.address || 'Localisation non renseignée', slider = listingSlider();
     document.title = `${listing.title || 'Fiche du bien'} — ImmoAggregator`;
     app.className = '';
-    app.innerHTML = `<header class="property-header"><div class="property-top"><a class="property-back" href="index.html" data-in-app-return>← Retour à la galerie</a><span class="property-brand">ImmoAggregator</span><div class="listing-slider" aria-label="Navigation entre les annonces"><button data-listing-prev aria-label="Annonce précédente" ${slider.previous?'':'disabled'}>‹</button><span>${slider.position} / ${slider.total}</span><button data-listing-next aria-label="Annonce suivante" ${slider.next?'':'disabled'}>›</button></div></div><nav class="property-tabs" role="tablist" aria-label="Fiche du bien">${tabButton('annonce','Annonce')}${tabButton('prix','Prix')}${tabButton('patrimonial','Patrimoine')}${tabButton('locatif','Locatif')}${tabButton('mdb','<span class="mdb-long">Marchand de biens</span><span class="mdb-short">MDB</span>')}</nav></header><section class="property-content" id="property-panel" role="tabpanel"></section>`;
+    app.innerHTML = `<header class="property-header"><div class="property-top"><a class="property-back" href="app.html" data-in-app-return>← Retour à la galerie</a><span class="property-brand">ImmoAggregator</span><div class="listing-slider" aria-label="Navigation entre les annonces"><button data-listing-prev aria-label="Annonce précédente" ${slider.previous?'':'disabled'}>‹</button><span>${slider.position} / ${slider.total}</span><button data-listing-next aria-label="Annonce suivante" ${slider.next?'':'disabled'}>›</button></div></div><nav class="property-tabs" role="tablist" aria-label="Fiche du bien">${tabButton('annonce','Annonce')}${tabButton('prix','Prix')}${tabButton('patrimonial','Patrimoine')}${tabButton('locatif','Locatif')}${tabButton('mdb','<span class="mdb-long">Marchand de biens</span><span class="mdb-short">MDB</span>')}</nav></header><section class="property-content" id="property-panel" role="tabpanel"></section>`;
     app.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => selectTab(button.dataset.tab)));
     app.querySelector('[data-listing-prev]')?.addEventListener('click', () => navigateListing(slider.previous));
     app.querySelector('[data-listing-next]')?.addEventListener('click', () => navigateListing(slider.next));
@@ -85,7 +85,7 @@
     panel().querySelectorAll('[data-selection]').forEach(button => button.addEventListener('click', () => updateSelection(button.dataset.selection)));
     panel().querySelectorAll('[data-edit-field]').forEach(value => value.addEventListener('dblclick', () => editKpi(value.dataset.editField)));
     panel().querySelectorAll('[data-edit-trigger]').forEach(button => button.addEventListener('click', () => editKpi(button.dataset.editTrigger)));
-    panel().querySelector('[data-map]').addEventListener('click', () => location.href = `index.html?view=map&listing=${encodeURIComponent(id)}`);
+    panel().querySelector('[data-map]').addEventListener('click', () => location.href = `app.html?view=map&listing=${encodeURIComponent(id)}`);
     panel().querySelector('[data-delete-listing]').addEventListener('click', deleteListing);
   }
   function isMissing(value) { return value === '' || value === null || value === undefined; }
@@ -166,7 +166,7 @@
   function confirmDeletion(message, action){window.ImmoModal.open({title:'Confirmer la suppression',message,actions:[{label:'Annuler'},{label:'Supprimer',type:'delete',onClick:async()=>{try{await action()}catch(error){toast(error.message)}}}]})}
   function deleteAnalysis(type){confirmDeletion(`Supprimer définitivement l’analyse ${types[type]} ?`,async()=>{await request(new URL(`property.php?id=${encodeURIComponent(id)}&type=${type}`,API_ROOT),{method:'DELETE'});await refresh(type)})}
   async function updateSelection(selection){const current=data.listing.selection===selection?null:selection;await request(new URL('tag.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,selection:current})});data.listing.selection=current;renderListing();toast(current?'Classement enregistré.':'Classement retiré.');}
-  function deleteListing(){confirmDeletion('Supprimer définitivement cette annonce et toutes ses analyses ?',async()=>{await request(new URL('delete.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});location.href='index.html'})}
+  function deleteListing(){confirmDeletion('Supprimer définitivement cette annonce et toutes ses analyses ?',async()=>{await request(new URL('delete.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});location.href='app.html'})}
   function panel(){return document.getElementById('property-panel')}
   function toast(message,options={}){
     const node=document.createElement('div'),close=()=>node.remove();
