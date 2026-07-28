@@ -14,10 +14,17 @@ function dvfHttpJson($url) {
 function dvfHttpResponse($url, $timeout, $headers, $transportError) {
     $context = stream_context_create(['http' => ['timeout' => $timeout, 'ignore_errors' => true, 'header' => $headers]]);
     $body = @file_get_contents($url, false, $context);
-    $status = 0;
-    if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $match)) $status = (int)$match[1];
+    $status = dvfHttpStatus(isset($http_response_header) ? $http_response_header : []);
     if ($body === false) throw new RuntimeException($transportError);
     return ['body' => $body, 'status' => $status];
+}
+
+function dvfHttpStatus($responseHeaders) {
+    $status = 0;
+    foreach ($responseHeaders as $header) {
+        if (preg_match('/^HTTP\/\S+\s+(\d{3})\b/i', $header, $match)) $status = (int)$match[1];
+    }
+    return $status;
 }
 
 function dvfCache($key, $ttl, $loader) {

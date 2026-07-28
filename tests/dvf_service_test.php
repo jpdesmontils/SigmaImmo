@@ -14,6 +14,15 @@ function dvfAssert($expected, $actual, $message) {
 
 echo "=== dvf_service_test ===\n";
 
+echo "-- Statut HTTP final après redirection vers le stockage geo-dvf\n";
+dvfAssert(200, dvfHttpStatus([
+    'HTTP/1.1 302 Found',
+    'Location: https://geo-dvf.s3.sbg.io.cloud.ovh.net/latest/csv/2025/communes/11/11106.csv',
+    'HTTP/1.1 200 OK',
+    'Content-Type: text/csv',
+]), 'Le statut final 200 doit remplacer le statut 302 de la redirection suivie par PHP.');
+dvfAssert(404, dvfHttpStatus(['HTTP/1.1 302 Found', 'HTTP/2 404']), 'Le statut final 404 doit rester identifiable après une redirection.');
+
 echo "-- Regroupement des mutations et calcul du prix au m²\n";
 $origin = ['latitude' => 48.8566, 'longitude' => 2.3522];
 $rows = [
