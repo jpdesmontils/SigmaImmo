@@ -437,7 +437,7 @@ function scoreTextHTML(item) {
   return latest && typeof latest.score === 'number' ? `<span class="tag tag-${latest.type}" title="Score de la dernière analyse">${latest.score}/100</span>` : '';
 }
 
-function propertyUrl(item) { return `/fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
+function propertyUrl(item) { return `fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
 function openProperty(item) { if (item?.id) { persistGalleryState(); location.href = propertyUrl(item); } }
 
 // ── Vue switcher ──────────────────────────────────────────────
