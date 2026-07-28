@@ -22,7 +22,7 @@ test('reconnaît Prix comme onglet principal persistant', () => {
 
 test('rend une synthèse, une contre-offre et les transactions DVF', () => {
   const html = context.window.priceTestApi.priceContent({
-    property: { asking_price: 330000 },
+    property: { asking_price: 330000 }, captured_at: '2026-07-28T10:30:00Z',
     location: { label: '12 rue Test, Lyon' }, perimeter: '1 km et surface ± 30 %',
     source: { name: 'DVF', url: 'https://data.gouv.fr', limitations: 'Limites DVF' },
     summary: { asking_gap_percent: 10, asking_price_per_sqm: 5500, median_price_per_sqm: 5000, low_price_per_sqm: 4700, high_price_per_sqm: 5200, prudent_value_low: 282000, prudent_value_high: 312000, offer_low: 270000, offer_high: 285000 },
@@ -32,4 +32,5 @@ test('rend une synthèse, une contre-offre et les transactions DVF', () => {
   assert.match(html, /Contre-offre recommandée/);
   assert.match(html, /12 rue Test/);
   assert.match(html, /10 % la médiane/);
+  assert.match(html, /data-price-recalculate>Recalculer/);
 });

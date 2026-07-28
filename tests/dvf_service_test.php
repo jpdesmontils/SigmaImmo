@@ -41,4 +41,12 @@ dvfAssert(315000.0, $context['price'], 'Le prix textuel de favorites.json doit s
 dvfAssert(48.8, $context['latitude'], 'Les coordonnées déjà enregistrées doivent éviter d’exiger une adresse.');
 dvfAssert('', $context['query'], 'Une adresse vide doit être acceptée lorsque des coordonnées existent.');
 
+$dataDirectory = sys_get_temp_dir() . '/sigma-immo-prix-' . uniqid('', true) . '/';
+$analysis = ['version' => 1, 'id' => 'bien-test', 'api_data' => ['dvf_rows' => [['id_mutation' => 'vente-1']]], 'result' => ['summary' => ['median_price_per_sqm' => 5000]]];
+dvfWriteAnalysis('bien-test', $dataDirectory, $analysis);
+dvfAssert($analysis, dvfReadAnalysis('bien-test', $dataDirectory), 'L’analyse Prix complète doit être relue depuis data/analyses/prix/<id>.json.');
+dvfAssert(true, is_file($dataDirectory . 'analyses/prix/bien-test.json'), 'Le fichier doit respecter l’arborescence des analyses Prix.');
+unlink($dataDirectory . 'analyses/prix/bien-test.json');
+rmdir($dataDirectory . 'analyses/prix'); rmdir($dataDirectory . 'analyses'); rmdir($dataDirectory);
+
 echo "dvf_service_test: OK\n";
