@@ -788,7 +788,7 @@ function popupHTML(item, idx) {
         ${btnShort}${btnEcart}
       </div>
       <div style="display:flex;gap:5px;">
-        <a href="${esc(propertyUrl(item))}" data-open-property="${idx}" target="_blank" rel="noopener" style="${btnStyle} #16150f;background:#16150f;color:#f5f3ee;flex:1;text-decoration:none;display:block;">Voir Fiche</a>
+        <button data-open-viewer="${idx}" style="${btnStyle} #16150f;background:#16150f;color:#f5f3ee;flex:1;">Voir Fiche</button>
         ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="${btnStyle} #d0ccc3;background:#edeae3;color:#16150f;flex:1;text-decoration:none;display:block;">→ Annonce</a>` : ''}
       </div>
     </div>`;
