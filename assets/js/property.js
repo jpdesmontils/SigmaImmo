@@ -139,44 +139,24 @@
   function state(type,title,message,actions,extra=''){return `<div class="analysis-state"><div class="analysis-state-card ${extra}"><div class="analysis-eyebrow">${type === 'prix' ? 'Données de marché' : `Analyse ${esc(types[type])}`}</div><h2>${esc(title)}</h2><p>${esc(message)}</p>${actions}</div></div>`}
   async function saveAddress(event){event.preventDefault();await saveFields({address:new FormData(event.currentTarget).get('address')});toast('Adresse enregistrée.');}
   async function saveFields(fields){data=await request(new URL(`property.php?id=${encodeURIComponent(id)}`,API_ROOT),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});}
-  async function startAnalysis(type){try{await request(new URL('analyze.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,type})});await refresh(type)}catch(error){toast(error.message)}}
+  async function startAnalysis(type){try{await request(new URL('analyze.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,type})});window.ImmoAnalysisNotifications.track({id,type,title:data.listing.title});await refresh(type)}catch(error){toast(error.message)}}
   function scheduleAnalysisRefresh(type){clearTimeout(pollTimer);pollTimer=setTimeout(()=>refresh(type),2500)}
   async function refresh(type){
-    const previousJob=data?.job;
     try{
       data=await request(new URL(`property.php?id=${encodeURIComponent(id)}`,API_ROOT));
       const job=data.job;
-      const wasRunning=previousJob&&previousJob.type===type&&['queued','running'].includes(previousJob.status);
-      const hasFinished=job&&job.type===type&&['completed','failed'].includes(job.status);
-      if(wasRunning&&hasFinished) notifyAnalysisFinished(type,job);
       if(activeTab===type) renderAnalysis(type);
       else if(job&&job.type===type&&['queued','running'].includes(job.status)) scheduleAnalysisRefresh(type);
       else if(activeTab==='annonce') renderListing();
     }catch(error){toast(error.message);scheduleAnalysisRefresh(type)}
   }
-  function notifyAnalysisFinished(type,job){
-    const succeeded=job.status==='completed';
-    toast(succeeded?'Analyse terminée':'Échec de l’analyse',{
-      detail:`${types[type]} · ${data.listing.title||'Fiche du bien'}`,
-      variant:succeeded?'success':'error',
-      action:{label:'Voir la fiche',onClick:()=>selectTab(type)},
-      duration:30000
-    });
-  }
+  document.addEventListener?.('immoagg:open-analysis',event=>{if(String(event.detail.id)!==String(id))return;event.preventDefault();selectTab(event.detail.type)});
   function confirmDeletion(message, action){window.ImmoModal.open({title:'Confirmer la suppression',message,actions:[{label:'Annuler'},{label:'Supprimer',type:'delete',onClick:async()=>{try{await action()}catch(error){toast(error.message)}}}]})}
   function deleteAnalysis(type){confirmDeletion(`Supprimer définitivement l’analyse ${types[type]} ?`,async()=>{await request(new URL(`property.php?id=${encodeURIComponent(id)}&type=${type}`,API_ROOT),{method:'DELETE'});await refresh(type)})}
   async function updateSelection(selection){const current=data.listing.selection===selection?null:selection;await request(new URL('tag.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,selection:current})});data.listing.selection=current;renderListing();toast(current?'Classement enregistré.':'Classement retiré.');}
   function deleteListing(){confirmDeletion('Supprimer définitivement cette annonce et toutes ses analyses ?',async()=>{await request(new URL('delete.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});location.href='app.html'})}
   function panel(){return document.getElementById('property-panel')}
-  function toast(message,options={}){
-    const node=document.createElement('div'),close=()=>node.remove();
-    node.className=`property-toast ${options.variant?`property-toast-${options.variant}`:''}`;
-    node.setAttribute('role',options.variant==='error'?'alert':'status');
-    node.innerHTML=`<button type="button" class="property-toast-close" aria-label="Fermer la notification">×</button><strong>${esc(message)}</strong>${options.detail?`<span>${esc(options.detail)}</span>`:''}${options.action?`<button type="button" class="property-toast-action">${esc(options.action.label)}</button>`:''}`;
-    node.querySelector('.property-toast-close').addEventListener('click',close);
-    if(options.action)node.querySelector('.property-toast-action').addEventListener('click',()=>{close();options.action.onClick()});
-    document.body.append(node);setTimeout(close,options.duration||4000);
-  }
+  function toast(message,options={}){window.ImmoAnalysisNotifications.toast(message,options)}
   function fail(message){app.className='property-error';app.textContent=message}
   load();
 })();
