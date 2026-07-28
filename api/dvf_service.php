@@ -115,18 +115,23 @@ function dvfWriteAnalysis($id, $dataDirectory, $analysis) {
     }
 }
 
-function dvfResources() {
-    $payload = dvfHttpJson('https://www.data.gouv.fr/api/1/datasets/' . DVF_DATASET . '/');
+function dvfAnnualResources($payload) {
     $resources = isset($payload['resources']) && is_array($payload['resources']) ? $payload['resources'] : [];
     $annual = [];
     foreach ($resources as $resource) {
         $text = strtolower((isset($resource['title']) ? $resource['title'] : '') . ' ' . (isset($resource['url']) ? $resource['url'] : ''));
-        if (strtolower((string)($resource['format'] ?? '')) !== 'csv' || strpos($text, 'valeurs') === false || !preg_match('/20(1[4-9]|2[0-9])/', $text, $year)) continue;
+        $format = strtolower(isset($resource['format']) ? (string)$resource['format'] : '');
+        if ($format !== 'csv' || empty($resource['id']) || !preg_match('/20(1[4-9]|2[0-9])/', $text, $year)) continue;
         $annual[] = ['id' => (string)$resource['id'], 'year' => (int)$year[0]];
     }
     usort($annual, function($a, $b) { return $b['year'] - $a['year']; });
     if (!$annual) throw new RuntimeException('Aucune ressource DVF annuelle compatible n’a été publiée.');
     return array_slice($annual, 0, 4);
+}
+
+function dvfResources() {
+    $payload = dvfHttpJson('https://www.data.gouv.fr/api/1/datasets/' . DVF_DATASET . '/');
+    return dvfAnnualResources($payload);
 }
 
 function dvfRowsForCommune($cityCode) {
