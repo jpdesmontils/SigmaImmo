@@ -25,6 +25,3 @@ body{background:var(--bg);color:var(--text);font:13px/1.55 var(--font-b)}button,
   .native-analysis .krow{grid-template-columns:minmax(0,1fr)}
   .native-analysis .kval,.native-analysis .ksrc{white-space:normal}
 }
-
-/* La fiche conserve le cadre de navigation de la galerie sans encapsulation. */
-.property-app-layout #property-app{min-width:0;flex:1}.property-app-layout .property-header{top:56px}.property-app-layout .property-content{max-width:1280px}.header-logo{text-decoration:none}@media(max-width:900px){.property-app-layout #property-app{width:100%}}

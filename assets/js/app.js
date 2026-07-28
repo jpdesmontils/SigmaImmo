@@ -38,11 +38,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   initViewSwitcher();
   document.getElementById('header-logo').addEventListener('click', showFavorites);
   initInAppNavigation();
-  const requestedContent = new URLSearchParams(location.search).get('content');
-  if (requestedContent) {
-    const requestedButton = [...document.querySelectorAll('[data-in-app-url]')].find(button => button.dataset.inAppUrl === requestedContent);
-    if (requestedButton) openInApp(requestedContent, requestedButton);
-  }
   initFilters();
   restoreGalleryState();
   initViewer();
