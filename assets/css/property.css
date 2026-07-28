@@ -3,6 +3,7 @@ body{background:var(--bg);color:var(--text);font:13px/1.55 var(--font-b)}button,
 /* Les fiches d'analyse intégrées reprennent le même cadre que la fiche annonce. */
 .native-analysis{min-width:0;overflow:hidden;border:1px solid var(--border);border-radius:4px;background:var(--surface)}
 .native-analysis .hero{padding:24px 24px 0}
+.listing-kpi small{display:flex;align-items:center;gap:5px}.listing-kpi strong{cursor:pointer}.kpi-edit-trigger{display:inline-grid;place-items:center;width:18px;height:18px;padding:0;border:0;background:transparent;color:var(--warn);font-size:14px;cursor:pointer}.kpi-edit-input{width:100%;margin-top:3px;padding:3px 5px;border:1px solid var(--warn);background:var(--surface);font:600 18px var(--font-d)}
 .native-analysis .hero-top-no-gallery{grid-template-columns:minmax(0,1fr) auto}
 .native-analysis .tabs-nav{top:114px;padding-inline:24px}
 .native-analysis .tab-content,.native-analysis .content{width:100%;max-width:none;padding:24px}

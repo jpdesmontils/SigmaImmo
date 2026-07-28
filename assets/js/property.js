@@ -9,6 +9,12 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const money = value => Number.isFinite(Number(value)) ? Number(value).toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}) : 'Prix non renseigné';
   const lastTabKey = 'immoagg.property.lastTab';
+  const editableKpis = {
+    surface: { label: 'Surface', type: 'number', suffix: ' m²' },
+    terrain: { label: 'Terrain', type: 'number', suffix: ' m²' },
+    dpe: { label: 'DPE', type: 'energy', suffix: '' },
+    ges: { label: 'GES', type: 'energy', suffix: '' }
+  };
 
   async function request(url, options) {
     const response = await fetch(url, options), payload = await response.json();
@@ -43,12 +49,42 @@
     const item = data.listing, images = [...new Set((item.images?.length ? item.images : [item.imageUrl]).filter(Boolean))];
     const image = images[0] ? `<img class="property-gallery-main" data-main-image src="${esc(images[0])}" alt="${esc(item.title || 'Photo du bien')}">` : '<div class="property-gallery-main"></div>';
     const thumbs = images.length > 1 ? `<div class="property-thumbnails">${images.map((src,i)=>`<button class="${i?'':'active'}" data-image="${esc(src)}" style="background-image:url('${esc(src)}')" aria-label="Afficher la photo ${i+1}"></button>`).join('')}</div>` : '';
-    panel().innerHTML = `<div class="listing-heading"><small>Annonce sauvegardée</small><h1>${esc(item.title || 'Annonce immobilière')}</h1><p>${esc(item.location || 'Localisation à compléter')}</p></div><div class="listing-layout"><div class="property-gallery-wrap">${image}${listingOverlays()}${thumbs}</div><aside class="listing-summary"><div class="listing-price">${esc(money(item.price))}</div><div class="listing-kpis"><div><small>Surface</small><strong>${item.surface ? esc(item.surface)+' m²':'—'}</strong></div><div><small>Pièces</small><strong>${esc(item.rooms || '—')}</strong></div><div><small>Terrain</small><strong>${item.terrain ? esc(item.terrain)+' m²':'—'}</strong></div><div><small>DPE</small><strong>${esc(item.dpe || '—')}</strong></div></div><form class="property-panel property-field" id="address-form"><label for="exact-address">Adresse exacte</label><input id="exact-address" name="address" value="${esc(item.address || item.location || '')}"><small>Facultative — améliore la précision géographique, mais n’est pas nécessaire pour lancer une analyse.</small><div class="analysis-form-actions"><button class="property-secondary">Enregistrer l’adresse</button></div></form>${item.url?`<a class="property-primary property-source-link" href="${esc(item.url)}" target="_blank" rel="noopener">Voir l’annonce d’origine ↗</a>`:''}<div class="property-actions"><button class="property-action" data-selection="shortlist">${item.selection==='shortlist'?'★ Retirer des favoris':'☆ Favori'}</button><button class="property-action" data-selection="ecartee">${item.selection==='ecartee'?'✓ Réintégrer':'× Écarter'}</button><button class="property-action" data-map>⌖ Carte</button><button class="property-action property-danger" data-delete-listing>Supprimer</button></div></aside></div><section class="property-panel listing-description"><h2>Description</h2><p>${esc(item.description || 'Aucune description disponible.')}</p></section>`;
+    panel().innerHTML = `<div class="listing-heading"><small>Annonce sauvegardée</small><h1>${esc(item.title || 'Annonce immobilière')}</h1><p>${esc(item.location || 'Localisation à compléter')}</p></div><div class="listing-layout"><div class="property-gallery-wrap">${image}${listingOverlays()}${thumbs}</div><aside class="listing-summary"><div class="listing-price">${esc(money(item.price))}</div><div class="listing-kpis">${kpiField('surface')}${kpiField('terrain')}${kpiField('dpe')}${kpiField('ges')}<div><small>Pièces</small><strong>${esc(item.rooms || '—')}</strong></div></div><form class="property-panel property-field" id="address-form"><label for="exact-address">Adresse exacte</label><input id="exact-address" name="address" value="${esc(item.address || item.location || '')}"><small>Facultative — améliore la précision géographique, mais n’est pas nécessaire pour lancer une analyse.</small><div class="analysis-form-actions"><button class="property-secondary">Enregistrer l’adresse</button></div></form>${item.url?`<a class="property-primary property-source-link" href="${esc(item.url)}" target="_blank" rel="noopener">Voir l’annonce d’origine ↗</a>`:''}<div class="property-actions"><button class="property-action" data-selection="shortlist">${item.selection==='shortlist'?'★ Retirer des favoris':'☆ Favori'}</button><button class="property-action" data-selection="ecartee">${item.selection==='ecartee'?'✓ Réintégrer':'× Écarter'}</button><button class="property-action" data-map>⌖ Carte</button><button class="property-action property-danger" data-delete-listing>Supprimer</button></div></aside></div><section class="property-panel listing-description"><h2>Description</h2><p>${esc(item.description || 'Aucune description disponible.')}</p></section>`;
     panel().querySelectorAll('[data-image]').forEach(button => button.addEventListener('click',()=>{panel().querySelector('[data-main-image]').src=button.dataset.image;panel().querySelectorAll('[data-image]').forEach(x=>x.classList.toggle('active',x===button))}));
     panel().querySelector('#address-form').addEventListener('submit', saveAddress);
     panel().querySelectorAll('[data-selection]').forEach(button => button.addEventListener('click', () => updateSelection(button.dataset.selection)));
+    panel().querySelectorAll('[data-edit-field]').forEach(value => value.addEventListener('dblclick', () => editKpi(value.dataset.editField)));
+    panel().querySelectorAll('[data-edit-trigger]').forEach(button => button.addEventListener('click', () => editKpi(button.dataset.editTrigger)));
     panel().querySelector('[data-map]').addEventListener('click', () => location.href = `index.html?view=map&listing=${encodeURIComponent(id)}`);
     panel().querySelector('[data-delete-listing]').addEventListener('click', deleteListing);
+  }
+  function isMissing(value) { return value === '' || value === null || value === undefined; }
+  function kpiField(field) {
+    const config = editableKpis[field], value = data.listing[field], missing = isMissing(value);
+    const pencil = missing ? `<button class="kpi-edit-trigger" type="button" data-edit-trigger="${field}" aria-label="Renseigner ${esc(config.label)}" title="Renseigner ce champ">✎</button>` : '';
+    return `<div class="listing-kpi" data-kpi="${field}"><small>${esc(config.label)}${pencil}</small><strong data-edit-field="${field}" title="Double-cliquer pour modifier">${missing ? '-' : esc(value)+config.suffix}</strong></div>`;
+  }
+  function editKpi(field) {
+    const config = editableKpis[field], container = panel().querySelector(`[data-kpi="${field}"]`);
+    if (!config || !container || container.querySelector('input')) return;
+    const current = isMissing(data.listing[field]) ? '' : data.listing[field];
+    const attributes = config.type === 'number' ? 'type="number" min="0" step="any"' : 'type="text" maxlength="1" pattern="[A-Ga-g]"';
+    container.querySelector('strong').outerHTML = `<input class="kpi-edit-input" data-kpi-input="${field}" ${attributes} value="${esc(current)}" aria-label="${esc(config.label)}">`;
+    const input = container.querySelector('input');
+    let finished = false;
+    const finish = async save => {
+      if (finished) return;
+      if (save && !input.reportValidity()) return;
+      finished = true;
+      if (save) {
+        try { await saveFields({[field]: input.value}); toast(`${config.label} enregistré${config.label === 'Surface' ? 'e' : ''}.`); }
+        catch (error) { toast(error.message); }
+      }
+      renderListing();
+    };
+    input.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); finish(true); } else if (event.key === 'Escape') finish(false); });
+    input.addEventListener('blur', () => finish(true));
+    input.focus(); input.select();
   }
   function listingOverlays() { const selection = data.listing.selection, ribbon = selection === 'shortlist' ? '<span class="property-ribbon shortlist">★ ShortList</span>' : selection === 'ecartee' ? '<span class="property-ribbon ecartee">× Écarté</span>' : ''; const labels={patrimonial:'Patrimoine',locatif:'Locatif',mdb:'Marchand de biens'}, tags=Object.keys(labels).filter(type=>data.analyses[type]&&data.analyses[type].available!==false).map(type=>`<span class="property-analysis-tag ${type}">${labels[type]}</span>`).join(''); return `${ribbon}${tags?`<div class="property-analysis-tags">${tags}</div>`:''}`; }
   function renderAnalysis(type) {

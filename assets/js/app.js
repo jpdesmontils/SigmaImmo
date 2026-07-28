@@ -76,6 +76,12 @@ async function loadData() {
 
     updateHeaderStats();
     applyFiltersAndRender();
+    const initialNavigation = new URLSearchParams(location.search);
+    const focusedListingId = initialNavigation.get('listing');
+    if (initialNavigation.get('view') === 'map' && focusedListingId) {
+      const focusedIndex = filtered.findIndex(item => String(item.id) === focusedListingId);
+      if (focusedIndex !== -1) await showOnMap(focusedIndex);
+    }
 
   } catch (e) {
     console.error('[ImmoAgg] Erreur chargement:', e);
