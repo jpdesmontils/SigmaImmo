@@ -15,20 +15,21 @@ $listing = null;
 foreach ((array)$favorites as $item) if (is_array($item) && (string)($item['id'] ?? '') === $id) { $listing = $item; break; }
 if (!$listing) priceRespond(404, ['ok' => false, 'error' => 'Annonce introuvable.']);
 
-$address = trim((string)($listing['address'] ?? $listing['location'] ?? ''));
-$surface = isset($listing['surface']) ? (float)$listing['surface'] : 0;
-$type = (string)($listing['propertyType'] ?? $listing['type'] ?? $listing['title'] ?? '');
-if ($address === '' || $surface <= 0) priceRespond(422, ['ok' => false, 'error' => 'Renseignez la localisation et la surface du bien pour rechercher des comparables.']);
+$context = dvfListingContext($listing);
+$missing = [];
+if ($context['query'] === '' && ($context['latitude'] === null || $context['longitude'] === null)) $missing[] = 'localisation';
+if ($context['surface'] <= 0) $missing[] = 'surface';
+if ($missing) priceRespond(422, ['ok' => false, 'error' => 'Renseignez ' . (count($missing) === 2 ? 'la localisation et la surface' : 'la ' . $missing[0]) . ' du bien dans l’onglet Annonce pour rechercher des comparables.', 'missing' => $missing]);
 
 try {
-    $cacheKey = 'listing_v2_' . $id . '_' . substr(sha1($address . '|' . $surface . '|' . $type), 0, 12);
-    $result = dvfCache($cacheKey, 21600, function() use ($address, $surface, $type, $listing) {
-        $origin = dvfGeocode($address);
+    $cacheKey = 'listing_v3_' . $id . '_' . substr(sha1(json_encode($context)), 0, 12);
+    $result = dvfCache($cacheKey, 21600, function() use ($context) {
+        $origin = dvfResolveLocation($context);
         if ($origin['city_code'] === '') throw new InvalidArgumentException('La commune de cette adresse n’a pas pu être identifiée.');
         $transactions = dvfNormalizeTransactions(dvfRowsForCommune($origin['city_code']), $origin);
-        $selection = dvfSelectComparables($transactions, $type, $surface, 10);
+        $selection = dvfSelectComparables($transactions, $context['type'], $context['surface'], 10);
         if (!$selection['items']) throw new RuntimeException('Aucune vente comparable de maison ou d’appartement n’a été trouvée dans cette commune.');
-        return ['property' => ['asking_price' => (float)($listing['price'] ?? 0), 'surface' => $surface, 'type' => dvfPropertyType($type)], 'location' => $origin, 'perimeter' => $selection['perimeter'], 'transactions' => $selection['items'], 'summary' => dvfSummary($selection['items'], (float)($listing['price'] ?? 0), $surface)];
+        return ['property' => ['asking_price' => $context['price'], 'surface' => $context['surface'], 'type' => dvfPropertyType($context['type'])], 'location' => $origin, 'perimeter' => $selection['perimeter'], 'transactions' => $selection['items'], 'summary' => dvfSummary($selection['items'], $context['price'], $context['surface'])];
     });
     priceRespond(200, ['ok' => true, 'source' => ['name' => 'DVF — DGFiP / data.gouv.fr', 'url' => 'https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/', 'limitations' => 'Les données DVF décrivent des mutations enregistrées et ne reflètent ni l’état intérieur, ni les travaux, ni les conditions particulières de chaque vente.'], 'generated_at' => gmdate('c')] + $result);
 } catch (InvalidArgumentException $error) {

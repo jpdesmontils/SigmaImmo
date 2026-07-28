@@ -44,6 +44,53 @@ function dvfGeocode($address) {
     ];
 }
 
+function dvfReverseGeocode($latitude, $longitude) {
+    $url = 'https://api-adresse.data.gouv.fr/reverse/?limit=1&lat=' . rawurlencode($latitude) . '&lon=' . rawurlencode($longitude);
+    $payload = dvfHttpJson($url);
+    $feature = isset($payload['features'][0]) ? $payload['features'][0] : null;
+    if (!is_array($feature)) throw new InvalidArgumentException('Les coordonnées du bien ne correspondent à aucune commune connue.');
+    $properties = isset($feature['properties']) ? $feature['properties'] : [];
+    return [
+        'longitude' => (float)$longitude,
+        'latitude' => (float)$latitude,
+        'city_code' => isset($properties['citycode']) ? (string)$properties['citycode'] : '',
+        'city' => isset($properties['city']) ? (string)$properties['city'] : '',
+        'label' => isset($properties['label']) ? (string)$properties['label'] : ((string)$latitude . ', ' . (string)$longitude),
+    ];
+}
+
+function dvfListingNumber($listing, $numericKey, $textKey) {
+    if (isset($listing[$numericKey]) && is_numeric($listing[$numericKey]) && (float)$listing[$numericKey] > 0) return (float)$listing[$numericKey];
+    $text = isset($listing[$textKey]) ? (string)$listing[$textKey] : '';
+    $pattern = $textKey === 'surfaceText' ? '/([0-9][0-9\s]*(?:[,.][0-9]+)?)\s*m(?:²|2)/iu' : '/([0-9][0-9\s]*(?:[,.][0-9]+)?)\s*€/u';
+    if (preg_match($pattern, $text, $match)) {
+        $number = (float)str_replace([' ', ','], ['', '.'], $match[1]);
+        if ($number > 0) return $number;
+    }
+    return 0.0;
+}
+
+function dvfListingContext($listing) {
+    $address = trim((string)($listing['address'] ?? ''));
+    $location = trim((string)($listing['location'] ?? ''));
+    $coords = isset($listing['coords']) && is_array($listing['coords']) ? $listing['coords'] : [];
+    $latitude = isset($coords['lat']) && is_numeric($coords['lat']) ? (float)$coords['lat'] : null;
+    $longitude = isset($coords['lng']) && is_numeric($coords['lng']) ? (float)$coords['lng'] : null;
+    return [
+        'query' => $address !== '' ? $address : $location,
+        'latitude' => $latitude,
+        'longitude' => $longitude,
+        'surface' => dvfListingNumber($listing, 'surface', 'surfaceText'),
+        'price' => dvfListingNumber($listing, 'price', 'priceText'),
+        'type' => (string)($listing['propertyType'] ?? $listing['type'] ?? $listing['title'] ?? $listing['description'] ?? ''),
+    ];
+}
+
+function dvfResolveLocation($context) {
+    if ($context['latitude'] !== null && $context['longitude'] !== null) return dvfReverseGeocode($context['latitude'], $context['longitude']);
+    return dvfGeocode($context['query']);
+}
+
 function dvfResources() {
     $payload = dvfHttpJson('https://www.data.gouv.fr/api/1/datasets/' . DVF_DATASET . '/');
     $resources = isset($payload['resources']) && is_array($payload['resources']) ? $payload['resources'] : [];

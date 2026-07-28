@@ -18,7 +18,7 @@
 
   async function request(url, options) {
     const response = await fetch(url, options), payload = await response.json();
-    if (!response.ok) throw new Error(payload.error || `Erreur HTTP ${response.status}`);
+    if (!response.ok) { const error = new Error(payload.error || `Erreur HTTP ${response.status}`); error.payload = payload; throw error; }
     return payload;
   }
   async function load() {
@@ -53,8 +53,10 @@
       panel().innerHTML = priceContent(prices);
     } catch (error) {
       if (localStorage.getItem(lastTabKey) !== 'prix') return;
-      panel().innerHTML = state('prix', 'Comparables indisponibles', error.message, '<button class="property-primary" data-price-retry>Réessayer</button>', 'analysis-error');
-      panel().querySelector('[data-price-retry]').addEventListener('click', renderPrices);
+      const missing = Array.isArray(error.payload?.missing) && error.payload.missing.length;
+      panel().innerHTML = state('prix', 'Comparables indisponibles', error.message, missing ? '<button class="property-primary" data-price-complete>Compléter l’annonce</button>' : '<button class="property-primary" data-price-retry>Réessayer</button>', 'analysis-error');
+      panel().querySelector('[data-price-retry]')?.addEventListener('click', renderPrices);
+      panel().querySelector('[data-price-complete]')?.addEventListener('click', () => selectTab('annonce'));
     }
   }
   function priceContent(prices) {
