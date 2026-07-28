@@ -2,15 +2,29 @@
 /** Fonctions d'accès et de calcul DVF, compatibles PHP 7.0. */
 
 function dvfHttpJson($url) {
-    $context = stream_context_create(['http' => ['timeout' => 12, 'ignore_errors' => true, 'header' => "Accept: application/json\r\nUser-Agent: SigmaImmo/1.0\r\n"]]);
-    $body = @file_get_contents($url, false, $context);
-    if ($body === false) throw new RuntimeException('Le service public de données immobilières ne répond pas.');
-    $status = 0;
-    if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $match)) $status = (int)$match[1];
+    $response = dvfHttpResponse($url, 12, "Accept: application/json\r\nUser-Agent: SigmaImmo/1.0\r\n", 'Le service public de données immobilières ne répond pas.');
+    $body = $response['body'];
+    $status = $response['status'];
     if ($status < 200 || $status >= 300) throw new RuntimeException('Le service public de données immobilières est temporairement indisponible.');
     $decoded = json_decode($body, true);
     if (!is_array($decoded)) throw new RuntimeException('La réponse du service public est inexploitable.');
     return $decoded;
+}
+
+function dvfHttpResponse($url, $timeout, $headers, $transportError) {
+    $context = stream_context_create(['http' => ['timeout' => $timeout, 'ignore_errors' => true, 'header' => $headers]]);
+    $body = @file_get_contents($url, false, $context);
+    $status = dvfHttpStatus(isset($http_response_header) ? $http_response_header : []);
+    if ($body === false) throw new RuntimeException($transportError);
+    return ['body' => $body, 'status' => $status];
+}
+
+function dvfHttpStatus($responseHeaders) {
+    $status = 0;
+    foreach ($responseHeaders as $header) {
+        if (preg_match('/^HTTP\/\S+\s+(\d{3})\b/i', $header, $match)) $status = (int)$match[1];
+    }
+    return $status;
 }
 
 function dvfCache($key, $ttl, $loader) {
@@ -116,7 +130,7 @@ function dvfWriteAnalysis($id, $dataDirectory, $analysis) {
 /**
  * Le jeu de données « demandes-de-valeurs-foncieres-geolocalisees » n'expose pas
  * ses millésimes comme des ressources CSV interrogeables via l'API tabulaire :
- * il est distribué sous forme d'un fichier CSV.GZ statique par commune et par
+ * il est distribué sous forme d'un fichier CSV statique par commune et par
  * année, publié par le projet geo-dvf sur files.data.gouv.fr.
  */
 function dvfDepartmentCode($cityCode) {
@@ -127,17 +141,7 @@ function dvfDepartmentCode($cityCode) {
 }
 
 function dvfCommuneCsvUrl($cityCode, $department, $year) {
-    return 'https://files.data.gouv.fr/geo-dvf/latest/csv/' . $year . '/communes/' . rawurlencode($department) . '/' . rawurlencode($cityCode) . '.csv.gz';
-}
-
-function dvfGunzip($data) {
-    if (function_exists('gzdecode')) {
-        $result = @gzdecode($data);
-        if ($result !== false) return $result;
-    }
-    if (strlen($data) < 18) return false;
-    $result = @gzinflate(substr($data, 10, -8));
-    return $result === false ? false : $result;
+    return 'https://files.data.gouv.fr/geo-dvf/latest/csv/' . $year . '/communes/' . rawurlencode($department) . '/' . rawurlencode($cityCode) . '.csv';
 }
 
 function dvfParseCsv($text) {
@@ -158,36 +162,37 @@ function dvfParseCsv($text) {
 
 function dvfFetchCommuneYearRows($cityCode, $department, $year) {
     $url = dvfCommuneCsvUrl($cityCode, $department, $year);
-    $context = stream_context_create(['http' => ['timeout' => 20, 'ignore_errors' => true, 'header' => "User-Agent: SigmaImmo/1.0\r\n"]]);
-    $body = @file_get_contents($url, false, $context);
-    if ($body === false) return [];
-    $status = 0;
-    if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $match)) $status = (int)$match[1];
+    $response = dvfHttpResponse($url, 20, "Accept: text/csv\r\nUser-Agent: SigmaImmo/1.0\r\n", 'Le service public de données foncières (geo-dvf) ne répond pas.');
+    $body = $response['body'];
+    $status = $response['status'];
     if ($status === 404) return [];
     if ($status < 200 || $status >= 300) throw new RuntimeException('Le service public de données foncières (geo-dvf) est temporairement indisponible.');
-    $csv = dvfGunzip($body);
-    if ($csv === false) return [];
-    return dvfParseCsv($csv);
+    return dvfParseCsv($body);
 }
 
 function dvfRowsForCommune($cityCode) {
     $department = dvfDepartmentCode($cityCode);
     if ($department === '') throw new RuntimeException('Le code commune ne permet pas d’identifier le département.');
     $currentYear = (int)gmdate('Y');
+    return dvfLoadCommuneYears($currentYear, function($year) use ($cityCode, $department) {
+        return dvfCache('rows_' . $cityCode . '_' . $year, 86400, function() use ($cityCode, $department, $year) {
+            return dvfFetchCommuneYearRows($cityCode, $department, $year);
+        });
+    });
+}
+
+function dvfLoadCommuneYears($currentYear, $loader) {
     $all = [];
     $yearsWithData = 0;
     $lastError = null;
     for ($year = $currentYear; $year >= $currentYear - 10 && $yearsWithData < 4; $year--) {
         try {
-            $rows = dvfCache('rows_' . $cityCode . '_' . $year, 86400, function() use ($cityCode, $department, $year) {
-                return dvfFetchCommuneYearRows($cityCode, $department, $year);
-            });
+            $rows = call_user_func($loader, $year);
         } catch (RuntimeException $error) {
             $lastError = $error;
             continue;
         }
         if ($rows) { $all = array_merge($all, $rows); $yearsWithData++; }
-        if (count($all) >= 400) break;
     }
     if (!$all) {
         if ($lastError && $yearsWithData === 0) throw $lastError;
