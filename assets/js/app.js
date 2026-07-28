@@ -431,7 +431,7 @@ function scoreTextHTML(item) {
   return latest && typeof latest.score === 'number' ? `<span class="tag tag-${latest.type}" title="Score de la dernière analyse">${latest.score}/100</span>` : '';
 }
 
-function propertyUrl(item) { return `fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
+function propertyUrl(item) { return `/fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
 function openProperty(item) { if (item?.id) { persistGalleryState(); location.href = propertyUrl(item); } }
 
 // ── Vue switcher ──────────────────────────────────────────────
@@ -764,7 +764,7 @@ function popupHTML(item, idx) {
         ${btnShort}${btnEcart}
       </div>
       <div style="display:flex;gap:5px;">
-        <button data-open-viewer="${idx}" style="${btnStyle} #16150f;background:#16150f;color:#f5f3ee;flex:1;">🖼 Voir l'annonce</button>
+        <a href="${propertyUrl(item)}" style="${btnStyle} #16150f;background:#16150f;color:#f5f3ee;flex:1;text-decoration:none;display:block;">Voir Fiche</a>
         ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="${btnStyle} #d0ccc3;background:#edeae3;color:#16150f;flex:1;text-decoration:none;display:block;">→ Annonce</a>` : ''}
       </div>
     </div>`;
