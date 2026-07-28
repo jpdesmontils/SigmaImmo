@@ -83,3 +83,17 @@ test('ouvre la fiche dans l’application uniquement pour un clic principal sans
   assert.equal(context.testApi.shouldOpenInApp({ button: 0, ctrlKey: true, metaKey: false, shiftKey: false, altKey: false }), false);
   assert.equal(context.testApi.shouldOpenInApp({ button: 1, ctrlKey: false, metaKey: false, shiftKey: false, altKey: false }), false);
 });
+
+test('transmet l’identifiant du bien au document chargé dans l’application', () => {
+  const propertyApp = { dataset: {} };
+  context.testApi.setInAppPropertyId({ getElementById: () => propertyApp }, { id: 'bien-42' });
+  assert.equal(propertyApp.dataset.propertyId, 'bien-42');
+});
+
+test('la carte ouvre la fiche actuelle du bien', () => {
+  const html = context.testApi.popupHTML({ id: 'bien 42', title: 'Bien cartographié' }, 3);
+  assert.match(html, /href="fiche-bien\.html\?id=bien%2042"/);
+  assert.match(html, /data-open-property="3"/);
+  assert.match(html, />Voir Fiche<\/a>/);
+  assert.doesNotMatch(html, /data-open-viewer|Voir l'annonce/);
+});

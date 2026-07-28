@@ -91,6 +91,30 @@ function dvfResolveLocation($context) {
     return dvfGeocode($context['query']);
 }
 
+function dvfAnalysisFile($id, $dataDirectory) {
+    if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id)) throw new InvalidArgumentException('Identifiant invalide.');
+    return rtrim($dataDirectory, '/') . '/analyses/prix/' . $id . '.json';
+}
+
+function dvfReadAnalysis($id, $dataDirectory) {
+    $file = dvfAnalysisFile($id, $dataDirectory);
+    if (!is_file($file)) return null;
+    $analysis = json_decode(file_get_contents($file), true);
+    return is_array($analysis) && isset($analysis['result']) && is_array($analysis['result']) ? $analysis : null;
+}
+
+function dvfWriteAnalysis($id, $dataDirectory, $analysis) {
+    $file = dvfAnalysisFile($id, $dataDirectory);
+    $directory = dirname($file);
+    if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) throw new RuntimeException('Le répertoire des analyses Prix ne peut pas être créé.');
+    $temporary = $file . '.tmp.' . uniqid('', true);
+    $json = json_encode($analysis, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    if ($json === false || file_put_contents($temporary, $json, LOCK_EX) === false || !rename($temporary, $file)) {
+        if (is_file($temporary)) @unlink($temporary);
+        throw new RuntimeException('L’analyse Prix ne peut pas être enregistrée.');
+    }
+}
+
 function dvfResources() {
     $payload = dvfHttpJson('https://www.data.gouv.fr/api/1/datasets/' . DVF_DATASET . '/');
     $resources = isset($payload['resources']) && is_array($payload['resources']) ? $payload['resources'] : [];
