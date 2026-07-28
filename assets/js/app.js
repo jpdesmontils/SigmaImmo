@@ -438,7 +438,14 @@ function scoreTextHTML(item) {
 }
 
 function propertyUrl(item) { return `fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
-function openProperty(item) { if (item?.id) { persistGalleryState(); location.href = propertyUrl(item); } }
+function shouldOpenInApp(event) {
+  return event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey;
+}
+function openProperty(item) {
+  if (!item?.id) return;
+  persistGalleryState();
+  openInApp(propertyUrl(item), null, item);
+}
 
 // ── Vue switcher ──────────────────────────────────────────────
 function initViewSwitcher() {
@@ -786,6 +793,11 @@ function initViewer() {
   document.getElementById('viewer-photo-prev').addEventListener('click', () => photoStep(-1));
   document.getElementById('viewer-photo-next').addEventListener('click', () => photoStep(1));
   document.getElementById('viewer-map-btn').addEventListener('click', () => showOnMap(viewer.listingIndex));
+  document.getElementById('viewer-fiche-link').addEventListener('click', event => {
+    if (!shouldOpenInApp(event)) return;
+    event.preventDefault();
+    openProperty(filtered[viewer.listingIndex]);
+  });
   document.getElementById('viewer-delete-btn').addEventListener('click', () => openDeleteModal(viewer.listingIndex));
 
   document.addEventListener('keydown', e => {

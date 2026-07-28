@@ -3,7 +3,7 @@
   let id = new URLSearchParams(location.search).get('id');
   const types = { patrimonial: 'Patrimoine', locatif: 'Locatif', mdb: 'Marchand de biens' };
   const app = document.getElementById('property-app');
-  let data, pollTimer;
+  let data, pollTimer, activeTab;
   const templateCache = new Map();
   const galleryState = (() => { try { return JSON.parse(localStorage.getItem('immoagg.gallery.state') || '{}'); } catch (_) { return {}; } })();
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -41,7 +41,7 @@
   function listingSlider() { let ids = Array.isArray(galleryState.listingIds) && galleryState.listingIds.length ? galleryState.listingIds : [id]; if (!ids.includes(id)) ids = [id]; const index = ids.indexOf(id); return { previous: index > 0 ? ids[index-1] : null, next: index < ids.length-1 ? ids[index+1] : null, position: index+1, total: ids.length }; }
   async function navigateListing(nextId) { if (!nextId) return; const active = validTab(localStorage.getItem(lastTabKey)) || 'annonce'; clearTimeout(pollTimer); id = nextId; history.replaceState(null, '', `?id=${encodeURIComponent(id)}`); try { data = await request(new URL(`property.php?id=${encodeURIComponent(id)}`, API_ROOT)); renderShell(); selectTab(active); scrollTo(0,0); } catch (error) { fail(error.message); } }
   function selectTab(tab) {
-    clearTimeout(pollTimer); localStorage.setItem(lastTabKey, tab);
+    activeTab = tab; localStorage.setItem(lastTabKey, tab);
     app.querySelectorAll('[data-tab]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.tab === tab)));
     if (tab === 'annonce') renderListing(); else if (tab === 'prix') renderPrices(); else renderAnalysis(tab);
   }
@@ -131,7 +131,7 @@
     panel().querySelector('[data-cancel]').addEventListener('click',()=>selectTab('annonce'));
     panel().querySelector('form').addEventListener('submit', async event => { event.preventDefault(); const values=Object.fromEntries(new FormData(event.currentTarget)); await saveFields(values); await startAnalysis(type); });
   }
-  function renderRunning(type, job) { panel().innerHTML = state(type,'Analyse en cours',`Lancée ${job.started_at ? new Date(job.started_at).toLocaleString('fr-FR') : 'il y a quelques instants'}. Vous pouvez fermer cet onglet et revenir plus tard.`, '<div class="analysis-spinner" aria-hidden="true"></div>'); pollTimer=setTimeout(()=>refresh(type),2500); }
+  function renderRunning(type, job) { panel().innerHTML = state(type,'Analyse en cours',`Lancée ${job.started_at ? new Date(job.started_at).toLocaleString('fr-FR') : 'il y a quelques instants'}. Vous pouvez changer d’onglet et revenir plus tard.`, '<div class="analysis-spinner" aria-hidden="true"></div>'); scheduleAnalysisRefresh(type); }
   function renderFailed(type, job) { panel().innerHTML=state(type,"L’analyse n’a pas abouti",job.error||'Une erreur technique est survenue.',`<button class="property-primary" data-retry>Réessayer</button> <button class="property-danger" data-delete>Supprimer l’analyse</button>`,'analysis-error'); panel().querySelector('[data-retry]').onclick=()=>startAnalysis(type);panel().querySelector('[data-delete]').onclick=()=>deleteAnalysis(type); }
   async function renderAvailable(type) { const renderId=id; panel().innerHTML=`<div class="analysis-toolbar"><button class="property-secondary" data-recalculate>Recalculer</button><button class="property-danger" data-delete>Supprimer l’analyse</button></div><div class="native-analysis" data-analysis-content>Chargement de l’analyse…</div>`;panel().querySelector('[data-recalculate]').onclick=()=>startAnalysis(type);panel().querySelector('[data-delete]').onclick=()=>deleteAnalysis(type); try { const template=await analysisTemplate(type); if(id!==renderId||localStorage.getItem(lastTabKey)!==type)return; await window.ImmoAnalysisRenderer.render({target:panel().querySelector('[data-analysis-content]'),type,id,template}); } catch(error) { const target=panel().querySelector('[data-analysis-content]'); if(target)target.textContent=`Analyse indisponible : ${error.message}`; } }
   async function analysisTemplate(type) { if (templateCache.has(type)) return templateCache.get(type); const response=await fetch(`templates/fiche-investissement-${type}.html`); if(!response.ok)throw new Error(`modèle HTTP ${response.status}`); const documentTemplate=new DOMParser().parseFromString(await response.text(),'text/html'); const template=documentTemplate.getElementById('fiche-template')?.innerHTML; if(!template)throw new Error('modèle de fiche absent'); templateCache.set(type,template); return template; }
@@ -139,11 +139,43 @@
   async function saveAddress(event){event.preventDefault();await saveFields({address:new FormData(event.currentTarget).get('address')});toast('Adresse enregistrée.');}
   async function saveFields(fields){data=await request(new URL(`property.php?id=${encodeURIComponent(id)}`,API_ROOT),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});}
   async function startAnalysis(type){try{await request(new URL('analyze.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,type})});await refresh(type)}catch(error){toast(error.message)}}
-  async function refresh(type){try{data=await request(new URL(`property.php?id=${encodeURIComponent(id)}`,API_ROOT));renderAnalysis(type)}catch(error){toast(error.message)}}
+  function scheduleAnalysisRefresh(type){clearTimeout(pollTimer);pollTimer=setTimeout(()=>refresh(type),2500)}
+  async function refresh(type){
+    const previousJob=data?.job;
+    try{
+      data=await request(new URL(`property.php?id=${encodeURIComponent(id)}`,API_ROOT));
+      const job=data.job;
+      const wasRunning=previousJob&&previousJob.type===type&&['queued','running'].includes(previousJob.status);
+      const hasFinished=job&&job.type===type&&['completed','failed'].includes(job.status);
+      if(wasRunning&&hasFinished) notifyAnalysisFinished(type,job);
+      if(activeTab===type) renderAnalysis(type);
+      else if(job&&job.type===type&&['queued','running'].includes(job.status)) scheduleAnalysisRefresh(type);
+      else if(activeTab==='annonce') renderListing();
+    }catch(error){toast(error.message);scheduleAnalysisRefresh(type)}
+  }
+  function notifyAnalysisFinished(type,job){
+    const succeeded=job.status==='completed';
+    toast(succeeded?'Analyse terminée':'Échec de l’analyse',{
+      detail:`${types[type]} · ${data.listing.title||'Fiche du bien'}`,
+      variant:succeeded?'success':'error',
+      action:{label:'Voir la fiche',onClick:()=>selectTab(type)},
+      duration:30000
+    });
+  }
   function confirmDeletion(message, action){window.ImmoModal.open({title:'Confirmer la suppression',message,actions:[{label:'Annuler'},{label:'Supprimer',type:'delete',onClick:async()=>{try{await action()}catch(error){toast(error.message)}}}]})}
   function deleteAnalysis(type){confirmDeletion(`Supprimer définitivement l’analyse ${types[type]} ?`,async()=>{await request(new URL(`property.php?id=${encodeURIComponent(id)}&type=${type}`,API_ROOT),{method:'DELETE'});await refresh(type)})}
   async function updateSelection(selection){const current=data.listing.selection===selection?null:selection;await request(new URL('tag.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,selection:current})});data.listing.selection=current;renderListing();toast(current?'Classement enregistré.':'Classement retiré.');}
   function deleteListing(){confirmDeletion('Supprimer définitivement cette annonce et toutes ses analyses ?',async()=>{await request(new URL('delete.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});location.href='index.html'})}
-  function panel(){return document.getElementById('property-panel')}function toast(message){const node=document.createElement('div');node.className='property-toast';node.textContent=message;document.body.append(node);setTimeout(()=>node.remove(),4000)}function fail(message){app.className='property-error';app.textContent=message}
+  function panel(){return document.getElementById('property-panel')}
+  function toast(message,options={}){
+    const node=document.createElement('div'),close=()=>node.remove();
+    node.className=`property-toast ${options.variant?`property-toast-${options.variant}`:''}`;
+    node.setAttribute('role',options.variant==='error'?'alert':'status');
+    node.innerHTML=`<button type="button" class="property-toast-close" aria-label="Fermer la notification">×</button><strong>${esc(message)}</strong>${options.detail?`<span>${esc(options.detail)}</span>`:''}${options.action?`<button type="button" class="property-toast-action">${esc(options.action.label)}</button>`:''}`;
+    node.querySelector('.property-toast-close').addEventListener('click',close);
+    if(options.action)node.querySelector('.property-toast-action').addEventListener('click',()=>{close();options.action.onClick()});
+    document.body.append(node);setTimeout(close,options.duration||4000);
+  }
+  function fail(message){app.className='property-error';app.textContent=message}
   load();
 })();
