@@ -1,8 +1,9 @@
 (() => {
   const API_ROOT = new URL('api/', document.baseURI);
-  let id = new URLSearchParams(location.search).get('id');
   const types = { patrimonial: 'Patrimoine', locatif: 'Locatif', mdb: 'Marchand de biens' };
   const app = document.getElementById('property-app');
+  const resolvePropertyId = (container, search) => container?.dataset?.propertyId || new URLSearchParams(search).get('id');
+  let id = resolvePropertyId(app, location.search);
   let data, pollTimer, activeTab;
   const templateCache = new Map();
   const galleryState = (() => { try { return JSON.parse(localStorage.getItem('immoagg.gallery.state') || '{}'); } catch (_) { return {}; } })();
@@ -31,7 +32,7 @@
     const listing = data.listing, locationText = listing.location || listing.address || 'Localisation non renseignée', slider = listingSlider();
     document.title = `${listing.title || 'Fiche du bien'} — ImmoAggregator`;
     app.className = '';
-    app.innerHTML = `<header class="property-header"><div class="property-top"><a class="property-back" href="index.html">← Retour à la galerie</a><span class="property-brand">ImmoAggregator</span><div class="listing-slider" aria-label="Navigation entre les annonces"><button data-listing-prev aria-label="Annonce précédente" ${slider.previous?'':'disabled'}>‹</button><span>${slider.position} / ${slider.total}</span><button data-listing-next aria-label="Annonce suivante" ${slider.next?'':'disabled'}>›</button></div></div><nav class="property-tabs" role="tablist" aria-label="Fiche du bien">${tabButton('annonce','Annonce')}${tabButton('prix','Prix')}${tabButton('patrimonial','Patrimoine')}${tabButton('locatif','Locatif')}${tabButton('mdb','<span class="mdb-long">Marchand de biens</span><span class="mdb-short">MDB</span>')}</nav></header><section class="property-content" id="property-panel" role="tabpanel"></section>`;
+    app.innerHTML = `<header class="property-header"><div class="property-top"><a class="property-back" href="index.html" data-in-app-return>← Retour à la galerie</a><span class="property-brand">ImmoAggregator</span><div class="listing-slider" aria-label="Navigation entre les annonces"><button data-listing-prev aria-label="Annonce précédente" ${slider.previous?'':'disabled'}>‹</button><span>${slider.position} / ${slider.total}</span><button data-listing-next aria-label="Annonce suivante" ${slider.next?'':'disabled'}>›</button></div></div><nav class="property-tabs" role="tablist" aria-label="Fiche du bien">${tabButton('annonce','Annonce')}${tabButton('prix','Prix')}${tabButton('patrimonial','Patrimoine')}${tabButton('locatif','Locatif')}${tabButton('mdb','<span class="mdb-long">Marchand de biens</span><span class="mdb-short">MDB</span>')}</nav></header><section class="property-content" id="property-panel" role="tabpanel"></section>`;
     app.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => selectTab(button.dataset.tab)));
     app.querySelector('[data-listing-prev]')?.addEventListener('click', () => navigateListing(slider.previous));
     app.querySelector('[data-listing-next]')?.addEventListener('click', () => navigateListing(slider.next));

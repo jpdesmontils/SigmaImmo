@@ -307,6 +307,7 @@ async function openInApp(url, activeButton, listing) {
     // Les guides n'ont pas besoin de leur en-tête dans la SPA. Les fiches le
     // conservent afin d'exposer les actions « Retour » et « Voir l'annonce ».
     if (!listing) guide.querySelectorAll('.site-header').forEach(node => node.remove());
+    setInAppPropertyId(guide, listing);
     content.innerHTML = guide.body.innerHTML;
     await runInAppScripts(content, response.url || new URL(url, window.location.href).href);
     if (listing) setupInAppFicheNavigation(content, listing);
@@ -315,6 +316,12 @@ async function openInApp(url, activeButton, listing) {
     content.innerHTML = '<div class="empty-state"><strong>Contenu indisponible</strong><span>Réessayez dans quelques instants.</span></div>';
   }
   if (typeof closeSidebar === 'function') closeSidebar();
+}
+
+function setInAppPropertyId(documentTemplate, listing) {
+  if (!listing?.id) return;
+  const propertyApp = documentTemplate.getElementById('property-app');
+  if (propertyApp) propertyApp.dataset.propertyId = listing.id;
 }
 
 function clearInAppStyles() {

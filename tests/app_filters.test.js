@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync(require.resolve('../app.js'), 'utf8');
 const context = { console, URL, window: {}, document: { addEventListener() {} } };
 vm.createContext(context);
-vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, renderCard: item => { filtered = [item]; return cardHTML(item, 0); }, compareListings, shouldOpenInApp };`, context);
+vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, renderCard: item => { filtered = [item]; return cardHTML(item, 0); }, compareListings, shouldOpenInApp, setInAppPropertyId };`, context);
 
 const baseFilters = overrides => ({
   userSelections: new Set(), analysisTypes: new Set(), city: '', priceMin: null,
@@ -75,4 +75,10 @@ test('ouvre la fiche dans l’application uniquement pour un clic principal sans
   assert.equal(context.testApi.shouldOpenInApp({ button: 0, ctrlKey: false, metaKey: false, shiftKey: false, altKey: false }), true);
   assert.equal(context.testApi.shouldOpenInApp({ button: 0, ctrlKey: true, metaKey: false, shiftKey: false, altKey: false }), false);
   assert.equal(context.testApi.shouldOpenInApp({ button: 1, ctrlKey: false, metaKey: false, shiftKey: false, altKey: false }), false);
+});
+
+test('transmet l’identifiant du bien au document chargé dans l’application', () => {
+  const propertyApp = { dataset: {} };
+  context.testApi.setInAppPropertyId({ getElementById: () => propertyApp }, { id: 'bien-42' });
+  assert.equal(propertyApp.dataset.propertyId, 'bien-42');
 });
