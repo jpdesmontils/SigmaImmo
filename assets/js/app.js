@@ -42,8 +42,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   restoreGalleryState();
   initViewer();
   initDeleteModal();
+  document.addEventListener('immoagg:open-analysis', openFinishedAnalysis);
   await loadData();
 });
+
+function openFinishedAnalysis(event) {
+  const listing = allListings.find(item => String(item.id) === String(event.detail.id));
+  if (!listing) return;
+  event.preventDefault();
+  localStorage.setItem('immoagg.property.lastTab', event.detail.type);
+  openProperty(listing);
+}
 
 // ── Chargement données ────────────────────────────────────────
 async function loadData() {
