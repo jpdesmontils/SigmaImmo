@@ -307,6 +307,7 @@ async function openInApp(url, activeButton, listing) {
     // Les guides n'ont pas besoin de leur en-tête dans la SPA. Les fiches le
     // conservent afin d'exposer les actions « Retour » et « Voir l'annonce ».
     if (!listing) guide.querySelectorAll('.site-header').forEach(node => node.remove());
+    setInAppPropertyId(guide, listing);
     content.innerHTML = guide.body.innerHTML;
     await runInAppScripts(content, response.url || new URL(url, window.location.href).href);
     if (listing) setupInAppFicheNavigation(content, listing);
@@ -315,6 +316,12 @@ async function openInApp(url, activeButton, listing) {
     content.innerHTML = '<div class="empty-state"><strong>Contenu indisponible</strong><span>Réessayez dans quelques instants.</span></div>';
   }
   if (typeof closeSidebar === 'function') closeSidebar();
+}
+
+function setInAppPropertyId(documentTemplate, listing) {
+  if (!listing?.id) return;
+  const propertyApp = documentTemplate.getElementById('property-app');
+  if (propertyApp) propertyApp.dataset.propertyId = listing.id;
 }
 
 function clearInAppStyles() {
@@ -438,7 +445,14 @@ function scoreTextHTML(item) {
 }
 
 function propertyUrl(item) { return `fiche-bien.html?id=${encodeURIComponent(item.id)}`; }
-function openProperty(item) { if (item?.id) { persistGalleryState(); location.href = propertyUrl(item); } }
+function shouldOpenInApp(event) {
+  return event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey;
+}
+function openProperty(item) {
+  if (!item?.id) return;
+  persistGalleryState();
+  openInApp(propertyUrl(item), null, item);
+}
 
 // ── Vue switcher ──────────────────────────────────────────────
 function initViewSwitcher() {
@@ -786,6 +800,11 @@ function initViewer() {
   document.getElementById('viewer-photo-prev').addEventListener('click', () => photoStep(-1));
   document.getElementById('viewer-photo-next').addEventListener('click', () => photoStep(1));
   document.getElementById('viewer-map-btn').addEventListener('click', () => showOnMap(viewer.listingIndex));
+  document.getElementById('viewer-fiche-link').addEventListener('click', event => {
+    if (!shouldOpenInApp(event)) return;
+    event.preventDefault();
+    openProperty(filtered[viewer.listingIndex]);
+  });
   document.getElementById('viewer-delete-btn').addEventListener('click', () => openDeleteModal(viewer.listingIndex));
 
   document.addEventListener('keydown', e => {

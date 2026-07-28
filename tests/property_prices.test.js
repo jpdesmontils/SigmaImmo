@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(require.resolve('../assets/js/property.js'), 'utf8')
-  .replace('  load();', '  window.priceTestApi = { validTab, priceContent };');
+  .replace('  load();', '  window.priceTestApi = { validTab, priceContent, resolvePropertyId };');
 const panel = { innerHTML: '', querySelectorAll() { return []; } };
 const context = {
   console, URL, URLSearchParams, Intl,
@@ -18,6 +18,11 @@ vm.runInContext(source, context);
 
 test('reconnaît Prix comme onglet principal persistant', () => {
   assert.equal(context.window.priceTestApi.validTab('prix'), 'prix');
+});
+
+test('privilégie l’identifiant transmis par la vue intégrée', () => {
+  assert.equal(context.window.priceTestApi.resolvePropertyId({ dataset: { propertyId: 'in-app' } }, '?id=hors-app'), 'in-app');
+  assert.equal(context.window.priceTestApi.resolvePropertyId({ dataset: {} }, '?id=hors-app'), 'hors-app');
 });
 
 test('rend une synthèse, une contre-offre et les transactions DVF', () => {
