@@ -4,7 +4,7 @@
 
 ## 1. Décision produit
 
-La galerie devient un point d’entrée vers une **fiche de bien unique**, ouverte dans un nouvel onglet. Cette fiche rassemble quatre espaces de premier niveau : **Annonce**, **Patrimoine**, **Locatif** et **Marchand de biens** (`MDB` sous 640 px).
+La galerie devient un point d’entrée vers une **fiche de bien unique**, ouverte dans un nouvel onglet. Cette fiche rassemble cinq espaces de premier niveau : **Annonce**, **Prix**, **Patrimoine**, **Locatif** et **Marchand de biens** (`MDB` sous 640 px). Prix présente les mutations DVF comparables et une synthèse de négociation indépendante des analyses enregistrées.
 
 Le dernier onglet consulté est mémorisé globalement pour l’utilisateur. À défaut de préférence enregistrée, la fiche s’ouvre sur **Annonce**. Le retour à la galerie restaure les filtres, le tri, le mode d’affichage et la position de défilement.
 
