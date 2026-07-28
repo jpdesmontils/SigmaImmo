@@ -52,7 +52,7 @@ test('superpose le cercle du score de la dernière analyse sur la vignette', () 
 
 test('ouvre la fiche courante depuis la carte', () => {
   const html = context.testApi.popupHTML({ id: 'bien avec espace', title: 'Bien cartographié' }, 0);
-  assert.match(html, /href="\/fiche-bien\.html\?id=bien%20avec%20espace"/);
+  assert.match(html, /href="fiche-bien\.html\?id=bien%20avec%20espace"/);
   assert.match(html, />Voir Fiche<\/a>/);
   assert.doesNotMatch(html, /data-open-viewer/);
 });
