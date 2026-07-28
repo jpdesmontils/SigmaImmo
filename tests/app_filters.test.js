@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync(require.resolve('../app.js'), 'utf8');
 const context = { console, URL, window: {}, document: { addEventListener() {} } };
 vm.createContext(context);
-vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, renderCard: item => { filtered = [item]; return cardHTML(item, 0); }, compareListings, shouldOpenInApp, setInAppPropertyId };`, context);
+vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, renderCard: item => { filtered = [item]; return cardHTML(item, 0); }, popupHTML, compareListings, shouldOpenInApp, setInAppPropertyId };`, context);
 
 const baseFilters = overrides => ({
   userSelections: new Set(), analysisTypes: new Set(), city: '', priceMin: null,
@@ -81,4 +81,12 @@ test('transmet l’identifiant du bien au document chargé dans l’application'
   const propertyApp = { dataset: {} };
   context.testApi.setInAppPropertyId({ getElementById: () => propertyApp }, { id: 'bien-42' });
   assert.equal(propertyApp.dataset.propertyId, 'bien-42');
+});
+
+test('la carte ouvre la fiche actuelle du bien', () => {
+  const html = context.testApi.popupHTML({ id: 'bien 42', title: 'Bien cartographié' }, 3);
+  assert.match(html, /href="fiche-bien\.html\?id=bien%2042"/);
+  assert.match(html, /data-open-property="3"/);
+  assert.match(html, />Voir Fiche<\/a>/);
+  assert.doesNotMatch(html, /data-open-viewer|Voir l'annonce/);
 });
