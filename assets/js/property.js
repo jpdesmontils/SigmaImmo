@@ -131,16 +131,43 @@
   function formatNumber(value, digits = 0) { return Number(value).toLocaleString('fr-FR', { maximumFractionDigits: digits }); }
   function renderListing() {
     const item = data.listing, images = [...new Set((item.images?.length ? item.images : [item.imageUrl]).filter(Boolean))];
-    const image = images[0] ? `<img class="property-gallery-main" data-main-image src="${esc(images[0])}" alt="${esc(item.title || 'Photo du bien')}">` : '<div class="property-gallery-main"></div>';
-    const thumbs = images.length > 1 ? `<div class="property-thumbnails">${images.map((src,i)=>`<button class="${i?'':'active'}" data-image="${esc(src)}" style="background-image:url('${esc(src)}')" aria-label="Afficher la photo ${i+1}"></button>`).join('')}</div>` : '';
+    const hasGallery = images.length > 1;
+    const image = images[0] ? `<div class="property-gallery-stage"><img class="property-gallery-main" data-main-image src="${esc(images[0])}" alt="${esc(item.title || 'Photo du bien')}">${hasGallery ? '<button class="property-gallery-arrow previous" type="button" data-gallery-step="-1" aria-label="Photo précédente">‹</button><button class="property-gallery-arrow next" type="button" data-gallery-step="1" aria-label="Photo suivante">›</button>' : ''}</div>` : '<div class="property-gallery-main"></div>';
+    const thumbs = hasGallery ? `<div class="property-thumbnail-strip"><button class="property-thumbnail-arrow" type="button" data-thumbnail-step="-1" aria-label="Miniature précédente" disabled>‹</button><div class="property-thumbnails-viewport"><div class="property-thumbnails">${images.map((src,i)=>`<button class="${i?'':'active'}" data-image-index="${i}" style="background-image:url('${esc(src)}')" aria-label="Afficher la photo ${i+1}"></button>`).join('')}</div></div><button class="property-thumbnail-arrow" type="button" data-thumbnail-step="1" aria-label="Miniature suivante" ${images.length <= 8 ? 'disabled' : ''}>›</button></div>` : '';
     panel().innerHTML = `<div class="listing-heading"><small>Annonce sauvegardée</small><h1>${esc(item.title || 'Annonce immobilière')}</h1><p>${esc(item.location || 'Localisation à compléter')}</p></div><div class="listing-layout"><div class="property-gallery-wrap">${image}${listingOverlays()}${thumbs}</div><aside class="listing-summary"><div class="listing-price">${esc(money(item.price))}</div><div class="listing-kpis">${kpiField('surface')}${kpiField('terrain')}${kpiField('dpe')}${kpiField('ges')}<div><small>Pièces</small><strong>${esc(item.rooms || '—')}</strong></div></div><form class="property-panel property-field" id="address-form"><label for="exact-address">Adresse exacte</label><input id="exact-address" name="address" value="${esc(item.address || item.location || '')}"><small>Facultative — améliore la précision géographique, mais n’est pas nécessaire pour lancer une analyse.</small><div class="analysis-form-actions"><button class="property-secondary">Enregistrer l’adresse</button></div></form>${item.url?`<a class="property-primary property-source-link" href="${esc(item.url)}" target="_blank" rel="noopener">Voir l’annonce d’origine ↗</a>`:''}<div class="property-actions"><button class="property-action" data-selection="shortlist">${item.selection==='shortlist'?'★ Retirer des favoris':'☆ Favori'}</button><button class="property-action" data-selection="ecartee">${item.selection==='ecartee'?'✓ Réintégrer':'× Écarter'}</button><button class="property-action" data-map>⌖ Carte</button><button class="property-action property-danger" data-delete-listing>Supprimer</button></div></aside></div><section class="property-panel listing-description"><h2>Description</h2><p>${esc(item.description || 'Aucune description disponible.')}</p></section>`;
-    panel().querySelectorAll('[data-image]').forEach(button => button.addEventListener('click',()=>{panel().querySelector('[data-main-image]').src=button.dataset.image;panel().querySelectorAll('[data-image]').forEach(x=>x.classList.toggle('active',x===button))}));
+    bindGallery(images);
     panel().querySelector('#address-form').addEventListener('submit', saveAddress);
     panel().querySelectorAll('[data-selection]').forEach(button => button.addEventListener('click', () => updateSelection(button.dataset.selection)));
     panel().querySelectorAll('[data-edit-field]').forEach(value => value.addEventListener('dblclick', () => editKpi(value.dataset.editField)));
     panel().querySelectorAll('[data-edit-trigger]').forEach(button => button.addEventListener('click', () => editKpi(button.dataset.editTrigger)));
     panel().querySelector('[data-map]').addEventListener('click', () => location.href = `app.html?view=map&listing=${encodeURIComponent(id)}`);
     panel().querySelector('[data-delete-listing]').addEventListener('click', deleteListing);
+  }
+  function bindGallery(images) {
+    if (images.length < 2) return;
+    let imageIndex = 0;
+    const thumbnails = [...panel().querySelectorAll('[data-image-index]')];
+    const viewport = panel().querySelector('.property-thumbnails-viewport');
+    const thumbnailArrows = [...panel().querySelectorAll('[data-thumbnail-step]')];
+    const selectImage = nextIndex => {
+      imageIndex = (nextIndex + images.length) % images.length;
+      panel().querySelector('[data-main-image]').src = images[imageIndex];
+      thumbnails.forEach((thumbnail, index) => thumbnail.classList.toggle('active', index === imageIndex));
+      thumbnails[imageIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      updateThumbnailArrows();
+    };
+    const updateThumbnailArrows = () => {
+      const maximum = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+      thumbnailArrows[0].disabled = viewport.scrollLeft <= 1;
+      thumbnailArrows[1].disabled = viewport.scrollLeft >= maximum - 1;
+    };
+    panel().querySelectorAll('[data-gallery-step]').forEach(button => button.addEventListener('click', () => selectImage(imageIndex + Number(button.dataset.galleryStep))));
+    thumbnails.forEach(button => button.addEventListener('click', () => selectImage(Number(button.dataset.imageIndex))));
+    thumbnailArrows.forEach(button => button.addEventListener('click', () => {
+      const thumbnailWidth = thumbnails[0].getBoundingClientRect().width + 6;
+      viewport.scrollBy({ left: Number(button.dataset.thumbnailStep) * thumbnailWidth, behavior: 'smooth' });
+    }));
+    viewport.addEventListener('scroll', updateThumbnailArrows, { passive: true });
   }
   function isMissing(value) { return value === '' || value === null || value === undefined; }
   function kpiField(field) {
