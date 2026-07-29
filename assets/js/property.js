@@ -98,14 +98,14 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(map);
     const bounds = [];
     if (hasCoordinates(origin)) {
-      L.marker(center, { icon: L.divIcon({ className: 'price-house-marker', html: '<span aria-hidden="true">⌂</span>', iconSize: [34, 34], iconAnchor: [17, 17] }), title: `Adresse retenue : ${origin.label || ''}` }).addTo(map).bindTooltip(`Adresse retenue : ${esc(origin.label || '')}`);
+      L.marker(center, { icon: L.divIcon({ className: 'price-house-marker', html: '<span aria-hidden="true">⌂</span>', iconSize: [34, 34], iconAnchor: [17, 17] }), title: `Adresse retenue : ${origin.label || ''}` }).addTo(map).bindPopup(priceHousePopup(origin, prices.summary), { maxWidth: 300 });
       bounds.push(center);
     }
     const values = items.map(item => Number(item.price_per_sqm)), minimum = Math.min(...values), maximum = Math.max(...values);
     items.forEach(item => {
       const coordinates = [Number(item.latitude), Number(item.longitude)];
       const color = priceMarkerColor(item.price_per_sqm, minimum, maximum);
-      L.circleMarker(coordinates, { radius: 10, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 }).addTo(map).bindTooltip(`${money(item.price_per_sqm)}/m²`).on('click', () => openPriceTransaction(item));
+      L.circleMarker(coordinates, { radius: 10, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 }).addTo(map).bindTooltip(`${money(item.price_per_sqm)}/m²`).bindPopup(priceTransactionPopup(item), { maxWidth: 320 });
       bounds.push(coordinates);
     });
     if (bounds.length > 1) map.fitBounds(bounds, { padding: [28, 28], maxZoom: 16 });
@@ -113,14 +113,11 @@
     setTimeout(() => map.invalidateSize(), 0);
     return map;
   }
-  function openPriceTransaction(item) {
-    const modal = document.createElement('dialog');
-    modal.className = 'price-transaction-modal';
-    modal.innerHTML = `<form method="dialog"><button class="price-modal-close" aria-label="Fermer">×</button><div class="analysis-eyebrow">Vente comparable</div><h2>${esc(item.address)}</h2><dl><div><dt>Date</dt><dd>${esc(formatDate(item.date))}</dd></div><div><dt>Type de bien</dt><dd>${esc(item.type)}</dd></div><div><dt>Nombre de pièces</dt><dd>${item.rooms ? esc(item.rooms) : '—'}</dd></div><div><dt>Surface</dt><dd>${esc(formatNumber(item.surface))} m²</dd></div><div><dt>Prix de vente</dt><dd>${esc(money(item.value))}</dd></div><div><dt>Prix au m²</dt><dd><strong>${esc(money(item.price_per_sqm))}/m²</strong></dd></div><div><dt>Distance</dt><dd>${item.distance_km === null ? '—' : `${esc(formatNumber(item.distance_km, 1))} km`}</dd></div></dl></form>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('close', () => modal.remove());
-    modal.addEventListener('click', event => { if (event.target === modal) modal.close(); });
-    modal.showModal();
+  function priceTransactionPopup(item) {
+    return `<div class="price-map-popup"><small>Vente comparable</small><strong>${esc(item.address)}</strong><dl><div><dt>Date</dt><dd>${esc(formatDate(item.date))}</dd></div><div><dt>Bien</dt><dd>${esc(item.type)} · ${item.rooms ? `${esc(item.rooms)} pièce(s)` : 'pièces non publiées'}</dd></div><div><dt>Surface</dt><dd>${esc(formatNumber(item.surface))} m²</dd></div><div><dt>Prix de vente</dt><dd>${esc(money(item.value))}</dd></div><div><dt>Prix au m²</dt><dd><b>${esc(money(item.price_per_sqm))}/m²</b></dd></div><div><dt>Distance</dt><dd>${item.distance_km === null ? '—' : `${esc(formatNumber(item.distance_km, 1))} km`}</dd></div></dl></div>`;
+  }
+  function priceHousePopup(origin, summary) {
+    return `<div class="price-map-popup"><small>Bien analysé</small><strong>${esc(origin.label || 'Adresse retenue')}</strong><span>Prix demandé au m²</span><b>${esc(money(summary ? summary.asking_price_per_sqm : null))}/m²</b></div>`;
   }
   function formatDate(value) { if (!value) return 'Date inconnue'; const parsed = new Date(`${value}T00:00:00`); return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('fr-FR'); }
   function formatDateTime(value) { if (!value) return 'date inconnue'; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('fr-FR'); }
