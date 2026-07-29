@@ -95,6 +95,7 @@ function dvfListingContext($listing) {
     $longitude = isset($coords['lng']) && is_numeric($coords['lng']) ? (float)$coords['lng'] : null;
     return [
         'query' => $address !== '' ? $address : $location,
+        'exact_address' => $address,
         'latitude' => $latitude,
         'longitude' => $longitude,
         'surface' => dvfListingNumber($listing, 'surface', 'surfaceText'),
@@ -116,6 +117,9 @@ function dvfListingPropertyType($listing) {
 }
 
 function dvfResolveLocation($context) {
+    // L'adresse saisie dans la fiche est plus précise que les coordonnées
+    // éventuellement extraites de l'annonce : elle définit donc le centre DVF.
+    if (isset($context['exact_address']) && $context['exact_address'] !== '') return dvfGeocode($context['exact_address']);
     if ($context['latitude'] !== null && $context['longitude'] !== null) return dvfReverseGeocode($context['latitude'], $context['longitude']);
     return dvfGeocode($context['query']);
 }
@@ -132,6 +136,13 @@ function dvfReadAnalysis($id, $dataDirectory) {
     return is_array($analysis) && isset($analysis['result']) && is_array($analysis['result']) ? $analysis : null;
 }
 
+function dvfAnalysisMatchesListing($analysis, $listing) {
+    if (!is_array($analysis) || !isset($analysis['input']) || !is_array($analysis['input'])) return false;
+    $current = dvfListingContext($listing);
+    $storedAddress = isset($analysis['input']['exact_address']) ? trim((string)$analysis['input']['exact_address']) : '';
+    return $storedAddress === $current['exact_address'];
+}
+
 function dvfWriteAnalysis($id, $dataDirectory, $analysis) {
     $file = dvfAnalysisFile($id, $dataDirectory);
     $directory = dirname($file);
@@ -142,6 +153,31 @@ function dvfWriteAnalysis($id, $dataDirectory, $analysis) {
         if (is_file($temporary)) @unlink($temporary);
         throw new RuntimeException('L’analyse Prix ne peut pas être enregistrée.');
     }
+}
+
+function dvfCreateAnalysis($id, $listing, $dataDirectory, $logContext = []) {
+    $context = dvfListingContext($listing);
+    $propertyType = dvfPropertyType($context['type']);
+    $missing = [];
+    if ($context['query'] === '' && ($context['latitude'] === null || $context['longitude'] === null)) $missing[] = 'localisation';
+    if ($context['surface'] <= 0) $missing[] = 'surface';
+    if ($missing) throw new InvalidArgumentException('Données insuffisantes pour rechercher les transactions DVF : ' . implode(', ', $missing) . '.');
+
+    $origin = dvfResolveLocation($context);
+    if ($origin['city_code'] === '') throw new InvalidArgumentException('La commune de cette adresse n’a pas pu être identifiée.');
+    $rows = dvfRowsForCommune($origin['city_code'], $logContext);
+    $transactions = dvfNormalizeTransactions($rows, $origin);
+    appLog('app', 'dvf.transactions_normalized', $logContext + ['city_code' => $origin['city_code'], 'raw_row_count' => count($rows)] + dvfTransactionDiagnostics($transactions));
+    $selection = dvfSelectComparables($transactions, $context['type'], $context['surface'], 10);
+    appLog('app', 'dvf.comparables_selected', $logContext + ['city_code' => $origin['city_code'], 'property_type' => $propertyType, 'surface' => $context['surface'], 'comparable_count' => count($selection['items']), 'perimeter' => $selection['perimeter']]);
+    if (!$selection['items']) throw new RuntimeException('Aucune vente comparable de maison ou d’appartement n’a été trouvée dans cette commune.');
+
+    $capturedAt = gmdate('c');
+    $source = ['name' => 'DVF — DGFiP / data.gouv.fr', 'url' => 'https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/', 'limitations' => 'Les données DVF décrivent des mutations enregistrées et ne reflètent ni l’état intérieur, ni les travaux, ni les conditions particulières de chaque vente.'];
+    $result = ['source' => $source, 'captured_at' => $capturedAt, 'property' => ['asking_price' => $context['price'], 'surface' => $context['surface'], 'type' => $propertyType], 'location' => $origin, 'perimeter' => $selection['perimeter'], 'transactions' => $selection['items'], 'summary' => dvfSummary($selection['items'], $context['price'], $context['surface'])];
+    $analysis = ['version' => 1, 'id' => $id, 'captured_at' => $capturedAt, 'input' => $context, 'api_data' => ['geocoding' => $origin, 'dvf_rows' => $rows], 'result' => $result];
+    dvfWriteAnalysis($id, $dataDirectory, $analysis);
+    return $analysis;
 }
 
 /**

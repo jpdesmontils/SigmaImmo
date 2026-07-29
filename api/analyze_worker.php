@@ -2,6 +2,7 @@
 /** Worker CLI : appelle OpenAI puis enregistre strictement le JSON produit. */
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/analysis_types.php';
+require_once __DIR__ . '/dvf_service.php';
 if (PHP_SAPI !== 'cli') exit(1);
 define('DATA_DIR', __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
@@ -22,11 +23,18 @@ try {
     markRunning($jobPath, $id, $type);
     $listingJson = json_encode($listing, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     if ($type === 'patrimonial') {
+        $priceAnalysis = dvfReadAnalysis($id, DATA_DIR);
+        if (!$priceAnalysis || !dvfAnalysisMatchesListing($priceAnalysis, $listing)) {
+            aiLog('analysis.price_data_started', ['id' => $id, 'type' => $type]);
+            $priceAnalysis = dvfCreateAnalysis($id, $listing, DATA_DIR, ['id' => $id, 'source' => 'patrimonial_worker']);
+            aiLog('analysis.price_data_succeeded', ['id' => $id, 'type' => $type, 'captured_at' => $priceAnalysis['captured_at']]);
+        }
         $travel = runAnalysisStage($apiKey, $model, 'ana_trajet_paris', ['{{annonce_complete}}' => $listingJson], $id, $type);
         applyTravelScore($travel);
         $analysis = runAnalysisStage($apiKey, $model, 'ana_patrimonial', [
             '{{annonce_complete}}' => $listingJson,
             '{{analyse_trajet}}' => json_encode($travel, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+            '{{analyse_prix}}' => json_encode($priceAnalysis['result'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
         ], $id, $type);
         $analysis['accessibilite_depuis_paris'] = $travel;
         $analysis['notation']['axes']['accessibilite']['score'] = $travel['evaluation']['score'] ?? null;
