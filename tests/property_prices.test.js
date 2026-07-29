@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(require.resolve('../assets/js/property.js'), 'utf8')
-  .replace('  load();', '  window.priceTestApi = { validTab, priceContent, priceMarkerColor, priceHouseColor, priceTransactionPopup, priceHousePopup, hasCoordinates, resolvePropertyId };');
+  .replace('  load();', '  window.priceTestApi = { validTab, priceContent, medianCardStyle, priceMarkerColor, priceHouseColor, priceTransactionPopup, priceHousePopup, hasCoordinates, resolvePropertyId };');
 const panel = { innerHTML: '', querySelectorAll() { return []; } };
 const context = {
   console, URL, URLSearchParams, Intl,
@@ -48,6 +48,16 @@ test('rend une synthèse, une contre-offre et les transactions DVF', () => {
 test('calcule un dégradé du vert clair au rouge selon le prix au m²', () => {
   assert.equal(context.window.priceTestApi.priceMarkerColor(4000, 4000, 6000), 'rgb(134, 217, 147)');
   assert.equal(context.window.priceTestApi.priceMarkerColor(6000, 4000, 6000), 'rgb(220, 76, 76)');
+});
+
+test('colore le bloc médiane de vert clair à rouge foncé avec un point médian blanc', () => {
+  const style = context.window.priceTestApi.medianCardStyle;
+  assert.match(style(-35), /--median-bg:rgb\(198, 239, 206\)/);
+  assert.match(style(0), /--median-bg:rgb\(255, 255, 255\)/);
+  assert.match(style(35), /--median-bg:rgb\(139, 0, 0\)/);
+  assert.equal(style(-50), style(-35));
+  assert.equal(style(50), style(35));
+  assert.match(style(35), /--median-text:#fff/);
 });
 
 test('colore la maison avec le même dégradé que les ventes', () => {
