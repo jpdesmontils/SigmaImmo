@@ -53,6 +53,7 @@
       if (localStorage.getItem(lastTabKey) !== 'prix') return;
       panel().innerHTML = priceContent(prices);
       panel().querySelector('[data-price-recalculate]').addEventListener('click', () => renderPrices(true));
+      bindPriceTransactions(prices);
     } catch (error) {
       if (localStorage.getItem(lastTabKey) !== 'prix') return;
       const missing = Array.isArray(error.payload?.missing) && error.payload.missing.length;
@@ -70,7 +71,56 @@
       ? `Le prix demandé dépasse de ${Math.abs(Number(gap)).toLocaleString('fr-FR')} % la médiane des ${items.length} ventes retenues. Une première offre entre ${money(summary.offer_low)} et ${money(summary.offer_high)} est cohérente avec les mutations publiées, sous réserve de l’état réel du bien.`
       : `Le prix demandé se situe ${gapText}. La négociation doit prioritairement s’appuyer sur les travaux et défauts constatés plutôt que sur une décote générale du marché.`;
     const rows = items.map(item => `<tr><td><strong>${esc(formatDate(item.date))}</strong><small>${esc(item.address)}</small></td><td>${esc(item.type)}<small>${item.rooms ? `${esc(item.rooms)} pièce(s)` : '—'}</small></td><td>${esc(formatNumber(item.surface))} m²</td><td>${esc(money(item.value))}</td><td><strong>${esc(money(item.price_per_sqm))}/m²</strong></td><td>${item.distance_km === null ? '—' : `${esc(formatNumber(item.distance_km, 1))} km`}</td></tr>`).join('');
-    return `<section class="price-page"><div class="price-heading"><div><div class="analysis-eyebrow">Marché réel · DVF</div><h1>Positionnement du prix</h1><p>${esc(prices.location.label)} · périmètre retenu : ${esc(prices.perimeter)} · données du ${esc(formatDateTime(prices.captured_at))}</p></div><div class="price-heading-actions"><button class="property-primary" data-price-recalculate>Recalculer</button><a href="${esc(prices.source.url)}" target="_blank" rel="noopener" class="property-secondary">Consulter la source ↗</a></div></div><div class="price-summary-grid"><article class="price-summary-card"><small>Prix demandé</small><strong>${esc(money(prices.property.asking_price))}</strong><span>${esc(money(summary.asking_price_per_sqm))}/m²</span></article><article class="price-summary-card accent"><small>Médiane des comparables</small><strong>${esc(money(summary.median_price_per_sqm))}/m²</strong><span>${esc(gapText)}</span></article><article class="price-summary-card"><small>Valeur prudente</small><strong>${esc(money(summary.prudent_value_low))} – ${esc(money(summary.prudent_value_high))}</strong><span>Quartiles des ventes retenues</span></article><article class="price-summary-card offer"><small>Contre-offre recommandée</small><strong>${esc(money(summary.offer_low))} – ${esc(money(summary.offer_high))}</strong><span>Point de départ à ajuster après visite</span></article></div><article class="price-argument"><div class="analysis-eyebrow">Argumentaire de négociation</div><h2>${above ? 'Un écart objectivable avec le marché' : 'Un prix déjà aligné avec le marché'}</h2><p>${esc(argument)}</p><ul><li>Médiane observée : ${esc(money(summary.median_price_per_sqm))}/m².</li><li>Fourchette interquartile : ${esc(money(summary.low_price_per_sqm))} à ${esc(money(summary.high_price_per_sqm))}/m².</li><li>${items.length} mutation${items.length > 1 ? 's' : ''} comparable${items.length > 1 ? 's' : ''}, regroupée${items.length > 1 ? 's' : ''} pour éviter les doublons de lots.</li></ul></article><section class="price-transactions"><div class="price-section-title"><div><div class="analysis-eyebrow">Transactions retenues</div><h2>Les ${items.length} ventes comparables les plus récentes</h2></div><span>${esc(prices.source.name)}</span></div><div class="price-table-wrap"><table><thead><tr><th>Date et adresse</th><th>Bien</th><th>Surface</th><th>Prix de vente</th><th>Prix/m²</th><th>Distance</th></tr></thead><tbody>${rows}</tbody></table></div><p class="price-limitations">${esc(prices.source.limitations)}</p></section></section>`;
+    return `<section class="price-page"><div class="price-heading"><div><div class="analysis-eyebrow">Marché réel · DVF</div><h1>Positionnement du prix</h1><p>${esc(prices.location.label)} · périmètre retenu : ${esc(prices.perimeter)} · données du ${esc(formatDateTime(prices.captured_at))}</p></div><div class="price-heading-actions"><button class="property-primary" data-price-recalculate>Recalculer</button><a href="${esc(prices.source.url)}" target="_blank" rel="noopener" class="property-secondary">Consulter la source ↗</a></div></div><div class="price-summary-grid"><article class="price-summary-card"><small>Prix demandé</small><strong>${esc(money(prices.property.asking_price))}</strong><span>${esc(money(summary.asking_price_per_sqm))}/m²</span></article><article class="price-summary-card accent"><small>Médiane des comparables</small><strong>${esc(money(summary.median_price_per_sqm))}/m²</strong><span>${esc(gapText)}</span></article><article class="price-summary-card"><small>Valeur prudente</small><strong>${esc(money(summary.prudent_value_low))} – ${esc(money(summary.prudent_value_high))}</strong><span>Quartiles des ventes retenues</span></article><article class="price-summary-card offer"><small>Contre-offre recommandée</small><strong>${esc(money(summary.offer_low))} – ${esc(money(summary.offer_high))}</strong><span>Point de départ à ajuster après visite</span></article></div><article class="price-argument"><div class="analysis-eyebrow">Argumentaire de négociation</div><h2>${above ? 'Un écart objectivable avec le marché' : 'Un prix déjà aligné avec le marché'}</h2><p>${esc(argument)}</p><ul><li>Médiane observée : ${esc(money(summary.median_price_per_sqm))}/m².</li><li>Fourchette interquartile : ${esc(money(summary.low_price_per_sqm))} à ${esc(money(summary.high_price_per_sqm))}/m².</li><li>${items.length} mutation${items.length > 1 ? 's' : ''} comparable${items.length > 1 ? 's' : ''}, regroupée${items.length > 1 ? 's' : ''} pour éviter les doublons de lots.</li></ul></article><section class="price-transactions"><div class="price-section-title"><div><div class="analysis-eyebrow">Transactions retenues</div><h2>Les ${items.length} ventes comparables les plus récentes</h2></div><span>${esc(prices.source.name)}</span></div><div class="price-view-tabs" role="tablist" aria-label="Vue des ventes comparables"><button role="tab" aria-selected="true" data-price-view="list">Liste</button><button role="tab" aria-selected="false" data-price-view="map">Carte</button></div><div data-price-view-panel="list" role="tabpanel"><div class="price-table-wrap"><table><thead><tr><th>Date et adresse</th><th>Bien</th><th>Surface</th><th>Prix de vente</th><th>Prix/m²</th><th>Distance</th></tr></thead><tbody>${rows}</tbody></table></div></div><div class="price-map-panel" data-price-view-panel="map" role="tabpanel" hidden><div class="price-map" data-price-map aria-label="Carte des ventes comparables"></div><p class="price-map-legend"><span>Prix au m² faible</span><i aria-hidden="true"></i><span>Prix au m² élevé</span></p></div><p class="price-limitations">${esc(prices.source.limitations)}</p></section></section>`;
+  }
+  function priceMarkerColor(value, minimum, maximum) {
+    const ratio = maximum > minimum ? Math.max(0, Math.min(1, (Number(value) - minimum) / (maximum - minimum))) : 0;
+    const low = [134, 217, 147], high = [220, 76, 76];
+    return `rgb(${low.map((channel, index) => Math.round(channel + (high[index] - channel) * ratio)).join(', ')})`;
+  }
+  function bindPriceTransactions(prices) {
+    const buttons = panel().querySelectorAll('[data-price-view]');
+    let map;
+    buttons.forEach(button => button.addEventListener('click', () => {
+      buttons.forEach(item => item.setAttribute('aria-selected', String(item === button)));
+      panel().querySelectorAll('[data-price-view-panel]').forEach(item => { item.hidden = item.dataset.priceViewPanel !== button.dataset.priceView; });
+      if (button.dataset.priceView === 'map') map = map || renderPriceMap(prices);
+    }));
+  }
+  function hasCoordinates(item) { return item && item.latitude !== null && item.latitude !== '' && item.longitude !== null && item.longitude !== '' && Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude)); }
+  function renderPriceMap(prices) {
+    const target = panel().querySelector('[data-price-map]');
+    const items = (prices.transactions || []).filter(hasCoordinates);
+    const origin = prices.location || {};
+    if (!target || typeof L === 'undefined') { if (target) target.textContent = 'La carte est temporairement indisponible.'; return null; }
+    const center = hasCoordinates(origin) ? [Number(origin.latitude), Number(origin.longitude)] : (items[0] ? [Number(items[0].latitude), Number(items[0].longitude)] : [46.8, 2.3]);
+    const map = L.map(target).setView(center, 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(map);
+    const bounds = [];
+    if (hasCoordinates(origin)) {
+      L.marker(center, { icon: L.divIcon({ className: 'price-house-marker', html: '<span aria-hidden="true">⌂</span>', iconSize: [34, 34], iconAnchor: [17, 17] }), title: `Adresse retenue : ${origin.label || ''}` }).addTo(map).bindTooltip(`Adresse retenue : ${esc(origin.label || '')}`);
+      bounds.push(center);
+    }
+    const values = items.map(item => Number(item.price_per_sqm)), minimum = Math.min(...values), maximum = Math.max(...values);
+    items.forEach(item => {
+      const coordinates = [Number(item.latitude), Number(item.longitude)];
+      const color = priceMarkerColor(item.price_per_sqm, minimum, maximum);
+      L.circleMarker(coordinates, { radius: 10, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 }).addTo(map).bindTooltip(`${money(item.price_per_sqm)}/m²`).on('click', () => openPriceTransaction(item));
+      bounds.push(coordinates);
+    });
+    if (bounds.length > 1) map.fitBounds(bounds, { padding: [28, 28], maxZoom: 16 });
+    if (!items.length) target.insertAdjacentHTML('beforeend', '<p class="price-map-empty">Aucune transaction géolocalisée.</p>');
+    setTimeout(() => map.invalidateSize(), 0);
+    return map;
+  }
+  function openPriceTransaction(item) {
+    const modal = document.createElement('dialog');
+    modal.className = 'price-transaction-modal';
+    modal.innerHTML = `<form method="dialog"><button class="price-modal-close" aria-label="Fermer">×</button><div class="analysis-eyebrow">Vente comparable</div><h2>${esc(item.address)}</h2><dl><div><dt>Date</dt><dd>${esc(formatDate(item.date))}</dd></div><div><dt>Type de bien</dt><dd>${esc(item.type)}</dd></div><div><dt>Nombre de pièces</dt><dd>${item.rooms ? esc(item.rooms) : '—'}</dd></div><div><dt>Surface</dt><dd>${esc(formatNumber(item.surface))} m²</dd></div><div><dt>Prix de vente</dt><dd>${esc(money(item.value))}</dd></div><div><dt>Prix au m²</dt><dd><strong>${esc(money(item.price_per_sqm))}/m²</strong></dd></div><div><dt>Distance</dt><dd>${item.distance_km === null ? '—' : `${esc(formatNumber(item.distance_km, 1))} km`}</dd></div></dl></form>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('close', () => modal.remove());
+    modal.addEventListener('click', event => { if (event.target === modal) modal.close(); });
+    modal.showModal();
   }
   function formatDate(value) { if (!value) return 'Date inconnue'; const parsed = new Date(`${value}T00:00:00`); return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('fr-FR'); }
   function formatDateTime(value) { if (!value) return 'date inconnue'; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('fr-FR'); }
