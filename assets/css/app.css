@@ -342,6 +342,8 @@
     .card-btn-delete:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
     .card-btn-tag:hover    { background: var(--surface3);  color: var(--text); }
     .tag-shortlist-active { background: var(--go-bg)     !important; color: var(--go)     !important; border-color: var(--go-border)     !important; }
+    .tag-a_visiter-active { background:#e2f3fd!important;color:#174b70!important;border-color:#78bce8!important; }
+    .tag-visite-active    { background:#1769aa!important;color:#fff!important;border-color:#1769aa!important; }
     .tag-ecartee-active   { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: var(--danger-border) !important; }
 
     /* ── Badge sélection sur vignette ─────────────────────────── */
@@ -360,6 +362,8 @@
       letter-spacing: .06em;
     }
     .badge-shortlist { background: var(--go);      color: var(--bg); }
+    .badge-a-visiter { background:#78bce8;color:#102f49; }
+    .badge-visite    { background:#1769aa;color:#fff; }
     .badge-ecartee   { background: var(--danger);  color: var(--bg); }
 
     /* ── Modale suppression ──────────────────────────────────── */
@@ -401,6 +405,12 @@
       color: var(--text);
       font-style: italic;
     }
+    .listing-options-name { margin-bottom: 12px !important; color: var(--text) !important; font-weight: 600; }
+    .listing-visit-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .listing-visit-options button { min-height: 42px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface2); color: var(--text-2); font-weight: 600; cursor: pointer; }
+    .listing-visit-options button[data-modal-selection="a_visiter"].active { border-color: #78bce8; background: #e2f3fd; color: #174b70; }
+    .listing-visit-options button[data-modal-selection="visite"].active { border-color: #1769aa; background: #1769aa; color: #fff; }
+    .listing-options-separator { margin: 22px 0; border: 0; border-top: 1px solid var(--border); }
     .delete-modal-actions {
       display: flex;
       gap: 10px;

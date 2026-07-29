@@ -70,7 +70,7 @@
     <div class="filter-group"><h3>Prix (€)</h3><div class="range-row"><input class="filter-input" id="f-price-min" type="number" placeholder="Min"><input class="filter-input" id="f-price-max" type="number" placeholder="Max"></div></div>
     <div class="filter-group"><h3>Surface (m²)</h3><div class="range-row"><input class="filter-input" id="f-surf-min" type="number" placeholder="Min"><input class="filter-input" id="f-surf-max" type="number" placeholder="Max"></div></div>
     <div class="filter-group"><h3>Tri</h3><select class="sort-select" id="f-sort"><option value="date_desc">Plus récent</option><option value="date_asc">Plus ancien</option><option value="price_asc">Prix croissant</option><option value="price_desc">Prix décroissant</option><option value="surface_desc">Surface décroissante</option><option value="surface_asc">Surface croissante</option><option value="score_desc">Note décroissante</option><option value="score_asc">Note croissante</option></select></div>
-    <div class="filter-group"><h3>Classement</h3><div class="selection-btns" data-filter-group="user"><button class="selection-btn active" data-user-filter="all" aria-pressed="true">Tous</button><button class="selection-btn" data-user-filter="untagged" aria-pressed="false">Sans tag</button><button class="selection-btn sel-shortlist" data-user-filter="shortlist" aria-pressed="false">⭐ ShortList</button><button class="selection-btn sel-ecartee" data-user-filter="ecartee" aria-pressed="false">✕ Écartés</button></div></div>
+    <div class="filter-group"><h3>Classement</h3><div class="selection-btns" data-filter-group="user"><button class="selection-btn active" data-user-filter="all" aria-pressed="true">Tous</button><button class="selection-btn" data-user-filter="untagged" aria-pressed="false">Sans tag</button><button class="selection-btn sel-shortlist" data-user-filter="shortlist" aria-pressed="false">⭐ ShortList</button><button class="selection-btn sel-a-visiter" data-user-filter="a_visiter" aria-pressed="false">A visiter</button><button class="selection-btn sel-visite" data-user-filter="visite" aria-pressed="false">Visité</button><button class="selection-btn sel-ecartee" data-user-filter="ecartee" aria-pressed="false">✕ Écartés</button></div></div>
     <div class="filter-group"><h3>Types d’analyse</h3><div class="selection-btns" data-filter-group="analysis"><button class="selection-btn" data-analysis-filter="patrimonial" aria-pressed="false">Patrimonial</button><button class="selection-btn" data-analysis-filter="locatif" aria-pressed="false">Locatif</button><button class="selection-btn" data-analysis-filter="mdb" aria-pressed="false">Marchand de biens</button></div></div>
     <button class="btn-reset" id="btn-reset">↺ Réinitialiser les filtres</button>
 
@@ -187,9 +187,16 @@
   </main>
 </div>
 
-<!-- Modale suppression -->
+<!-- Menu d’options d’une vignette -->
 <div class="delete-modal" id="delete-modal">
   <div class="delete-modal-box">
+    <h3>Plus d’options</h3>
+    <p class="listing-options-name" id="listing-options-title"></p>
+    <div class="listing-visit-options" aria-label="Classement de visite">
+      <button type="button" data-modal-selection="a_visiter">A visiter</button>
+      <button type="button" data-modal-selection="visite">Visité</button>
+    </div>
+    <hr class="listing-options-separator">
     <h3>🗑 Supprimer l'annonce</h3>
     <p>Voulez-vous supprimer <span class="delete-modal-name" id="delete-modal-title"></span> de votre galerie ?<br>Cette action est irréversible.</p>
     <div class="delete-modal-actions">
@@ -202,7 +209,7 @@
 
 <!-- La version évite de combiner ce HTML, dont les choix sont dynamiques, avec un ancien app.js en cache. -->
 <script src="assets/js/analysis-notifications.js?v=20260728-global-analysis-toast"></script>
-<script src="assets/js/app.js?v=20260729-map-property-links"></script>
+<script src="assets/js/app.js?v=20260729-listing-options"></script>
 <script src="assets/js/navigation.js"></script>
 </body>
 </html>
