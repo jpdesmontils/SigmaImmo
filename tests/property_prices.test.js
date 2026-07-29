@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(require.resolve('../assets/js/property.js'), 'utf8')
-  .replace('  load();', '  window.priceTestApi = { validTab, priceContent, resolvePropertyId };');
+  .replace('  load();', '  window.priceTestApi = { validTab, priceContent, priceMarkerColor, hasCoordinates, resolvePropertyId };');
 const panel = { innerHTML: '', querySelectorAll() { return []; } };
 const context = {
   console, URL, URLSearchParams, Intl,
@@ -38,4 +38,17 @@ test('rend une synthèse, une contre-offre et les transactions DVF', () => {
   assert.match(html, /12 rue Test/);
   assert.match(html, /10 % la médiane/);
   assert.match(html, /data-price-recalculate>Recalculer/);
+  assert.match(html, /data-price-view="list"/);
+  assert.match(html, /data-price-view="map"/);
+  assert.match(html, /data-price-map/);
+});
+
+test('calcule un dégradé du vert clair au rouge selon le prix au m²', () => {
+  assert.equal(context.window.priceTestApi.priceMarkerColor(4000, 4000, 6000), 'rgb(134, 217, 147)');
+  assert.equal(context.window.priceTestApi.priceMarkerColor(6000, 4000, 6000), 'rgb(220, 76, 76)');
+});
+
+test('écarte de la carte les ventes sans coordonnées publiées', () => {
+  assert.equal(context.window.priceTestApi.hasCoordinates({ latitude: null, longitude: null }), false);
+  assert.equal(context.window.priceTestApi.hasCoordinates({ latitude: 48.85, longitude: 2.35 }), true);
 });
