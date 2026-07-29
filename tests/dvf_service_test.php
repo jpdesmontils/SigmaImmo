@@ -63,6 +63,20 @@ dvfAssert(315000.0, $context['price'], 'Le prix textuel de favorites.json doit s
 dvfAssert(48.8, $context['latitude'], 'Les coordonnées déjà enregistrées doivent éviter d’exiger une adresse.');
 dvfAssert('', $context['query'], 'Une adresse vide doit être acceptée lorsque des coordonnées existent.');
 
+echo "-- Normalisation du type d’annonce vers les catégories DVF\n";
+$villaContext = dvfListingContext([
+    'propertyType' => "Belle villa d'architecte entièrement rénovée avec piscine proche centre ville à pieds",
+    'title' => 'Bien à vendre',
+]);
+dvfAssert('Maison', $villaContext['type'], 'Une description contenant « villa » doit être normalisée en Maison.');
+dvfAssert('Appartement', dvfPropertyType('Studio rénové'), 'Un studio doit être normalisé en Appartement.');
+$pollutedTypeContext = dvfListingContext([
+    'propertyType' => 'Bien de charme entièrement rénové',
+    'type' => '',
+    'title' => 'Maison avec jardin',
+]);
+dvfAssert('Maison', $pollutedTypeContext['type'], 'Un champ propertyType non exploitable ne doit pas masquer un titre catégorisable.');
+
 echo "-- Persistance de l’analyse Prix (data/analyses/prix/<id>.json)\n";
 $dataDirectory = sys_get_temp_dir() . '/sigma-immo-prix-' . uniqid('', true) . '/';
 $analysis = ['version' => 1, 'id' => 'bien-test', 'api_data' => ['dvf_rows' => [['id_mutation' => 'vente-1']]], 'result' => ['summary' => ['median_price_per_sqm' => 5000]]];

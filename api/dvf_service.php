@@ -99,8 +99,20 @@ function dvfListingContext($listing) {
         'longitude' => $longitude,
         'surface' => dvfListingNumber($listing, 'surface', 'surfaceText'),
         'price' => dvfListingNumber($listing, 'price', 'priceText'),
-        'type' => (string)($listing['propertyType'] ?? $listing['type'] ?? $listing['title'] ?? $listing['description'] ?? ''),
+        'type' => dvfListingPropertyType($listing),
     ];
+}
+
+function dvfListingPropertyType($listing) {
+    $fallback = '';
+    foreach (['propertyType', 'type', 'title', 'description'] as $key) {
+        $value = isset($listing[$key]) ? trim((string)$listing[$key]) : '';
+        if ($value === '') continue;
+        if ($fallback === '') $fallback = $value;
+        $normalized = dvfPropertyType($value);
+        if (in_array($normalized, ['Maison', 'Appartement'], true)) return $normalized;
+    }
+    return $fallback;
 }
 
 function dvfResolveLocation($context) {
@@ -225,8 +237,8 @@ function dvfText($row, $keys) {
 
 function dvfPropertyType($value) {
     $normalized = strtolower(trim((string)$value));
-    if (strpos($normalized, 'appart') !== false) return 'Appartement';
-    if (strpos($normalized, 'maison') !== false) return 'Maison';
+    if (preg_match('/\b(appart(?:ement)?|studio|duplex|triplex|loft)\b/u', $normalized)) return 'Appartement';
+    if (preg_match('/\b(maison|villa|pavillon|chalet)\b/u', $normalized)) return 'Maison';
     return ucfirst($normalized);
 }
 
