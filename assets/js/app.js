@@ -6,6 +6,12 @@
 // ── Config ────────────────────────────────────────────────────
 const API_URL = 'https://solenis-studio.fr/sigma-immo/api/listings.php';
 const GALLERY_STATE_KEY = 'immoagg.gallery.state';
+const SELECTIONS = {
+  shortlist: { icon: '⭐', label: 'ShortList', badge: '⭐ ShortList' },
+  a_visiter: { icon: '○', label: 'A visiter', badge: 'A visiter' },
+  visite: { icon: '✓', label: 'Visité', badge: 'Visité' },
+  ecartee: { icon: '✕', label: 'Écarter', badge: '✕ Écarté' }
+};
 
 // ── État global ───────────────────────────────────────────────
 let allListings = [];
@@ -106,6 +112,11 @@ function updateHeaderStats() {
 function initDeleteModal() {
   document.getElementById('delete-modal-cancel').addEventListener('click', closeDeleteModal);
   document.getElementById('delete-modal-confirm').addEventListener('click', confirmDelete);
+  document.querySelectorAll('[data-modal-selection]').forEach(button => button.addEventListener('click', async () => {
+    if (deleteTargetIdx === null) return;
+    await toggleSelection(deleteTargetIdx, button.dataset.modalSelection);
+    closeDeleteModal();
+  }));
   document.getElementById('delete-modal').addEventListener('click', function(e) {
     if (e.target === document.getElementById('delete-modal')) closeDeleteModal();
   });
@@ -418,9 +429,7 @@ function availableAnalysisTypes(item) {
   return Object.keys(ANALYSIS_TYPES).filter(type => item.analyses[type] && item.analyses[type].available !== false);
 }
 
-function normalizedSelection(selection) {
-  return selection === 'shortlist' || selection === 'ecartee' ? selection : '';
-}
+function normalizedSelection(selection) { return Object.prototype.hasOwnProperty.call(SELECTIONS, selection) ? selection : ''; }
 
 function analysisTagsHTML(item, className = '') {
   const labels = { locatif: 'Locatif', patrimonial: 'Patrimonial', mdb: 'Marchands de biens' };
@@ -526,7 +535,7 @@ function renderGallery() {
     });
   });
 
-  // Boutons suppression
+  // Menu « Plus d’options »
   grid.querySelectorAll('.card-btn-delete').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -568,7 +577,7 @@ function cardHTML(item, idx) {
           ${btnShort}
           ${btnEcart}
           <button class="card-btn-map" data-idx="${idx}" title="Voir sur la carte">🗺</button>
-          <button class="card-btn-delete" data-idx="${idx}" title="Plus d’options · supprimer">•••</button>
+          <button class="card-btn-delete" data-idx="${idx}" title="Plus d’options" aria-label="Plus d’options">•••</button>
         </div>
       </div>
     </div>`;
@@ -781,11 +790,8 @@ function popupHTML(item, idx) {
   const sel = normalizedSelection(item.selection);
 
   const btnStyle = 'flex:1;padding:6px 4px;border-radius:3px;cursor:pointer;font-size:11px;font-weight:600;text-align:center;border:1px solid';
-  const shortActive = sel === 'shortlist';
-  const ecartActive = sel === 'ecartee';
-
-  const btnShort = `<button data-popup-tag="shortlist" data-popup-idx="${idx}" style="${btnStyle} ${shortActive ? '#7ec99a;background:#d6f0df;color:#145a2e' : '#d0ccc3;background:#edeae3;color:#5a5850'}">⭐ ShortList</button>`;
-  const btnEcart = `<button data-popup-tag="ecartee"   data-popup-idx="${idx}" style="${btnStyle} ${ecartActive ? '#d97373;background:#fce8e8;color:#831515'   : '#d0ccc3;background:#edeae3;color:#5a5850'}">✕ Écarter</button>`;
+  const activeStyles = { shortlist: '#7ec99a;background:#d6f0df;color:#145a2e', a_visiter: '#78bce8;background:#e2f3fd;color:#174b70', visite: '#1769aa;background:#dcecf8;color:#0d4775', ecartee: '#d97373;background:#fce8e8;color:#831515' };
+  const popupButtons = Object.keys(SELECTIONS).map(key => `<button data-popup-tag="${key}" data-popup-idx="${idx}" style="${btnStyle} ${sel === key ? activeStyles[key] : '#d0ccc3;background:#edeae3;color:#5a5850'}">${SELECTIONS[key].icon} ${SELECTIONS[key].label}</button>`).join('');
 
   return `
     <div style="font-family:Inter,sans-serif;font-size:13px;min-width:220px;color:#16150f;">
@@ -795,7 +801,7 @@ function popupHTML(item, idx) {
       ${item.price ? `<div style="font-family:'JetBrains Mono',monospace;color:#7a4108;font-weight:700;margin-bottom:2px;">${formatPrice(item.price)}</div>` : ''}
       ${item.surface ? `<div style="color:#9a9890;font-size:12px;margin-bottom:6px;">${item.surface} m²</div>` : ''}
       <div style="display:flex;gap:5px;margin-bottom:6px;">
-        ${btnShort}${btnEcart}
+        ${popupButtons}
       </div>
       <div style="display:flex;gap:5px;">
         <a href="${propertyUrl(item)}" data-open-property="${idx}" style="${btnStyle} #16150f;background:#16150f;color:#f5f3ee;flex:1;text-decoration:none;display:block;">Voir Fiche</a>
@@ -1030,12 +1036,8 @@ function viewerMetaHTML(item) {
 }
 
 function viewerSelectionButtonsHTML(idx, sel) {
-  const options = [
-    { key: 'shortlist', label: '⭐ ShortList' },
-    { key: 'ecartee',   label: '✕ Écarter' }
-  ];
-  return options.map(o =>
-    `<button class="viewer-sel-btn${sel === o.key ? ` tag-${o.key}-active` : ''}" data-sel="${o.key}" data-idx="${idx}">${o.label}</button>`
+  return Object.keys(SELECTIONS).map(key =>
+    `<button class="viewer-sel-btn${sel === key ? ` tag-${key}-active` : ''}" data-sel="${key}" data-idx="${idx}">${SELECTIONS[key].icon} ${SELECTIONS[key].label}</button>`
   ).join('');
 }
 
@@ -1079,25 +1081,19 @@ async function toggleSelection(idx, sel) {
 }
 
 function selectionTagHTML(selection) {
-  if (selection === 'shortlist') return '<span class="tag badge-shortlist">⭐ ShortList</span>';
-  if (selection === 'ecartee') return '<span class="tag badge-ecartee">✕ Écarté</span>';
-  return '';
+  const option = SELECTIONS[selection];
+  return option ? `<span class="tag badge-${selection.replace('_', '-')}">${option.badge}</span>` : '';
 }
 
 function selectionBadgeHTML(selection) {
-  if (selection === 'shortlist') return '<div class="card-selection-badge badge-shortlist">⭐ ShortList</div>';
-  if (selection === 'ecartee') return '<div class="card-selection-badge badge-ecartee">✕ Écartée</div>';
-  return '';
+  const option = SELECTIONS[selection];
+  return option ? `<div class="card-selection-badge badge-${selection.replace('_', '-')}">${option.badge}</div>` : '';
 }
 
 function selectionButtonHTML(idx, selection, className) {
-  const labels = {
-    shortlist: { label: '⭐', title: 'ShortList' },
-    ecartee: { label: '✕', title: 'Écarter' }
-  };
-  const option = labels[selection];
+  const option = SELECTIONS[selection];
   const active = filtered[idx].selection === selection ? ` tag-${selection}-active` : '';
-  return `<button class="${className}${active}" data-idx="${idx}" data-sel="${selection}" title="${option.title}" aria-label="${option.title}">${option.label}</button>`;
+  return `<button class="${className}${active}" data-idx="${idx}" data-sel="${selection}" title="${option.label}" aria-label="${option.label}">${option.icon}</button>`;
 }
 
 // ── Actions carte depuis galerie ─────────────────────────────
@@ -1124,7 +1120,14 @@ let deleteTargetIdx = null;
 function openDeleteModal(idx) {
   deleteTargetIdx = idx;
   const item = filtered[idx];
+  const selection = item ? normalizedSelection(item.selection) : '';
+  document.getElementById('listing-options-title').textContent = item ? item.title || 'Cette annonce' : 'Cette annonce';
   document.getElementById('delete-modal-title').textContent = item ? item.title || 'cette annonce' : 'cette annonce';
+  document.querySelectorAll('[data-modal-selection]').forEach(button => {
+    const active = selection === button.dataset.modalSelection;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
   document.getElementById('delete-modal').classList.add('open');
 }
 

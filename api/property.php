@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     if (!is_array($payload)) respond(400, ['ok' => false, 'error' => 'Corps JSON invalide.']);
     // Les compléments enrichissent les champs canoniques : aucun second objet
     // de paramètres n'est créé et une synchronisation conserve ces valeurs.
-    $fields = ['address' => 'text', 'location' => 'text', 'price' => 'number', 'surface' => 'number', 'rooms' => 'text', 'terrain' => 'number', 'dpe' => 'energy', 'ges' => 'energy'];
+    $fields = ['address' => 'text', 'location' => 'text', 'price' => 'number', 'surface' => 'number', 'rooms' => 'text', 'terrain' => 'number', 'dpe' => 'energy', 'ges' => 'energy', 'notes' => 'notes', 'visitAt' => 'datetime', 'agentName' => 'text', 'agentPhone' => 'phone', 'agentEmail' => 'email'];
     $previousAddress = isset($favorites[$key]['address']) ? trim((string)$favorites[$key]['address']) : '';
     foreach ($fields as $field => $kind) if (array_key_exists($field, $payload)) {
         $value = $payload[$field];
@@ -32,7 +32,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
             $energy = strtoupper(trim((string)$value));
             if (!preg_match('/^[A-G]$/', $energy)) respond(400, ['ok' => false, 'error' => 'La note énergétique doit être comprise entre A et G.']);
             $favorites[$key][$field] = $energy;
-        } else $favorites[$key][$field] = mb_substr(trim(strip_tags((string)$value)), 0, 300);
+        } elseif ($kind === 'datetime') {
+            $date = trim((string)$value);
+            if ($date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $date)) respond(400, ['ok' => false, 'error' => 'La date de visite est invalide.']);
+            $favorites[$key][$field] = $date;
+        } elseif ($kind === 'email') {
+            $email = mb_substr(trim((string)$value), 0, 254);
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) respond(400, ['ok' => false, 'error' => 'L’adresse e-mail de l’agent est invalide.']);
+            $favorites[$key][$field] = $email;
+        } elseif ($kind === 'phone') {
+            $phone = mb_substr(trim(strip_tags((string)$value)), 0, 40);
+            if ($phone !== '' && !preg_match('/^[0-9+().\s-]+$/', $phone)) respond(400, ['ok' => false, 'error' => 'Le téléphone de l’agent est invalide.']);
+            $favorites[$key][$field] = $phone;
+        } elseif ($kind === 'notes') $favorites[$key][$field] = mb_substr(trim(strip_tags((string)$value)), 0, 10000);
+        else $favorites[$key][$field] = mb_substr(trim(strip_tags((string)$value)), 0, 300);
     }
     $favorites[$key]['updatedAt'] = time() * 1000;
     writeJson(FAVORITES_FILE, $favorites);
