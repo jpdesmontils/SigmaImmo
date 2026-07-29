@@ -86,6 +86,15 @@ dvfAssert(true, is_file($dataDirectory . 'analyses/prix/bien-test.json'), 'Le fi
 unlink($dataDirectory . 'analyses/prix/bien-test.json');
 rmdir($dataDirectory . 'analyses/prix'); rmdir($dataDirectory . 'analyses'); rmdir($dataDirectory);
 
+echo "-- Priorité de l’adresse exacte sur les coordonnées de l’annonce\n";
+$exactContext = dvfListingContext(['address' => '10 rue de la Paix, Paris', 'location' => 'Paris', 'coords' => ['lat' => 1.2, 'lng' => 3.4]]);
+dvfAssert('10 rue de la Paix, Paris', $exactContext['exact_address'], 'L’adresse exacte doit être identifiable séparément de la localisation de repli.');
+$oldCoordinateAnalysis = ['input' => ['query' => '10 rue de la Paix, Paris']];
+dvfAssert(false, dvfAnalysisMatchesListing($oldCoordinateAnalysis, ['address' => '10 rue de la Paix, Paris']), 'Une ancienne analyse sans centre issu de l’adresse exacte doit être recalculée.');
+$exactAddressAnalysis = ['input' => ['exact_address' => '10 rue de la Paix, Paris']];
+dvfAssert(true, dvfAnalysisMatchesListing($exactAddressAnalysis, ['address' => '10 rue de la Paix, Paris']), 'Une analyse centrée sur l’adresse exacte courante doit être réutilisable.');
+dvfAssert(false, dvfAnalysisMatchesListing($exactAddressAnalysis, ['address' => '12 rue de la Paix, Paris']), 'Un changement d’adresse exacte doit invalider l’analyse Prix.');
+
 echo "-- Résolution du code département depuis le code commune INSEE (correctif geo-dvf)\n";
 dvfAssert('11', dvfDepartmentCode('11106'), 'Coursan (11106) doit être rattachée au département 11 (Aude).');
 dvfAssert('75', dvfDepartmentCode('75056'), 'Paris (75056) doit être rattachée au département 75.');

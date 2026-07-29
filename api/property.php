@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     // Les compléments enrichissent les champs canoniques : aucun second objet
     // de paramètres n'est créé et une synchronisation conserve ces valeurs.
     $fields = ['address' => 'text', 'location' => 'text', 'price' => 'number', 'surface' => 'number', 'rooms' => 'text', 'terrain' => 'number', 'dpe' => 'energy', 'ges' => 'energy'];
+    $previousAddress = isset($favorites[$key]['address']) ? trim((string)$favorites[$key]['address']) : '';
     foreach ($fields as $field => $kind) if (array_key_exists($field, $payload)) {
         $value = $payload[$field];
         if ($kind === 'number') $favorites[$key][$field] = $value === '' || $value === null ? null : max(0, (float)$value);
@@ -35,6 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     }
     $favorites[$key]['updatedAt'] = time() * 1000;
     writeJson(FAVORITES_FILE, $favorites);
+    if (array_key_exists('address', $payload) && $previousAddress !== (isset($favorites[$key]['address']) ? $favorites[$key]['address'] : '')) {
+        $priceAnalysis = DATA_DIR . 'analyses/prix/' . $id . '.json';
+        if (is_file($priceAnalysis)) @unlink($priceAnalysis);
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
@@ -69,7 +74,7 @@ function analysisRequirements($listing) {
     foreach (analysisTypes() as $type) {
         $missing = [];
         foreach ($definitions as $field => $definition) if (!isset($listing[$field]) || $listing[$field] === '' || $listing[$field] === null) $missing[] = ['field' => $field] + $definition;
-        $result[$type] = ['promptVariables' => $type === 'patrimonial' ? ['annonce_complete', 'analyse_trajet'] : ['annonce_complete'], 'missing' => $missing];
+        $result[$type] = ['promptVariables' => $type === 'patrimonial' ? ['annonce_complete', 'analyse_trajet', 'analyse_prix'] : ['annonce_complete'], 'missing' => $missing];
     }
     return $result;
 }
