@@ -138,6 +138,9 @@ function dvfReadAnalysis($id, $dataDirectory) {
 
 function dvfAnalysisMatchesListing($analysis, $listing) {
     if (!is_array($analysis) || !isset($analysis['input']) || !is_array($analysis['input'])) return false;
+    if (isset($analysis['result']['transactions']) && is_array($analysis['result']['transactions'])) {
+        foreach ($analysis['result']['transactions'] as $transaction) if (!array_key_exists('land_surface', $transaction)) return false;
+    }
     $current = dvfListingContext($listing);
     $storedAddress = isset($analysis['input']['exact_address']) ? trim((string)$analysis['input']['exact_address']) : '';
     return $storedAddress === $current['exact_address'];
@@ -175,7 +178,7 @@ function dvfCreateAnalysis($id, $listing, $dataDirectory, $logContext = []) {
     $capturedAt = gmdate('c');
     $source = ['name' => 'DVF — DGFiP / data.gouv.fr', 'url' => 'https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/', 'limitations' => 'Les données DVF décrivent des mutations enregistrées et ne reflètent ni l’état intérieur, ni les travaux, ni les conditions particulières de chaque vente.'];
     $result = ['source' => $source, 'captured_at' => $capturedAt, 'property' => ['asking_price' => $context['price'], 'surface' => $context['surface'], 'type' => $propertyType], 'location' => $origin, 'perimeter' => $selection['perimeter'], 'transactions' => $selection['items'], 'summary' => dvfSummary($selection['items'], $context['price'], $context['surface'])];
-    $analysis = ['version' => 1, 'id' => $id, 'captured_at' => $capturedAt, 'input' => $context, 'api_data' => ['geocoding' => $origin, 'dvf_rows' => $rows], 'result' => $result];
+    $analysis = ['version' => 2, 'id' => $id, 'captured_at' => $capturedAt, 'input' => $context, 'api_data' => ['geocoding' => $origin, 'dvf_rows' => $rows], 'result' => $result];
     dvfWriteAnalysis($id, $dataDirectory, $analysis);
     return $analysis;
 }
@@ -271,6 +274,20 @@ function dvfText($row, $keys) {
     return '';
 }
 
+function dvfParcelKey($row) {
+    $parcelId = dvfText($row, ['id_parcelle']);
+    if ($parcelId !== '') return $parcelId;
+    $parts = [dvfText($row, ['code_commune']), dvfText($row, ['prefixe_de_section', 'prefixe_section']), dvfText($row, ['section']), dvfText($row, ['numero_plan', 'no_plan'])];
+    return implode('|', $parts) === '|||' ? '' : implode('|', $parts);
+}
+
+function dvfMutationKey($row) {
+    $key = dvfText($row, ['id_mutation']);
+    if ($key !== '') return $key;
+    $address = trim(dvfText($row, ['adresse_numero']) . ' ' . dvfText($row, ['adresse_suffixe']) . ' ' . dvfText($row, ['adresse_nom_voie', 'nom_voie']));
+    return dvfText($row, ['date_mutation']) . '|' . dvfNumber($row, ['valeur_fonciere']) . '|' . $address;
+}
+
 function dvfPropertyType($value) {
     $normalized = strtolower(trim((string)$value));
     if (preg_match('/\b(appart(?:ement)?|studio|duplex|triplex|loft)\b/u', $normalized)) return 'Appartement';
@@ -296,16 +313,25 @@ function dvfNormalizeTransactions($rows, $origin) {
         if (!$value || !$surface || !in_array($type, ['Maison', 'Appartement'], true)) continue;
         $date = dvfText($row, ['date_mutation']);
         $address = trim(dvfText($row, ['adresse_numero']) . ' ' . dvfText($row, ['adresse_suffixe']) . ' ' . dvfText($row, ['adresse_nom_voie', 'nom_voie']));
-        $key = dvfText($row, ['id_mutation']);
-        if ($key === '') $key = $date . '|' . $value . '|' . $address;
-        if (!isset($groups[$key])) $groups[$key] = ['id' => $key, 'date' => $date, 'address' => $address ?: 'Adresse non publiée', 'type' => $type, 'surface' => 0.0, 'value' => $value, 'rooms' => 0, 'latitude' => dvfNumber($row, ['latitude']), 'longitude' => dvfNumber($row, ['longitude'])];
+        $key = dvfMutationKey($row);
+        if (!isset($groups[$key])) $groups[$key] = ['id' => $key, 'date' => $date, 'address' => $address ?: 'Adresse non publiée', 'type' => $type, 'surface' => 0.0, 'land_surface' => null, 'land_parcels' => [], 'value' => $value, 'rooms' => 0, 'latitude' => dvfNumber($row, ['latitude']), 'longitude' => dvfNumber($row, ['longitude'])];
         $groups[$key]['surface'] += $surface;
         $rooms = dvfNumber($row, ['nombre_pieces_principales']);
         if ($rooms) $groups[$key]['rooms'] += (int)$rooms;
     }
+    foreach ($rows as $row) {
+        $key = dvfMutationKey($row);
+        if (!isset($groups[$key])) continue;
+        $landSurface = dvfNumber($row, ['surface_terrain']);
+        $parcelKey = dvfParcelKey($row);
+        if ($landSurface === null || $landSurface <= 0 || $parcelKey === '' || isset($groups[$key]['land_parcels'][$parcelKey])) continue;
+        $groups[$key]['land_parcels'][$parcelKey] = $landSurface;
+        $groups[$key]['land_surface'] = array_sum($groups[$key]['land_parcels']);
+    }
     $transactions = [];
     foreach ($groups as $item) {
         if ($item['surface'] <= 0) continue;
+        unset($item['land_parcels']);
         $item['price_per_sqm'] = round($item['value'] / $item['surface']);
         if ($item['price_per_sqm'] < 200 || $item['price_per_sqm'] > 30000) continue;
         $item['distance_km'] = dvfDistance($origin['latitude'], $origin['longitude'], $item['latitude'], $item['longitude']);

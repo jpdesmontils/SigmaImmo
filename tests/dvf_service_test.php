@@ -29,12 +29,17 @@ $rows = [
     ['id_mutation' => 'vente-1', 'date_mutation' => '2025-06-02', 'nature_mutation' => 'Vente', 'valeur_fonciere' => '300000', 'type_local' => 'Appartement', 'surface_reelle_bati' => '40', 'nombre_pieces_principales' => '2', 'adresse_numero' => '12', 'adresse_nom_voie' => 'RUE TEST', 'latitude' => 48.8567, 'longitude' => 2.3523],
     ['id_mutation' => 'vente-1', 'date_mutation' => '2025-06-02', 'nature_mutation' => 'Vente', 'valeur_fonciere' => '300000', 'type_local' => 'Appartement', 'surface_reelle_bati' => '20', 'nombre_pieces_principales' => '1', 'adresse_numero' => '12', 'adresse_nom_voie' => 'RUE TEST', 'latitude' => 48.8567, 'longitude' => 2.3523],
     ['id_mutation' => 'vente-2', 'date_mutation' => '2025-04-01', 'nature_mutation' => 'Vente', 'valeur_fonciere' => '270000', 'type_local' => 'Maison', 'surface_reelle_bati' => '60', 'latitude' => 48.87, 'longitude' => 2.36],
+    ['id_mutation' => 'vente-1', 'nature_mutation' => 'Vente', 'id_parcelle' => 'parcelle-a', 'surface_terrain' => '120'],
+    ['id_mutation' => 'vente-1', 'nature_mutation' => 'Vente', 'id_parcelle' => 'parcelle-b', 'surface_terrain' => '80'],
+    ['id_mutation' => 'vente-1', 'nature_mutation' => 'Vente', 'id_parcelle' => 'parcelle-a', 'surface_terrain' => '120'],
     ['id_mutation' => 'don-1', 'date_mutation' => '2025-05-01', 'nature_mutation' => 'Donation', 'valeur_fonciere' => '280000', 'type_local' => 'Appartement', 'surface_reelle_bati' => '60'],
 ];
 
 $transactions = dvfNormalizeTransactions($rows, $origin);
 dvfAssert(2, count($transactions), 'Les ventes doivent être regroupées par mutation et les donations exclues.');
 dvfAssert(60.0, $transactions[0]['surface'], 'Les surfaces des lots d’une mutation doivent être additionnées.');
+dvfAssert(200.0, $transactions[0]['land_surface'], 'Les surfaces des parcelles distinctes doivent être additionnées une seule fois.');
+dvfAssert(null, $transactions[1]['land_surface'], 'Une vente sans surface de terrain publiée doit conserver une valeur absente.');
 dvfAssert(5000.0, $transactions[0]['price_per_sqm'], 'Le prix au mètre carré doit utiliser la mutation regroupée.');
 $diagnostics = dvfTransactionDiagnostics($transactions);
 dvfAssert(['Appartement' => 1, 'Maison' => 1], $diagnostics['type_counts'], 'Le diagnostic doit compter les transactions normalisées par type de bien.');
