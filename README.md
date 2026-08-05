@@ -2,7 +2,7 @@
 
 SigmaImmo est un MVP PHP monolithique qui agrège des favoris immobiliers, affiche les annonces côté serveur/statique et expose des APIs JSON pour l'application et l'extension Chrome.
 
-Cette version introduit un socle SQLite progressif : les lectures et écritures critiques des favoris passent par SQLite, tandis que les fichiers JSON existants restent conservés comme export/backup temporaire pendant la migration.
+Cette version introduit un socle SQLite progressif : les lectures et écritures critiques des favoris passent par SQLite. Les fichiers JSON existants peuvent être importés manuellement, mais l'application ne relit plus implicitement `data/favorites.json`.
 
 ## Prérequis
 
@@ -73,6 +73,7 @@ php scripts/import_properties_json.php /chemin/vers/export.json
 ```
 
 Le script crée une sauvegarde du fichier JSON d'origine avec un suffixe `.bak-YYYYMMDDHHMMSS`.
+L'ancien script `scripts/import_favorites_json.php` reste disponible comme alias de migration, mais il exige également un chemin explicite et ne pointe plus par défaut vers `data/favorites.json`.
 
 ## Lancement local
 
