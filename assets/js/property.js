@@ -154,6 +154,21 @@
     await saveFields({ primaryResidenceCity: city });
     if (form.get('saveDefault')) await saveDefaultResidenceCity(city);
   }
+  function openConfigModal() {
+    const modal = document.createElement('div');
+    modal.className = 'property-modal';
+    modal.innerHTML = `<form class="property-modal-box property-config-form" role="dialog" aria-modal="true"><h2>Configuration de la fiche</h2><p>Ajustez les paramètres utilisés pour les analyses de ce bien.</p>${residenceOptionsHtml('config')}<div class="analysis-form-actions"><button type="button" class="property-secondary" data-close>Annuler</button><button class="property-primary">Enregistrer</button></div></form>`;
+    const close = () => modal.remove();
+    modal.addEventListener('click', event => { if (event.target === modal) close(); });
+    modal.querySelector('[data-close]').addEventListener('click', close);
+    modal.querySelector('form').addEventListener('submit', async event => {
+      event.preventDefault();
+      try { await persistResidenceOptions(new FormData(event.currentTarget)); close(); toast('Configuration enregistrée.'); }
+      catch (error) { toast(error.message); }
+    });
+    document.body.append(modal);
+    modal.querySelector('input').focus();
+  }
   function openPatrimonialRecalculationModal() {
     const modal = document.createElement('div');
     modal.className = 'property-modal';
