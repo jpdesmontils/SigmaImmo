@@ -14,11 +14,14 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-Api-Key');
 
+set_exception_handler('jsonFatal');
+set_error_handler('jsonPhpError');
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { jsonError(405, 'Method not allowed'); }
 
 // ── Config ────────────────────────────────────────────────────
-define('API_KEY',       file_get_contents('keyfile.txt') ?: 'CHANGE_ME');
+define('API_KEY',       readApiKey());
 define('DATA_DIR',      __DIR__ . '/../data/');
 define('MAX_FAVORITES', 1000);
 
@@ -40,6 +43,9 @@ if (!$data || !is_array($data)) {
 $stats = ['favorites_added' => 0, 'favorites_updated' => 0];
 
 if (!empty($data['favorites'])) {
+    if (!is_array($data['favorites'])) {
+        jsonError(400, 'favorites must be an array');
+    }
     $stats = array_merge($stats, processFavorites($data['favorites']));
 }
 
@@ -196,13 +202,43 @@ function normalizeUrl($url) {
     return trim($parts['path'] ?? $url, '/');
 }
 
+function readApiKey() {
+    $path = __DIR__ . '/keyfile.txt';
+    if (!is_file($path) || !is_readable($path)) {
+        appLog('app', 'sync.keyfile_missing', array('path' => $path));
+        return 'CHANGE_ME';
+    }
+    $key = trim((string) file_get_contents($path));
+    return $key !== '' ? $key : 'CHANGE_ME';
+}
+
 function jsonOk($data) {
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-function jsonError($code, $msg) {
+function jsonError($code, $msg, $details = null) {
     http_response_code($code);
-    echo json_encode(['error' => $msg]);
+    $payload = array('error' => $msg);
+    if ($details !== null) {
+        $payload['details'] = $details;
+    }
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit;
+}
+
+function jsonFatal($e) {
+    appLog('app', 'sync.fatal', array(
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ));
+    jsonError(500, 'Internal server error', 'Consultez log/app.log pour le détail serveur.');
+}
+
+function jsonPhpError($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        return false;
+    }
+    throw new ErrorException($message, 0, $severity, $file, $line);
 }
