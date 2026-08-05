@@ -141,22 +141,30 @@
   function formatDateTime(value) { if (!value) return 'date inconnue'; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('fr-FR'); }
   function formatNumber(value, digits = 0) { return Number(value).toLocaleString('fr-FR', { maximumFractionDigits: digits }); }
 
-  function openConfigModal() {
+  function residenceCityValue() { return data.listing.primaryResidenceCity || data.settings?.primaryResidenceCity || 'Paris'; }
+  function residenceOptionsHtml(prefix) {
+    const city = residenceCityValue();
+    return `<div class="analysis-residence-options"><div class="property-field"><label for="${prefix}-primary-residence-city">Ville de résidence principale utilisée pour l’analyse</label><input id="${prefix}-primary-residence-city" name="primaryResidenceCity" maxlength="120" value="${esc(city)}" required><small>Cette ville sert d’origine au trajet de l’analyse patrimoniale.</small></div><label class="property-checkbox"><input type="checkbox" name="saveDefault" value="1" checked> Utiliser cette ville pour toutes les autres annonces par défaut</label></div>`;
+  }
+  async function saveDefaultResidenceCity(city) {
+    data.settings = (await request(new URL('settings.php', API_ROOT), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ primaryResidenceCity: city }) })).settings;
+  }
+  async function persistResidenceOptions(form) {
+    const city = form.get('primaryResidenceCity');
+    await saveFields({ primaryResidenceCity: city });
+    if (form.get('saveDefault')) await saveDefaultResidenceCity(city);
+  }
+  function openPatrimonialRecalculationModal() {
     const modal = document.createElement('div');
     modal.className = 'property-modal';
-    const currentCity = data.listing.primaryResidenceCity || data.settings?.primaryResidenceCity || 'Paris';
-    modal.innerHTML = `<form class="property-modal-box property-config-form" role="dialog" aria-modal="true"><h2>Configuration de l’analyse</h2><p>Cette ville sert d’origine à l’analyse trajet de cette annonce. La valeur par défaut des paramètres serveur est ${esc(data.settings?.primaryResidenceCity || 'Paris')}.</p><div class="property-field"><label for="primary-residence-city">Ville de résidence principale</label><input id="primary-residence-city" name="primaryResidenceCity" maxlength="120" value="${esc(currentCity)}" required></div><label class="property-checkbox"><input type="checkbox" name="saveDefault" value="1"> Utiliser aussi cette ville comme valeur par défaut serveur</label><div class="analysis-form-actions"><button type="button" class="property-secondary" data-close>Annuler</button><button class="property-primary">Enregistrer</button></div></form>`;
+    modal.innerHTML = `<form class="property-modal-box property-config-form" role="dialog" aria-modal="true"><h2>Recalculer l’analyse patrimoine</h2><p>Confirmez le recalcul et ajustez si besoin la ville d’origine utilisée pour l’analyse trajet.</p>${residenceOptionsHtml('recalc')}<div class="analysis-form-actions"><button type="button" class="property-secondary" data-close>Annuler</button><button class="property-primary">Recalculer</button></div></form>`;
     const close = () => modal.remove();
     modal.addEventListener('click', event => { if (event.target === modal) close(); });
     modal.querySelector('[data-close]').addEventListener('click', close);
     modal.querySelector('form').addEventListener('submit', async event => {
       event.preventDefault();
-      const form = new FormData(event.currentTarget), city = form.get('primaryResidenceCity');
-      try {
-        await saveFields({ primaryResidenceCity: city });
-        if (form.get('saveDefault')) data.settings = (await request(new URL('settings.php', API_ROOT), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ primaryResidenceCity: city }) })).settings;
-        close(); renderShell(); selectTab(activeTab || 'annonce'); toast('Configuration enregistrée.');
-      } catch (error) { toast(error.message); }
+      try { await persistResidenceOptions(new FormData(event.currentTarget)); close(); await startAnalysis('patrimonial'); }
+      catch (error) { toast(error.message); }
     });
     document.body.append(modal);
     modal.querySelector('input').focus();
@@ -255,17 +263,22 @@
     if (summary && summary.available !== false) return renderAvailable(type);
     const missing = data.requirements[type]?.missing || [];
     if (missing.length) return renderForm(type, missing);
+    if (type === 'patrimonial') {
+      panel().innerHTML = state(type, `Lancer l’analyse ${types[type].toLowerCase()}`, 'Les données indispensables sont présentes. Choisissez la ville d’origine utilisée pour le trajet.', `<form data-analysis-launch>${residenceOptionsHtml('launch')}<div class="analysis-form-actions"><button class="property-primary">Lancer l’analyse</button></div></form>`);
+      panel().querySelector('[data-analysis-launch]').addEventListener('submit', async event => { event.preventDefault(); try { await persistResidenceOptions(new FormData(event.currentTarget)); await startAnalysis(type); } catch (error) { toast(error.message); } });
+      return;
+    }
     panel().innerHTML = state(type, `Lancer l’analyse ${types[type].toLowerCase()}`, 'Les données indispensables sont présentes. L’analyse est calculée indépendamment des autres opportunités.', `<button class="property-primary" data-start>Lancer l’analyse</button>`);
     panel().querySelector('[data-start]').addEventListener('click',()=>startAnalysis(type));
   }
   function renderForm(type, missing) {
-    panel().innerHTML = `<div class="analysis-state"><form class="analysis-state-card analysis-form" id="requirements-form"><div class="analysis-eyebrow">${esc(types[type])} · données indispensables</div><h2>Compléter avant l’analyse</h2><p>Seuls les champs absents et réellement nécessaires au prompt sont demandés.</p><div class="analysis-form-grid">${missing.map(field=>`<div class="property-field"><label for="req-${field.field}">${esc(field.label)} *</label><input id="req-${field.field}" name="${field.field}" type="${field.type}" ${field.type === 'number' ? 'min="0"' : ''} ${field.pattern ? `pattern="${esc(field.pattern)}"` : ''} ${field.maxlength ? `maxlength="${esc(field.maxlength)}"` : ''} value="${esc(data.listing[field.field] || '')}" required></div>`).join('')}</div><div class="property-panel property-field"><label for="req-address">Adresse exacte — facultatif</label><input id="req-address" name="address" value="${esc(data.listing.address || data.listing.location || '')}"><small>Son absence ne bloque pas le calcul.</small></div><div class="analysis-form-actions"><button type="button" class="property-secondary" data-cancel>Annuler</button><button class="property-primary">Enregistrer et lancer</button></div></form></div>`;
+    panel().innerHTML = `<div class="analysis-state"><form class="analysis-state-card analysis-form" id="requirements-form"><div class="analysis-eyebrow">${esc(types[type])} · données indispensables</div><h2>Compléter avant l’analyse</h2><p>Seuls les champs absents et réellement nécessaires au prompt sont demandés.</p><div class="analysis-form-grid">${missing.map(field=>`<div class="property-field"><label for="req-${field.field}">${esc(field.label)} *</label><input id="req-${field.field}" name="${field.field}" type="${field.type}" ${field.type === 'number' ? 'min="0"' : ''} ${field.pattern ? `pattern="${esc(field.pattern)}"` : ''} ${field.maxlength ? `maxlength="${esc(field.maxlength)}"` : ''} value="${esc(data.listing[field.field] || '')}" required></div>`).join('')}</div>${type === 'patrimonial' ? residenceOptionsHtml('requirements') : ''}<div class="property-panel property-field"><label for="req-address">Adresse exacte — facultatif</label><input id="req-address" name="address" value="${esc(data.listing.address || data.listing.location || '')}"><small>Son absence ne bloque pas le calcul.</small></div><div class="analysis-form-actions"><button type="button" class="property-secondary" data-cancel>Annuler</button><button class="property-primary">Enregistrer et lancer</button></div></form></div>`;
     panel().querySelector('[data-cancel]').addEventListener('click',()=>selectTab('annonce'));
-    panel().querySelector('form').addEventListener('submit', async event => { event.preventDefault(); const values=Object.fromEntries(new FormData(event.currentTarget)); await saveFields(values); await startAnalysis(type); });
+    panel().querySelector('form').addEventListener('submit', async event => { event.preventDefault(); const form = new FormData(event.currentTarget), values=Object.fromEntries(form); if (type === 'patrimonial') { await persistResidenceOptions(form); delete values.saveDefault; } await saveFields(values); await startAnalysis(type); });
   }
   function renderRunning(type, job) { panel().innerHTML = state(type,'Analyse en cours',`Lancée ${job.started_at ? new Date(job.started_at).toLocaleString('fr-FR') : 'il y a quelques instants'}. Vous pouvez changer d’onglet et revenir plus tard.`, '<div class="analysis-spinner" aria-hidden="true"></div>'); scheduleAnalysisRefresh(type); }
   function renderFailed(type, job) { panel().innerHTML=state(type,"L’analyse n’a pas abouti",job.error||'Une erreur technique est survenue.',`<button class="property-primary" data-retry>Réessayer</button> <button class="property-danger" data-delete>Supprimer l’analyse</button>`,'analysis-error'); panel().querySelector('[data-retry]').onclick=()=>startAnalysis(type);panel().querySelector('[data-delete]').onclick=()=>deleteAnalysis(type); }
-  async function renderAvailable(type) { const renderId=id; panel().innerHTML=`<div class="analysis-toolbar"><button class="property-secondary" data-recalculate>Recalculer</button><button class="property-danger" data-delete>Supprimer l’analyse</button></div><div class="native-analysis" data-analysis-content>Chargement de l’analyse…</div>`;panel().querySelector('[data-recalculate]').onclick=()=>startAnalysis(type);panel().querySelector('[data-delete]').onclick=()=>deleteAnalysis(type); try { const template=await analysisTemplate(type); if(id!==renderId||localStorage.getItem(lastTabKey)!==type)return; await window.ImmoAnalysisRenderer.render({target:panel().querySelector('[data-analysis-content]'),type,id,template}); } catch(error) { const target=panel().querySelector('[data-analysis-content]'); if(target)target.textContent=`Analyse indisponible : ${error.message}`; } }
+  async function renderAvailable(type) { const renderId=id; panel().innerHTML=`<div class="analysis-toolbar"><button class="property-secondary" data-recalculate>Recalculer</button><button class="property-danger" data-delete>Supprimer l’analyse</button></div><div class="native-analysis" data-analysis-content>Chargement de l’analyse…</div>`;panel().querySelector('[data-recalculate]').onclick=()=>type === 'patrimonial' ? openPatrimonialRecalculationModal() : startAnalysis(type);panel().querySelector('[data-delete]').onclick=()=>deleteAnalysis(type); try { const template=await analysisTemplate(type); if(id!==renderId||localStorage.getItem(lastTabKey)!==type)return; await window.ImmoAnalysisRenderer.render({target:panel().querySelector('[data-analysis-content]'),type,id,template}); } catch(error) { const target=panel().querySelector('[data-analysis-content]'); if(target)target.textContent=`Analyse indisponible : ${error.message}`; } }
   async function analysisTemplate(type) { if (templateCache.has(type)) return templateCache.get(type); const response=await fetch(`templates/fiche-investissement-${type}.html`); if(!response.ok)throw new Error(`modèle HTTP ${response.status}`); const documentTemplate=new DOMParser().parseFromString(await response.text(),'text/html'); const template=documentTemplate.getElementById('fiche-template')?.innerHTML; if(!template)throw new Error('modèle de fiche absent'); templateCache.set(type,template); return template; }
   function state(type,title,message,actions,extra=''){return `<div class="analysis-state"><div class="analysis-state-card ${extra}"><div class="analysis-eyebrow">${type === 'prix' ? 'Données de marché' : `Analyse ${esc(types[type])}`}</div><h2>${esc(title)}</h2><p>${esc(message)}</p>${actions}</div></div>`}
   async function saveAddress(event){event.preventDefault();await saveFields({address:new FormData(event.currentTarget).get('address')});toast('Adresse enregistrée.');}
