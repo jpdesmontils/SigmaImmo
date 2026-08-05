@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync(require.resolve('../app.js'), 'utf8');
 const context = { console, URL, window: {}, document: { addEventListener() {} } };
 vm.createContext(context);
-vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, renderCard: item => { filtered = [item]; return cardHTML(item, 0); }, popupHTML, compareListings };`, context);
+vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, renderCard: item => { filtered = [item]; return cardHTML(item, 0); }, popupHTML, compareListings, shouldOpenInApp, setInAppPropertyId };`, context);
 
 const baseFilters = overrides => ({
   userSelections: new Set(), analysisTypes: new Set(), city: '', priceMin: null,
@@ -35,6 +35,17 @@ test('traite les anciens investissements comme sans tag', () => {
 test('n’affiche pas de cercle sans score mais conserve zéro sur cent', () => {
   assert.equal(context.testApi.scoreCircleHTML({ analyses: { locatif: true }, latestAnalysis: { type: 'locatif', score: null } }), '');
   assert.match(context.testApi.scoreCircleHTML({ analyses: { locatif: true }, latestAnalysis: { type: 'locatif', score: 0 } }), />0<\/span>/);
+});
+
+test('affiche les données locatives disponibles sur la vignette', () => {
+  const html = context.testApi.renderCard({
+    id: 'bien-locatif', title: 'Bien locatif', analyses: {
+      locatif: { available: true, revenuBrutAnnuel: 18800, rendementNetPct: 6.1 },
+    },
+  });
+  assert.match(html, /class="card-locatif-summary"/);
+  assert.match(html, />18\s?800\s?€ brut\/an</);
+  assert.match(html, />6,1% net annuel</);
 });
 
 test('superpose le cercle du score de la dernière analyse sur la vignette', () => {
