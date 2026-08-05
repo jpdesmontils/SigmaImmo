@@ -112,13 +112,11 @@ function updateHeaderStats() {
 function initDeleteModal() {
   document.getElementById('delete-modal-cancel').addEventListener('click', closeDeleteModal);
   document.getElementById('delete-modal-confirm').addEventListener('click', confirmDelete);
-  document.querySelectorAll('[data-modal-selection]').forEach(button => button.addEventListener('click', async () => {
-    if (deleteTargetIdx === null) return;
-    await toggleSelection(deleteTargetIdx, button.dataset.modalSelection);
-    closeDeleteModal();
-  }));
   document.getElementById('delete-modal').addEventListener('click', function(e) {
     if (e.target === document.getElementById('delete-modal')) closeDeleteModal();
+  });
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.card-options')) closeCardOptions();
   });
 }
 
@@ -439,6 +437,43 @@ function analysisTagsHTML(item, className = '') {
   return className && tags ? `<div class="${className}">${tags}</div>` : tags;
 }
 
+
+function locatifMetricsHTML(item) {
+  const locatif = item && item.analyses && item.analyses.locatif;
+  if (!locatif || locatif.available === false || !locatif.metrics) return '';
+  const revenue = locatif.metrics.annualGrossRevenue;
+  const netYield = locatif.metrics.netYield;
+  if (typeof revenue !== 'number' && typeof netYield !== 'number') return '';
+  const revenueText = typeof revenue === 'number' ? `${formatInteger(revenue)}€/an` : '—€/an';
+  const yieldText = typeof netYield === 'number' ? `${formatPercentNumber(netYield)}% net annuel` : '—% net annuel';
+  return `<div class="card-locatif-metrics" aria-label="Métriques locatives"><strong>Locatif</strong><span>${revenueText}</span><span>${yieldText}</span></div>`;
+}
+
+function formatInteger(value) {
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(value);
+}
+
+function formatPercentNumber(value) {
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(value);
+}
+
+function closeCardOptions() {
+  document.querySelectorAll('.card-options.open').forEach(menu => {
+    menu.classList.remove('open');
+    const trigger = menu.querySelector('.card-btn-options');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function toggleCardOptions(trigger) {
+  const wrapper = trigger.closest('.card-options');
+  const shouldOpen = wrapper && !wrapper.classList.contains('open');
+  closeCardOptions();
+  if (!shouldOpen) return;
+  wrapper.classList.add('open');
+  trigger.setAttribute('aria-expanded', 'true');
+}
+
 function latestAnalysis(item) {
   if (item && item.latestAnalysis) return item.latestAnalysis;
   return availableAnalysisTypes(item).map(type => ({ type, ...(item.analyses[type] || {}) }))
@@ -510,20 +545,10 @@ function renderGallery() {
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
       // Ne pas ouvrir la visionneuse si clic sur un bouton action
-      if (e.target.closest('.card-btn-delete') || e.target.closest('.card-btn-map') || e.target.closest('.card-btn-tag')) return;
+      if (e.target.closest('.card-options') || e.target.closest('.card-btn-tag')) return;
       openProperty(filtered[parseInt(card.dataset.idx)]);
     });
   });
-
-  // Boutons carte
-  grid.querySelectorAll('.card-btn-map').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const idx = parseInt(btn.dataset.idx);
-      showOnMap(idx);
-    });
-  });
-
 
   // Boutons tag sélection
   grid.querySelectorAll('.card-btn-tag').forEach(btn => {
@@ -536,11 +561,20 @@ function renderGallery() {
   });
 
   // Menu « Plus d’options »
-  grid.querySelectorAll('.card-btn-delete').forEach(btn => {
+  grid.querySelectorAll('.card-btn-options').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      toggleCardOptions(btn);
+    });
+  });
+  grid.querySelectorAll('[data-card-option]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       const idx = parseInt(btn.dataset.idx);
-      openDeleteModal(idx);
+      closeCardOptions();
+      if (btn.dataset.cardOption === 'map') return showOnMap(idx);
+      if (btn.dataset.cardOption === 'delete') return openDeleteModal(idx);
+      await toggleSelection(idx, btn.dataset.cardOption);
     });
   });
 }
@@ -561,7 +595,7 @@ function cardHTML(item, idx) {
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
       ${badge}
-      <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}${analysisTagsHTML(item, 'card-analysis-tags')}${scoreCircleHTML(item)}</div>
+      <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}${analysisTagsHTML(item, 'card-analysis-tags')}${scoreCircleHTML(item)}${locatifMetricsHTML(item)}</div>
       <div class="card-body">
         <div class="card-tags">
           ${selectionTagHTML(sel)}
@@ -576,8 +610,15 @@ function cardHTML(item, idx) {
         <div class="card-actions">
           ${btnShort}
           ${btnEcart}
-          <button class="card-btn-map" data-idx="${idx}" title="Voir sur la carte">🗺</button>
-          <button class="card-btn-delete" data-idx="${idx}" title="Plus d’options" aria-label="Plus d’options">•••</button>
+          <div class="card-options">
+            <button class="card-btn-options" data-idx="${idx}" title="Plus d’options" aria-label="Plus d’options" aria-expanded="false">•••</button>
+            <div class="card-options-menu" role="menu">
+              <button type="button" role="menuitem" data-card-option="map" data-idx="${idx}">Voir sur la carte</button>
+              <button type="button" role="menuitem" data-card-option="a_visiter" data-idx="${idx}">A visiter</button>
+              <button type="button" role="menuitem" data-card-option="visite" data-idx="${idx}">Visité</button>
+              <button type="button" role="menuitem" class="danger" data-card-option="delete" data-idx="${idx}">Supprimer</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>`;
@@ -1120,14 +1161,7 @@ let deleteTargetIdx = null;
 function openDeleteModal(idx) {
   deleteTargetIdx = idx;
   const item = filtered[idx];
-  const selection = item ? normalizedSelection(item.selection) : '';
-  document.getElementById('listing-options-title').textContent = item ? item.title || 'Cette annonce' : 'Cette annonce';
   document.getElementById('delete-modal-title').textContent = item ? item.title || 'cette annonce' : 'cette annonce';
-  document.querySelectorAll('[data-modal-selection]').forEach(button => {
-    const active = selection === button.dataset.modalSelection;
-    button.classList.toggle('active', active);
-    button.setAttribute('aria-pressed', String(active));
-  });
   document.getElementById('delete-modal').classList.add('open');
 }
 

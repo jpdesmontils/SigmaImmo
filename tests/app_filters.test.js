@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync(require.resolve('../app.js'), 'utf8');
 const context = { console, URL, window: {}, document: { addEventListener() {} } };
 vm.createContext(context);
-vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, renderCard: item => { filtered = [item]; return cardHTML(item, 0); }, popupHTML, compareListings };`, context);
+vm.runInContext(`${source}\nthis.testApi = { listingMatchesFilters, normalizedSelection, availableAnalysisTypes, scoreCircleHTML, locatifMetricsHTML, renderCard: item => { filtered = [item]; return cardHTML(item, 0); }, popupHTML, compareListings, shouldOpenInApp, setInAppPropertyId };`, context);
 
 const baseFilters = overrides => ({
   userSelections: new Set(), analysisTypes: new Set(), city: '', priceMin: null,
@@ -48,6 +48,19 @@ test('superpose le cercle du score de la dernière analyse sur la vignette', () 
   assert.match(html, />72<\/span>/);
   assert.match(html, /class="card-analysis-tags"/);
   assert.match(html, />Patrimonial<\/span>.*>Locatif<\/span>.*>Marchands de biens<\/span>/s);
+});
+
+
+test('affiche les métriques locatives sur les vignettes tagguées locatif', () => {
+  const html = context.testApi.renderCard({
+    id: 'locatif-note',
+    title: 'Bien locatif',
+    analyses: { locatif: { available: true, metrics: { annualGrossRevenue: 19428, netYield: 6.1 } } },
+  });
+  assert.match(html, /<div class="card-locatif-metrics"/);
+  assert.match(html, />Locatif<\/strong>/);
+  assert.match(html, />19 428€\/an<\/span>/);
+  assert.match(html, />6,1% net annuel<\/span>/);
 });
 
 test('ouvre la fiche courante depuis la carte', () => {

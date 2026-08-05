@@ -323,7 +323,7 @@
       margin-top: 8px;
     }
     /* Boutons uniformes sur les cartes */
-    .card-btn-map, .card-btn-delete, .card-btn-tag {
+    .card-btn-tag, .card-btn-options {
       flex: 1;
       padding: 5px 0;
       border-radius: 3px;
@@ -338,9 +338,17 @@
       line-height: 1.4;
       display: block;
     }
-    .card-btn-map:hover    { background: var(--text);      color: var(--bg);     border-color: var(--text); }
-    .card-btn-delete:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+    .card-btn-options:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
     .card-btn-tag:hover    { background: var(--surface3);  color: var(--text); }
+    .card-options { position: relative; flex: 1; }
+    .card-options-menu { display: none; position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 30; min-width: 170px; padding: 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); box-shadow: 0 12px 28px rgba(22,21,15,.18); }
+    .card-options.open .card-options-menu { display: grid; gap: 3px; }
+    .card-options-menu button { width: 100%; padding: 8px 10px; border: 0; border-radius: 3px; background: transparent; color: var(--text-2); text-align: left; cursor: pointer; }
+    .card-options-menu button:hover { background: var(--surface2); color: var(--text); }
+    .card-options-menu button.danger { color: var(--danger); }
+    .card-locatif-metrics { position: absolute; left: 10px; bottom: 10px; z-index: 4; display: grid; gap: 2px; padding: 7px 9px; border: 1px solid rgba(20,90,46,.22); border-radius: 3px; background: rgba(255,255,255,.92); color: var(--go); font-family: var(--font-m); font-size: 10px; line-height: 1.2; box-shadow: 0 4px 14px rgba(22,21,15,.12); }
+    .card-locatif-metrics strong { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--go); }
+
     .tag-shortlist-active { background: var(--go-bg)     !important; color: var(--go)     !important; border-color: var(--go-border)     !important; }
     .tag-a_visiter-active { background:#e2f3fd!important;color:#174b70!important;border-color:#78bce8!important; }
     .tag-visite-active    { background:#1769aa!important;color:#fff!important;border-color:#1769aa!important; }
@@ -405,12 +413,6 @@
       color: var(--text);
       font-style: italic;
     }
-    .listing-options-name { margin-bottom: 12px !important; color: var(--text) !important; font-weight: 600; }
-    .listing-visit-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .listing-visit-options button { min-height: 42px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface2); color: var(--text-2); font-weight: 600; cursor: pointer; }
-    .listing-visit-options button[data-modal-selection="a_visiter"].active { border-color: #78bce8; background: #e2f3fd; color: #174b70; }
-    .listing-visit-options button[data-modal-selection="visite"].active { border-color: #1769aa; background: #1769aa; color: #fff; }
-    .listing-options-separator { margin: 22px 0; border: 0; border-top: 1px solid var(--border); }
     .delete-modal-actions {
       display: flex;
       gap: 10px;
