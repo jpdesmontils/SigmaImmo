@@ -4,7 +4,8 @@
 // ============================================================
 
 // ── Config ────────────────────────────────────────────────────
-const API_URL = 'https://solenis-studio.fr/sigma-immo/api/listings.php';
+const API_BASE_URL = 'api';
+const API_URL = `${API_BASE_URL}/listings.php`;
 const GALLERY_STATE_KEY = 'immoagg.gallery.state';
 const SELECTIONS = {
   shortlist: { icon: '⭐', label: 'ShortList', badge: '⭐ ShortList' },
@@ -1136,7 +1137,7 @@ async function toggleSelection(idx, sel) {
   item.selection = newSel;
 
   try {
-    const response = await fetch('https://solenis-studio.fr/sigma-immo/api/tag.php', {
+    const response = await fetch(`${API_BASE_URL}/tag.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: item.id, selection: newSel })
@@ -1212,7 +1213,7 @@ async function confirmDelete() {
 
   // Appeler API suppression
   try {
-    await fetch('https://solenis-studio.fr/sigma-immo/api/delete.php', {
+    await fetch(`${API_BASE_URL}/delete.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: item.id })
