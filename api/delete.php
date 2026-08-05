@@ -5,6 +5,8 @@
 // ============================================================
 
 require_once __DIR__ . '/analysis_types.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -32,19 +34,9 @@ if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id)) {
     echo json_encode(['error' => 'Invalid id']);
     exit;
 }
-$deleted = false;
+$deleted = (new PropertyRepository(sigma_db()))->softDelete($id);
 
-// Supprimer des favoris
-$favorites = loadJson(FAVORITES_FILE, array());
-foreach ($favorites as $key => $item) {
-    if (isset($item['id']) && (string)$item['id'] === $id) {
-        unset($favorites[$key]);
-        $deleted = true;
-        break;
-    }
-}
-if ($deleted) saveJson(FAVORITES_FILE, $favorites);
-
+// Les anciens fichiers JSON restent en sauvegarde temporaire; la suppression critique est SQLite.
 $deletedAnalysisFiles = deleteAnalysisFiles($id);
 
 echo json_encode(array(
@@ -53,18 +45,6 @@ echo json_encode(array(
     'deletedAnalysisFiles' => $deletedAnalysisFiles,
     'id' => $id,
 ));
-
-function loadJson($file, $default) {
-    if (!file_exists($file)) return $default;
-    $decoded = json_decode(file_get_contents($file), true);
-    return is_array($decoded) ? $decoded : $default;
-}
-
-function saveJson($file, $data) {
-    $dir = dirname($file);
-    if (!is_dir($dir)) mkdir($dir, 0755, true);
-    file_put_contents($file, json_encode(array_values($data), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-}
 
 function deleteAnalysisFiles($id) {
     $files = array(DATA_DIR . 'analyses/jobs/' . $id . '.json');

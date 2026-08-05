@@ -6,6 +6,8 @@
 // ============================================================
 
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -106,7 +108,12 @@ function processFavorites($incoming) {
         $store = array_slice($store, 0, MAX_FAVORITES, true);
     }
 
-    // Sauvegarder en objet associatif (pas array_values) pour garder les clés
+    $repo = new PropertyRepository(sigma_db());
+    foreach ($store as $item) {
+        $repo->upsert($item);
+    }
+
+    // Sauvegarde temporaire de compatibilité : le JSON reste disponible comme export/backup.
     saveJsonObject(FAVORITES_FILE, $store);
     return array('favorites_added' => $added, 'favorites_updated' => $updated);
 }

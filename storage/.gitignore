@@ -1,0 +1,7 @@
+app.sqlite
+app.sqlite-*
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+logs/*
+!logs/.gitkeep
