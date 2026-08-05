@@ -48,6 +48,13 @@ test('affiche les données locatives disponibles sur la vignette', () => {
   assert.match(html, />6,1% net annuel</);
 });
 
+test('affiche le prix au m² à droite de la surface sur la vignette', () => {
+  const html = context.testApi.renderCard({
+    id: 'bien-prix-m2', title: 'Bien avec prix au mètre carré', price: 250000, surface: 50,
+  });
+  assert.match(html, /<span>50 m²<\/span>\s*<span>5\s?000\s?€\/m²<\/span>/);
+});
+
 test('superpose le cercle du score de la dernière analyse sur la vignette', () => {
   const html = context.testApi.renderCard({
     id: 'bien-note', title: 'Bien analysé', analyses: {
