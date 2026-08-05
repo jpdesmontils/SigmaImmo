@@ -235,17 +235,20 @@
     }
 
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      position: relative;
+      isolation: isolate;
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(249,247,241,.96));
+      border: 1px solid rgba(208,204,195,.9);
+      border-radius: 0;
       overflow: hidden;
       cursor: pointer;
-      transition: transform .2s, box-shadow .2s, border-color .2s;
+      box-shadow: 0 16px 38px rgba(22,21,15,.10), 0 1px 0 rgba(255,255,255,.85) inset;
+      transition: transform .24s ease, box-shadow .24s ease, border-color .24s ease;
     }
     .card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow);
-      border-color: var(--border-hi);
+      transform: translateY(-4px);
+      box-shadow: 0 24px 56px rgba(22,21,15,.16), 0 1px 0 rgba(255,255,255,.9) inset;
+      border-color: rgba(122,65,8,.32);
     }
 
     .card-img {
@@ -254,107 +257,65 @@
       object-fit: cover;
       background: var(--surface2);
       display: block;
+      transform: scale(1.01);
+      transition: transform .45s ease;
     }
+    .card:hover .card-img { transform: scale(1.045); }
     .card-img-placeholder {
       width: 100%;
       aspect-ratio: 16/10;
-      background: var(--surface2);
+      background: radial-gradient(circle at 30% 20%, #f7efe0, var(--surface2) 58%);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 32px;
       color: var(--muted);
     }
-    .card-media { position:relative; }
+    .card-media { position:relative; overflow:hidden; background:var(--surface2); }
+    .card-media:after { content:"";position:absolute;inset:auto 0 0;height:48%;background:linear-gradient(180deg, transparent, rgba(22,21,15,.52));pointer-events:none;z-index:2; }
 
-    .card-analysis-tags { position:absolute;top:8px;right:8px;z-index:9;display:flex;flex-direction:column;align-items:flex-end;gap:4px; }
-    .card-score { position:absolute;right:10px;bottom:10px;z-index:9;width:52px;height:52px;border-radius:50%;background:rgba(245,243,238,.96);box-shadow:0 2px 10px #16150f55;display:grid;place-items:center; }
-    .card-score svg { position:absolute;inset:0;width:52px;height:52px;transform:rotate(-90deg); }
-    .card-score-inner { position:relative;display:flex;flex-direction:column;align-items:center;font-family:var(--font-m);font-weight:700;line-height:1; }
-    .card-score-value { font-size:16px; }
-    .card-score-denom { font-size:8px;color:var(--muted);margin-top:2px; }
+    .card-analysis-tags { position:absolute;top:12px;right:12px;z-index:9;display:flex;flex-direction:column;align-items:flex-end;gap:5px; }
+    .card-score { position:absolute;right:13px;bottom:13px;z-index:9;width:58px;height:58px;border-radius:50%;background:rgba(255,252,245,.96);box-shadow:0 12px 26px rgba(22,21,15,.32), 0 0 0 5px rgba(255,255,255,.52);display:grid;place-items:center; }
+    .card-score svg { position:absolute;inset:0;width:58px;height:58px;transform:rotate(-90deg); }
+    .card-score-inner { position:relative;display:flex;flex-direction:column;align-items:center;font-family:var(--font-m);font-weight:800;line-height:1; }
+    .card-score-value { font-size:17px;letter-spacing:-.03em; }
+    .card-score-denom { font-size:9px;color:var(--muted);margin-top:2px; }
 
-    .card-body { padding: 12px 14px 14px; }
+    .card-body { padding: 15px 16px 16px; }
 
-    .card-tags {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-    .tag {
-      font-family: var(--font-m);
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 2px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
+    .card-tags { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;min-height:20px; }
+    .tag { font-family:var(--font-m);font-size:9px;font-weight:800;padding:4px 8px;border-radius:0;text-transform:uppercase;letter-spacing:.08em;box-shadow:0 1px 0 rgba(255,255,255,.7) inset; }
     .tag-locatif { background:#e7f0fb;color:#245987;border:1px solid #b9d0e8; }
     .tag-patrimonial { background:#eee9f8;color:#62448a;border:1px solid #cfc1e6; }
     .tag-mdb { background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border); }
-    .card-locatif-summary { position:absolute;top:38px;right:8px;z-index:9;min-width:132px;padding:8px 10px;background:#f4f8ff;color:#111;border:1px solid #d8e5f4;font:13px/1.15 Georgia, serif;box-shadow:0 2px 8px #16150f1a; }
+    .card-locatif-summary { position:absolute;top:48px;right:12px;z-index:9;min-width:150px;padding:10px 12px;background:rgba(255,252,245,.94);color:#16150f;border:1px solid rgba(255,255,255,.72);border-radius:0;font:15px/1.15 Georgia, serif;box-shadow:0 14px 30px rgba(22,21,15,.20);backdrop-filter:blur(8px); }
     .card-locatif-summary span { display:block; }
 
-    .card-title {
-      font-size: 14px;
-      font-weight: 600;
-      line-height: 1.3;
-      margin-bottom: 6px;
-      color: var(--text);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
+    .card-title { font-size:16px;font-weight:800;line-height:1.25;margin-bottom:10px;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;letter-spacing:-.02em; }
+    .card-meta { display:flex;align-items:baseline;gap:11px;font-size:13px;color:var(--muted);flex-wrap:wrap; }
+    .card-price { color:var(--gold);font-family:var(--font-m);font-weight:800;font-size:17px;letter-spacing:.01em; }
+    .card-location { font-size:13px;color:var(--muted);margin-top:8px; }
 
-    .card-meta {
-      display: flex;
-      gap: 10px;
-      font-size: 12px;
-      color: var(--muted);
-      flex-wrap: wrap;
-    }
-    .card-price { color: var(--gold); font-family: var(--font-m); font-weight: 700; font-size: 15px; }
-    .card-location { font-size: 11px; color: var(--muted); margin-top: 4px; }
-
-    .card-actions {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-      overflow: visible;
-    }
-    .card-options { position: relative; flex: 1; }
-    .card-options-menu { display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:30;min-width:168px;padding:5px;background:var(--surface);border:1px solid var(--border);border-radius:4px;box-shadow:0 12px 30px #16150f33; }
+    .card-actions { display:grid;grid-template-columns:1fr 1fr 32px;gap:8px;margin-top:14px;overflow:visible; }
+    .card-options { position: relative; }
+    .card-options-menu { display:none;position:absolute;right:0;bottom:calc(100% + 8px);z-index:30;min-width:176px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:0;box-shadow:0 18px 38px #16150f33; }
     .card-options:hover .card-options-menu, .card-options:focus-within .card-options-menu { display:block; }
-    .card-options-menu button { display:block;width:100%;padding:8px 10px;border:0;background:transparent;color:var(--text);text-align:left;font-size:12px;cursor:pointer;border-radius:3px; }
+    .card-options-menu button { display:block;width:100%;padding:9px 10px;border:0;background:transparent;color:var(--text);text-align:left;font-size:12px;cursor:pointer;border-radius:0; }
     .card-options-menu button:hover { background:var(--surface3); }
     .card-options-menu button.danger { color:var(--danger); }
-    /* Boutons uniformes sur les cartes */
-    .card-btn-map, .card-btn-delete, .card-btn-tag, .card-btn-more {
-      flex: 1;
-      padding: 5px 0;
-      border-radius: 3px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text-2);
-      font-size: 13px;
-      cursor: pointer;
-      transition: all .15s;
-      text-align: center;
-      text-decoration: none;
-      line-height: 1.4;
-      display: block;
-    }
-    .card-btn-map:hover, .card-btn-more:hover { background: var(--text);      color: var(--bg);     border-color: var(--text); }
-    .card-btn-delete:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
-    .card-btn-tag:hover    { background: var(--surface3);  color: var(--text); }
-    .tag-shortlist-active { background: var(--go-bg)     !important; color: var(--go)     !important; border-color: var(--go-border)     !important; }
+    .card-btn-tag, .card-btn-more { min-height:50px;border-radius:0;border:1px solid var(--border);background:linear-gradient(180deg,#fff,#edeae3);color:var(--text-2);font-size:19px;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;text-decoration:none;line-height:1;display:grid;place-items:center;box-shadow:0 1px 0 rgba(255,255,255,.72) inset; }
+    .card-btn-more { min-height:50px;font-size:18px; }
+    .card-btn-more:hover { background:var(--text);color:var(--bg);border-color:var(--text); }
+    .card-btn-tag:hover { background:var(--surface3);color:var(--text);transform:translateY(-1px); }
+    .tag-shortlist-active { background: var(--go-bg) !important; color: var(--go) !important; border-color: var(--go-border) !important; }
     .tag-a_visiter-active { background:#e2f3fd!important;color:#174b70!important;border-color:#78bce8!important; }
-    .tag-visite-active    { background:#1769aa!important;color:#fff!important;border-color:#1769aa!important; }
-    .tag-ecartee-active   { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: var(--danger-border) !important; }
+    .tag-visite-active { background:#1769aa!important;color:#fff!important;border-color:#1769aa!important; }
+    .tag-ecartee-active { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: var(--danger-border) !important; }
 
+    .map-card-popup { width:280px; }
+    .leaflet-popup-content-wrapper:has(.map-card-popup) { border-radius:0; }
+    .leaflet-popup-content .map-card-popup .card { width:100%; }
+    .map-card-open { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
     /* ── Badge sélection sur vignette ─────────────────────────── */
     .card { position: relative; overflow: hidden; }
     .card-selection-badge {

@@ -554,8 +554,8 @@ function cardHTML(item, idx) {
   const sel = normalizedSelection(item.selection);
   const badge = selectionBadgeHTML(sel);
 
-  const btnShort = selectionButtonHTML(idx, 'shortlist', 'card-btn-tag');
-  const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag');
+  const btnShort = selectionButtonHTML(idx, 'shortlist', 'card-btn-tag', item);
+  const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag', item);
 
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
@@ -776,13 +776,35 @@ async function renderMap(focusedItem = null) {
       });
     }
 
-    popup.querySelectorAll('[data-popup-tag]').forEach(function(btn) {
+    var popupCard = popup.querySelector('.map-card-popup .card');
+    if (popupCard && !popupCard._bound) {
+      popupCard._bound = true;
+      popupCard.addEventListener('click', function(event) {
+        if (event.target.closest('.card-options') || event.target.closest('.card-btn-tag')) return;
+        openProperty(filtered[parseInt(popupCard.dataset.idx)]);
+      });
+    }
+
+    popup.querySelectorAll('.card-btn-tag').forEach(function(btn) {
       if (btn._bound) return;
       btn._bound = true;
       btn.addEventListener('click', function() {
-        var popupIdx = parseInt(btn.dataset.popupIdx);
-        var tagVal   = btn.dataset.popupTag;
+        var popupIdx = parseInt(btn.dataset.idx);
+        var tagVal   = btn.dataset.sel;
         toggleSelection(popupIdx, tagVal);
+        map.closePopup();
+        renderMap();
+      });
+    });
+
+    popup.querySelectorAll('[data-option-action]').forEach(function(btn) {
+      if (btn._bound) return;
+      btn._bound = true;
+      btn.addEventListener('click', async function() {
+        var popupIdx = parseInt(btn.dataset.idx);
+        var action = btn.dataset.optionAction;
+        if (action === 'delete') openDeleteModal(popupIdx);
+        if (action === 'a_visiter' || action === 'visite') await toggleSelection(popupIdx, action);
         map.closePopup();
         renderMap();
       });
@@ -792,28 +814,7 @@ async function renderMap(focusedItem = null) {
 
 
 function popupHTML(item, idx) {
-  const imgSrc = getImageUrl(item);
-  const sel = normalizedSelection(item.selection);
-
-  const btnStyle = 'flex:1;padding:6px 4px;border-radius:3px;cursor:pointer;font-size:11px;font-weight:600;text-align:center;border:1px solid';
-  const activeStyles = { shortlist: '#7ec99a;background:#d6f0df;color:#145a2e', a_visiter: '#78bce8;background:#e2f3fd;color:#174b70', visite: '#1769aa;background:#dcecf8;color:#0d4775', ecartee: '#d97373;background:#fce8e8;color:#831515' };
-  const popupButtons = Object.keys(SELECTIONS).map(key => `<button data-popup-tag="${key}" data-popup-idx="${idx}" style="${btnStyle} ${sel === key ? activeStyles[key] : '#d0ccc3;background:#edeae3;color:#5a5850'}">${SELECTIONS[key].icon} ${SELECTIONS[key].label}</button>`).join('');
-
-  return `
-    <div style="font-family:Inter,sans-serif;font-size:13px;min-width:220px;color:#16150f;">
-      ${imgSrc ? `<img src="${esc(imgSrc)}" style="width:100%;height:110px;object-fit:cover;border-radius:3px;margin-bottom:8px;" loading="lazy">` : ''}
-      <div style="font-weight:600;margin-bottom:4px;line-height:1.3;">${esc(item.title || 'Annonce')}</div>
-      ${selectionTagHTML(sel)}${analysisTagsHTML(item)}${scoreTextHTML(item)}
-      ${item.price ? `<div style="font-family:'JetBrains Mono',monospace;color:#7a4108;font-weight:700;margin-bottom:2px;">${formatPrice(item.price)}</div>` : ''}
-      ${item.surface ? `<div style="color:#9a9890;font-size:12px;margin-bottom:6px;">${item.surface} m²</div>` : ''}
-      <div style="display:flex;gap:5px;margin-bottom:6px;">
-        ${popupButtons}
-      </div>
-      <div style="display:flex;gap:5px;">
-        <a href="${propertyUrl(item)}" data-open-property="${idx}" style="${btnStyle} #16150f;background:#16150f;color:#f5f3ee;flex:1;text-decoration:none;display:block;">Voir Fiche</a>
-        ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="${btnStyle} #d0ccc3;background:#edeae3;color:#16150f;flex:1;text-decoration:none;display:block;">→ Annonce</a>` : ''}
-      </div>
-    </div>`;
+  return `<div class="map-card-popup">${cardHTML(item, idx)}<a href="${propertyUrl(item)}" data-open-property="${idx}" class="map-card-open">Voir Fiche</a></div>`;
 }
 
 // ── Visionneuse d'annonce ──────────────────────────────────────
@@ -1096,9 +1097,9 @@ function selectionBadgeHTML(selection) {
   return option ? `<div class="card-selection-badge badge-${selection.replace('_', '-')}">${option.badge}</div>` : '';
 }
 
-function selectionButtonHTML(idx, selection, className) {
+function selectionButtonHTML(idx, selection, className, item = filtered[idx]) {
   const option = SELECTIONS[selection];
-  const active = filtered[idx].selection === selection ? ` tag-${selection}-active` : '';
+  const active = item && item.selection === selection ? ` tag-${selection}-active` : '';
   return `<button class="${className}${active}" data-idx="${idx}" data-sel="${selection}" title="${option.label}" aria-label="${option.label}">${option.icon}</button>`;
 }
 
