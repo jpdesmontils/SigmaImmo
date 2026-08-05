@@ -1,16 +1,21 @@
-# Prompt — Trajet Paris vers le bien
+# Prompt — Trajet résidence principale vers le bien
 
 ## Mission
-Tu es un analyste ferroviaire rigoureux. Analyse uniquement l'accessibilité aller ET retour entre Paris et le bien de l'annonce. Cette étape est indépendante de l'analyse patrimoniale.
+Tu es un analyste ferroviaire rigoureux. Analyse uniquement l'accessibilité aller ET retour entre {{ville_residence_principale}} et le bien de l'annonce. Cette étape est indépendante de l'analyse patrimoniale.
 
 ## Annonce
 {{annonce_complete}}
+
+## Paramètres explicites
+Ville de résidence principale : {{ville_residence_principale}}
+DPE : {{dpe}}
+GES : {{ges}}
 
 ## Règles de fiabilité
 - Recherche des horaires publiés et récents. Cite chaque source avec son URL et sa date de consultation.
 - Observe un mardi ordinaire hors vacances et jour férié, un samedi et un dimanche. Indique les dates exactes retenues.
 - Compare jusqu'à trois gares d'arrivée et choisis le meilleur compromis porte-à-porte, pas nécessairement la gare la plus proche.
-- L'origine est la gare parisienne adaptée ; n'inclus pas le trajet depuis un domicile parisien.
+- L'origine est la gare adaptée à {{ville_residence_principale}} ; n'inclus pas le trajet depuis un domicile précis dans cette ville.
 - Une liaison exploitable comporte au plus une correspondance et dure au plus 150 % du meilleur trajet. Signale séparément les secours à deux correspondances.
 - Distingue durée ferroviaire et dernier kilomètre. N'assimile jamais une distance à vol d'oiseau à une distance routière.
 - N'affiche la marche que si elle est vérifiable et inférieure ou égale à 20 minutes.
@@ -21,10 +26,10 @@ Tu es un analyste ferroviaire rigoureux. Analyse uniquement l'accessibilité all
 ## Sortie
 Retourne uniquement un objet JSON valide conforme à cette structure :
 {
-  "origine":{"ville":"Paris","gare_depart":"string","temps_acces_gare_parisienne_inclus":false},
+  "origine":{"ville":"{{ville_residence_principale}}","gare_depart":"string","temps_acces_gare_origine_inclus":false},
   "periode_observation":{"date_debut":"YYYY-MM-DD","date_fin":"YYYY-MM-DD","jours_observes":["YYYY-MM-DD"],"hors_perturbation_exceptionnelle":true},
   "itineraire_recommande":{"gare_arrivee":{"nom":"string","commune":"string","code_uic":null},"trains":[],"direct":false,"nombre_correspondances":null,"gare_correspondance":null,"duree_train_min":null,"duree_train_typique":null,"duree_totale_min":null,"duree_totale_typique":null,"robustesse":"forte|moyenne|faible|tres_faible"},
-  "frequences":{"jour_ouvre":{"liaisons_exploitables":null,"liaisons_directes":null},"samedi":{"liaisons_exploitables":null,"liaisons_directes":null},"dimanche":{"liaisons_exploitables":null,"liaisons_directes":null},"vendredi_soir_commentaire":"string","dimanche_soir_retour_commentaire":"string","premier_depart_paris":null,"dernier_depart_paris":null,"commentaire":"string"},
+  "frequences":{"jour_ouvre":{"liaisons_exploitables":null,"liaisons_directes":null},"samedi":{"liaisons_exploitables":null,"liaisons_directes":null},"dimanche":{"liaisons_exploitables":null,"liaisons_directes":null},"vendredi_soir_commentaire":"string","dimanche_soir_retour_commentaire":"string","premier_depart_origine":null,"dernier_depart_origine":null,"commentaire":"string"},
   "dernier_kilometre":{"mode_recommande":"marche|voiture|transport_public|taxi|non_determinable","distance_km":null,"duree_min":null,"marche":{"affichee":false,"distance_km":null,"duree_min":null},"transport_public":{"disponible":false,"description":null,"duree_min":null},"voiture_indispensable":false},
   "aller_retour_journee":{"possible":false,"temps_sur_place_estime_heures":null,"commentaire":"string"},
   "alternatives":[],

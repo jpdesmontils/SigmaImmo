@@ -33,8 +33,9 @@
     const listing = data.listing, locationText = listing.location || listing.address || 'Localisation non renseignée', slider = listingSlider();
     document.title = `${listing.title || 'Fiche du bien'} — ImmoAggregator`;
     app.className = '';
-    app.innerHTML = `<header class="property-header"><div class="property-top"><a class="property-back" href="app.html" data-in-app-return>← Retour à la galerie</a><span class="property-brand">ImmoAggregator</span><div class="listing-slider" aria-label="Navigation entre les annonces"><button data-listing-prev aria-label="Annonce précédente" ${slider.previous?'':'disabled'}>‹</button><span>${slider.position} / ${slider.total}</span><button data-listing-next aria-label="Annonce suivante" ${slider.next?'':'disabled'}>›</button></div></div><nav class="property-tabs" role="tablist" aria-label="Fiche du bien">${tabButton('annonce','Annonce')}${tabButton('prix','Prix')}${tabButton('patrimonial','Patrimoine')}${tabButton('locatif','Locatif')}${tabButton('mdb','<span class="mdb-long">Marchand de biens</span><span class="mdb-short">MDB</span>')}${tabButton('notes','Notes')}</nav></header><section class="property-content" id="property-panel" role="tabpanel"></section>`;
+    app.innerHTML = `<header class="property-header"><div class="property-top"><a class="property-back" href="app.html" data-in-app-return>← Retour à la galerie</a><span class="property-brand">ImmoAggregator</span><button class="property-config-button" type="button" data-config>⚙ Config</button><div class="listing-slider" aria-label="Navigation entre les annonces"><button data-listing-prev aria-label="Annonce précédente" ${slider.previous?'':'disabled'}>‹</button><span>${slider.position} / ${slider.total}</span><button data-listing-next aria-label="Annonce suivante" ${slider.next?'':'disabled'}>›</button></div></div><nav class="property-tabs" role="tablist" aria-label="Fiche du bien">${tabButton('annonce','Annonce')}${tabButton('prix','Prix')}${tabButton('patrimonial','Patrimoine')}${tabButton('locatif','Locatif')}${tabButton('mdb','<span class="mdb-long">Marchand de biens</span><span class="mdb-short">MDB</span>')}${tabButton('notes','Notes')}</nav></header><section class="property-content" id="property-panel" role="tabpanel"></section>`;
     app.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => selectTab(button.dataset.tab)));
+    app.querySelector('[data-config]')?.addEventListener('click', openConfigModal);
     app.querySelector('[data-listing-prev]')?.addEventListener('click', () => navigateListing(slider.previous));
     app.querySelector('[data-listing-next]')?.addEventListener('click', () => navigateListing(slider.next));
     app.dataset.location = locationText;
@@ -139,6 +140,28 @@
   function formatDate(value) { if (!value) return 'Date inconnue'; const parsed = new Date(`${value}T00:00:00`); return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('fr-FR'); }
   function formatDateTime(value) { if (!value) return 'date inconnue'; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('fr-FR'); }
   function formatNumber(value, digits = 0) { return Number(value).toLocaleString('fr-FR', { maximumFractionDigits: digits }); }
+
+  function openConfigModal() {
+    const modal = document.createElement('div');
+    modal.className = 'property-modal';
+    const currentCity = data.listing.primaryResidenceCity || data.settings?.primaryResidenceCity || 'Paris';
+    modal.innerHTML = `<form class="property-modal-box property-config-form" role="dialog" aria-modal="true"><h2>Configuration de l’analyse</h2><p>Cette ville sert d’origine à l’analyse trajet de cette annonce. La valeur par défaut des paramètres serveur est ${esc(data.settings?.primaryResidenceCity || 'Paris')}.</p><div class="property-field"><label for="primary-residence-city">Ville de résidence principale</label><input id="primary-residence-city" name="primaryResidenceCity" maxlength="120" value="${esc(currentCity)}" required></div><label class="property-checkbox"><input type="checkbox" name="saveDefault" value="1"> Utiliser aussi cette ville comme valeur par défaut serveur</label><div class="analysis-form-actions"><button type="button" class="property-secondary" data-close>Annuler</button><button class="property-primary">Enregistrer</button></div></form>`;
+    const close = () => modal.remove();
+    modal.addEventListener('click', event => { if (event.target === modal) close(); });
+    modal.querySelector('[data-close]').addEventListener('click', close);
+    modal.querySelector('form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget), city = form.get('primaryResidenceCity');
+      try {
+        await saveFields({ primaryResidenceCity: city });
+        if (form.get('saveDefault')) data.settings = (await request(new URL('settings.php', API_ROOT), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ primaryResidenceCity: city }) })).settings;
+        close(); renderShell(); selectTab(activeTab || 'annonce'); toast('Configuration enregistrée.');
+      } catch (error) { toast(error.message); }
+    });
+    document.body.append(modal);
+    modal.querySelector('input').focus();
+  }
+
   function renderListing() {
     const item = data.listing, images = [...new Set((item.images?.length ? item.images : [item.imageUrl]).filter(Boolean))];
     const hasGallery = images.length > 1;
@@ -236,7 +259,7 @@
     panel().querySelector('[data-start]').addEventListener('click',()=>startAnalysis(type));
   }
   function renderForm(type, missing) {
-    panel().innerHTML = `<div class="analysis-state"><form class="analysis-state-card analysis-form" id="requirements-form"><div class="analysis-eyebrow">${esc(types[type])} · données indispensables</div><h2>Compléter avant l’analyse</h2><p>Seuls les champs absents et réellement nécessaires au prompt sont demandés.</p><div class="analysis-form-grid">${missing.map(field=>`<div class="property-field"><label for="req-${field.field}">${esc(field.label)} *</label><input id="req-${field.field}" name="${field.field}" type="${field.type}" min="0" required></div>`).join('')}</div><div class="property-panel property-field"><label for="req-address">Adresse exacte — facultatif</label><input id="req-address" name="address" value="${esc(data.listing.address || data.listing.location || '')}"><small>Son absence ne bloque pas le calcul.</small></div><div class="analysis-form-actions"><button type="button" class="property-secondary" data-cancel>Annuler</button><button class="property-primary">Enregistrer et lancer</button></div></form></div>`;
+    panel().innerHTML = `<div class="analysis-state"><form class="analysis-state-card analysis-form" id="requirements-form"><div class="analysis-eyebrow">${esc(types[type])} · données indispensables</div><h2>Compléter avant l’analyse</h2><p>Seuls les champs absents et réellement nécessaires au prompt sont demandés.</p><div class="analysis-form-grid">${missing.map(field=>`<div class="property-field"><label for="req-${field.field}">${esc(field.label)} *</label><input id="req-${field.field}" name="${field.field}" type="${field.type}" ${field.type === 'number' ? 'min="0"' : ''} ${field.pattern ? `pattern="${esc(field.pattern)}"` : ''} ${field.maxlength ? `maxlength="${esc(field.maxlength)}"` : ''} value="${esc(data.listing[field.field] || '')}" required></div>`).join('')}</div><div class="property-panel property-field"><label for="req-address">Adresse exacte — facultatif</label><input id="req-address" name="address" value="${esc(data.listing.address || data.listing.location || '')}"><small>Son absence ne bloque pas le calcul.</small></div><div class="analysis-form-actions"><button type="button" class="property-secondary" data-cancel>Annuler</button><button class="property-primary">Enregistrer et lancer</button></div></form></div>`;
     panel().querySelector('[data-cancel]').addEventListener('click',()=>selectTab('annonce'));
     panel().querySelector('form').addEventListener('submit', async event => { event.preventDefault(); const values=Object.fromEntries(new FormData(event.currentTarget)); await saveFields(values); await startAnalysis(type); });
   }
