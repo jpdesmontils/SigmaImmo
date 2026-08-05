@@ -48,9 +48,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   restoreGalleryState();
   initViewer();
   initDeleteModal();
+  initCardOptionsMenus();
   document.addEventListener('immoagg:open-analysis', openFinishedAnalysis);
   await loadData();
 });
+
+// ── Menu déroulant "options" des vignettes ──────────────────────
+// Le menu ne s'ouvre que sur clic du bouton •••, jamais au survol.
+function initCardOptionsMenus() {
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('.card-btn-more');
+    const openMenu = document.querySelector('.card-options.open');
+
+    if (trigger) {
+      e.stopPropagation();
+      const container = trigger.closest('.card-options');
+      const wasOpen = container.classList.contains('open');
+      if (openMenu && openMenu !== container) openMenu.classList.remove('open');
+      container.classList.toggle('open', !wasOpen);
+      trigger.setAttribute('aria-expanded', String(!wasOpen));
+      return;
+    }
+
+    if (openMenu && !e.target.closest('.card-options')) {
+      openMenu.classList.remove('open');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const openMenu = document.querySelector('.card-options.open');
+    if (!openMenu) return;
+    openMenu.classList.remove('open');
+    openMenu.querySelector('.card-btn-more')?.setAttribute('aria-expanded', 'false');
+  });
+}
 
 function openFinishedAnalysis(event) {
   const listing = allListings.find(item => String(item.id) === String(event.detail.id));
@@ -535,6 +567,7 @@ function renderGallery() {
   grid.querySelectorAll('[data-option-action]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
+      btn.closest('.card-options')?.classList.remove('open');
       const idx = parseInt(btn.dataset.idx);
       const action = btn.dataset.optionAction;
       if (action === 'map') await showOnMap(idx);
@@ -576,7 +609,7 @@ function cardHTML(item, idx) {
           ${btnShort}
           ${btnEcart}
           <div class="card-options">
-            <button class="card-btn-more" type="button" title="Plus d’options" aria-label="Plus d’options" aria-haspopup="menu">•••</button>
+            <button class="card-btn-more" type="button" title="Plus d’options" aria-label="Plus d’options" aria-haspopup="menu" aria-expanded="false">•••</button>
             <div class="card-options-menu" role="menu">
               <button type="button" role="menuitem" data-option-action="map" data-idx="${idx}">Voir sur la carte</button>
               <button type="button" role="menuitem" data-option-action="a_visiter" data-idx="${idx}">A visiter</button>
@@ -803,6 +836,7 @@ async function renderMap(focusedItem = null) {
       btn.addEventListener('click', async function() {
         var popupIdx = parseInt(btn.dataset.idx);
         var action = btn.dataset.optionAction;
+        btn.closest('.card-options')?.classList.remove('open');
         if (action === 'delete') openDeleteModal(popupIdx);
         if (action === 'a_visiter' || action === 'visite') await toggleSelection(popupIdx, action);
         map.closePopup();
