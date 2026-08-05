@@ -34,6 +34,7 @@ function analysisSummaries($dataDir, $id) {
         if ($type === 'locatif') {
             $summaries[$type]['revenuBrutAnnuel'] = locatifAnnualGrossRevenue($analysis);
             $summaries[$type]['rendementNetPct'] = locatifNetYield($analysis);
+            $summaries[$type]['cashflowMensuel'] = locatifMonthlyCashflow($analysis);
         }
     }
     return $summaries;
@@ -73,6 +74,20 @@ function locatifNetYield($analysis) {
     }
     if (!is_numeric($value)) return null;
     return round((float)$value, 1);
+}
+
+function locatifMonthlyCashflow($analysis) {
+    $value = $analysis['exec_summary']['cashflow_min_mois'] ?? null;
+    if (!is_numeric($value) && isset($analysis['financement']['scenarios']) && is_array($analysis['financement']['scenarios'])) {
+        foreach ($analysis['financement']['scenarios'] as $scenario) {
+            if (isset($scenario['cashflow_mois']) && is_numeric($scenario['cashflow_mois'])) {
+                $value = $scenario['cashflow_mois'];
+                break;
+            }
+        }
+    }
+    if (!is_numeric($value)) return null;
+    return round((float)$value);
 }
 
 function analysisScoreValue($analysis, $type) {

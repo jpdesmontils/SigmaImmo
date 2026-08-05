@@ -182,6 +182,11 @@
       color: var(--bg);
     }
 
+    .sort-row {
+      display: flex;
+      gap: 8px;
+    }
+
     .sort-select {
       width: 100%;
       background: var(--bg);
@@ -314,6 +319,7 @@
     .tag-ecartee-active { background: var(--danger-bg) !important; color: var(--danger) !important; border-color: var(--danger-border) !important; }
 
     .map-card-popup { width:280px; }
+    .leaflet-popup-content-wrapper:has(.map-card-popup) { border-radius:0; }
     .leaflet-popup-content .map-card-popup .card { width:100%; }
     .map-card-open { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
     /* ── Badge sélection sur vignette ─────────────────────────── */

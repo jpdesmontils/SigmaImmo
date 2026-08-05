@@ -89,6 +89,17 @@ test('trie les notes dans les deux sens en laissant les annonces sans note à la
   assert.deepEqual(listings.toSorted((a, b) => context.testApi.compareListings(a, b, 'score_desc')).map(item => item.id), ['haute', 'basse', 'zero', 'sans-note']);
 });
 
+test('trie les critères financiers locatifs dans les deux sens avec les valeurs manquantes à la fin', () => {
+  const listings = [
+    { id: 'incomplet', analyses: { locatif: { available: true } } },
+    { id: 'fort', analyses: { locatif: { available: true, rendementNetPct: 7.2, revenuBrutAnnuel: 24000, cashflowMensuel: 320 } } },
+    { id: 'faible', analyses: { locatif: { available: true, rendementNetPct: 4.4, revenuBrutAnnuel: 12000, cashflowMensuel: -80 } } },
+  ];
+  assert.deepEqual(listings.toSorted((a, b) => context.testApi.compareListings(a, b, 'yield_desc')).map(item => item.id), ['fort', 'faible', 'incomplet']);
+  assert.deepEqual(listings.toSorted((a, b) => context.testApi.compareListings(a, b, 'revenue_asc')).map(item => item.id), ['faible', 'fort', 'incomplet']);
+  assert.deepEqual(listings.toSorted((a, b) => context.testApi.compareListings(a, b, 'cashflow_asc')).map(item => item.id), ['faible', 'fort', 'incomplet']);
+});
+
 test('ouvre la fiche dans l’application uniquement pour un clic principal sans modificateur', () => {
   assert.equal(context.testApi.shouldOpenInApp({ button: 0, ctrlKey: false, metaKey: false, shiftKey: false, altKey: false }), true);
   assert.equal(context.testApi.shouldOpenInApp({ button: 0, ctrlKey: true, metaKey: false, shiftKey: false, altKey: false }), false);
