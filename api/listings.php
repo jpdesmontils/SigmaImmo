@@ -7,6 +7,8 @@
 
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/analysis_types.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -40,7 +42,7 @@ $sort = isset($_GET['sort']) ? $_GET['sort'] : 'date_desc';
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
 
 // ── Load data ─────────────────────────────────────────────────
-$items = array_values(loadJson(FAVORITES_FILE, []));
+$items = (new PropertyRepository(sigma_db()))->allActive();
 
 // Expose uniquement la disponibilité locale des analyses, jamais leur contenu.
 foreach ($items as &$item) {

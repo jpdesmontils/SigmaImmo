@@ -2,6 +2,8 @@
 /** Lance et suit les analyses OpenAI sans bloquer la requête HTTP. */
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/analysis_types.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -76,7 +78,7 @@ echo json_encode(['ok' => true, 'job' => $job], JSON_UNESCAPED_UNICODE);
 function validId($id) { return is_string($id) && preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id); }
 function jobPath($id) { return JOBS_DIR . $id . '.json'; }
 function analysisFiles($id) { return analysisSummaries(DATA_DIR, $id); }
-function findFavorite($id) { foreach (readJson(FAVORITES_FILE, []) as $item) if (isset($item['id']) && (string)$item['id'] === $id) return $item; return null; }
+function findFavorite($id) { return (new PropertyRepository(sigma_db()))->find($id); }
 function readJson($path, $default = null) { if (!is_file($path)) return $default; $value = json_decode(file_get_contents($path), true); return is_array($value) ? $value : $default; }
 function writeJson($path, $value) { file_put_contents($path, json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX); }
 function failJob($path, $job, $error) { $job['status'] = 'failed'; $job['finished_at'] = gmdate('c'); $job['error'] = $error; writeJson($path, $job); aiLog('analysis.worker_start_failed', ['id' => $job['id'], 'type' => $job['type'], 'error' => $error]); jsonError(500, $error); }
