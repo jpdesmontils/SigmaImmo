@@ -48,9 +48,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   restoreGalleryState();
   initViewer();
   initDeleteModal();
+  initCardOptionsMenus();
   document.addEventListener('immoagg:open-analysis', openFinishedAnalysis);
   await loadData();
 });
+
+// ── Menu déroulant "options" des vignettes ──────────────────────
+// Le menu ne s'ouvre que sur clic du bouton •••, jamais au survol.
+function initCardOptionsMenus() {
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('.card-btn-more');
+    const openMenu = document.querySelector('.card-options.open');
+
+    if (trigger) {
+      e.stopPropagation();
+      const container = trigger.closest('.card-options');
+      const wasOpen = container.classList.contains('open');
+      if (openMenu && openMenu !== container) openMenu.classList.remove('open');
+      container.classList.toggle('open', !wasOpen);
+      trigger.setAttribute('aria-expanded', String(!wasOpen));
+      return;
+    }
+
+    if (openMenu && !e.target.closest('.card-options')) {
+      openMenu.classList.remove('open');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const openMenu = document.querySelector('.card-options.open');
+    if (!openMenu) return;
+    openMenu.classList.remove('open');
+    openMenu.querySelector('.card-btn-more')?.setAttribute('aria-expanded', 'false');
+  });
+}
 
 function openFinishedAnalysis(event) {
   const listing = allListings.find(item => String(item.id) === String(event.detail.id));
@@ -112,11 +144,6 @@ function updateHeaderStats() {
 function initDeleteModal() {
   document.getElementById('delete-modal-cancel').addEventListener('click', closeDeleteModal);
   document.getElementById('delete-modal-confirm').addEventListener('click', confirmDelete);
-  document.querySelectorAll('[data-modal-selection]').forEach(button => button.addEventListener('click', async () => {
-    if (deleteTargetIdx === null) return;
-    await toggleSelection(deleteTargetIdx, button.dataset.modalSelection);
-    closeDeleteModal();
-  }));
   document.getElementById('delete-modal').addEventListener('click', function(e) {
     if (e.target === document.getElementById('delete-modal')) closeDeleteModal();
   });
@@ -148,9 +175,11 @@ function initFilters() {
     filters.surfMax = e.target.value ? parseFloat(e.target.value) : null;
     debounced();
   });
-  document.getElementById('f-sort').addEventListener('change', e => {
-    filters.sort = e.target.value;
-    applyFiltersAndRender();
+  ['f-sort-field', 'f-sort-order'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      filters.sort = selectedSortValue();
+      applyFiltersAndRender();
+    });
   });
 
   document.getElementById('btn-reset').addEventListener('click', resetFilters);
@@ -216,7 +245,8 @@ function restoreGalleryState() {
     if (!saved) return;
     filters.city = saved.city || ''; filters.priceMin = saved.priceMin ?? null; filters.priceMax = saved.priceMax ?? null; filters.surfMin = saved.surfMin ?? null; filters.surfMax = saved.surfMax ?? null; filters.sort = saved.sort || 'date_desc';
     filters.userSelections = new Set(saved.userSelections || []); filters.analysisTypes = new Set(saved.analysisTypes || []); currentView = ['gallery','list','map'].includes(saved.view) ? saved.view : 'gallery';
-    const values = {'f-city':filters.city,'f-price-min':filters.priceMin,'f-price-max':filters.priceMax,'f-surf-min':filters.surfMin,'f-surf-max':filters.surfMax,'f-sort':filters.sort}; Object.entries(values).forEach(([key,value])=>{const input=document.getElementById(key);if(input)input.value=value??''}); syncFilterButtons();
+    syncSortControls();
+    const values = {'f-city':filters.city,'f-price-min':filters.priceMin,'f-price-max':filters.priceMax,'f-surf-min':filters.surfMin,'f-surf-max':filters.surfMax}; Object.entries(values).forEach(([key,value])=>{const input=document.getElementById(key);if(input)input.value=value??''}); syncFilterButtons();
     document.querySelectorAll('.view-btn').forEach(button=>button.classList.toggle('active',button.dataset.view===currentView)); ['gallery','list','map'].forEach(view=>document.getElementById('view-'+view).classList.toggle('active',view===currentView));
     pendingGalleryScroll = Number(saved.scrollY) || 0;
   } catch (_) {}
@@ -240,26 +270,52 @@ function hasScore(item) {
   return Number.isFinite(Number(item.latestAnalysis?.score)) && item.latestAnalysis?.score !== null && item.latestAnalysis?.score !== '';
 }
 
+function selectedSortValue() {
+  return document.getElementById('f-sort-field').value + '_' + document.getElementById('f-sort-order').value;
+}
+
+function syncSortControls() {
+  const [field, order] = normalizedSort(filters.sort).split('_');
+  filters.sort = field + '_' + order;
+  document.getElementById('f-sort-field').value = field;
+  document.getElementById('f-sort-order').value = order;
+}
+
+function normalizedSort(sort) {
+  const parts = String(sort || 'date_desc').split('_');
+  const field = ['date', 'price', 'surface', 'score', 'yield', 'revenue', 'cashflow'].includes(parts[0]) ? parts[0] : 'date';
+  const order = parts[1] === 'asc' ? 'asc' : 'desc';
+  return field + '_' + order;
+}
+
 function compareListings(a, b, sort) {
-  const [sortField, sortOrder] = sort.split('_');
-
-  if (sortField === 'score') {
-    const aHasScore = hasScore(a);
-    const bHasScore = hasScore(b);
-    if (aHasScore !== bHasScore) return aHasScore ? -1 : 1;
-    if (!aHasScore) return 0;
-    return sortOrder === 'asc'
-      ? Number(a.latestAnalysis.score) - Number(b.latestAnalysis.score)
-      : Number(b.latestAnalysis.score) - Number(a.latestAnalysis.score);
-  }
-
-  let va, vb;
-  switch (sortField) {
-    case 'price':   va = a.price   || Infinity; vb = b.price   || Infinity; break;
-    case 'surface': va = a.surface || 0;        vb = b.surface || 0;        break;
-    default:        va = a.capturedAt || 0;     vb = b.capturedAt || 0;
-  }
+  const [sortField, sortOrder] = normalizedSort(sort).split('_');
+  const va = sortValue(a, sortField);
+  const vb = sortValue(b, sortField);
+  const aHasValue = Number.isFinite(va);
+  const bHasValue = Number.isFinite(vb);
+  if (aHasValue !== bHasValue) return aHasValue ? -1 : 1;
+  if (!aHasValue) return 0;
   return sortOrder === 'asc' ? va - vb : vb - va;
+}
+
+function sortValue(item, sortField) {
+  const locatif = item?.analyses?.locatif || {};
+  switch (sortField) {
+    case 'price': return numericSortValue(item?.price);
+    case 'surface': return numericSortValue(item?.surface);
+    case 'score': return hasScore(item) ? Number(item.latestAnalysis.score) : NaN;
+    case 'yield': return numericSortValue(locatif.rendementNetPct);
+    case 'revenue': return numericSortValue(locatif.revenuBrutAnnuel);
+    case 'cashflow': return numericSortValue(locatif.cashflowMensuel);
+    default: return numericSortValue(item?.capturedAt);
+  }
+}
+
+function numericSortValue(value) {
+  if (value === null || value === '') return NaN;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : NaN;
 }
 
 function resetFilters() {
@@ -277,7 +333,7 @@ function resetFilters() {
   document.getElementById('f-price-max').value = '';
   document.getElementById('f-surf-min').value  = '';
   document.getElementById('f-surf-max').value  = '';
-  document.getElementById('f-sort').value      = 'date_desc';
+  syncSortControls();
   syncFilterButtons();
 
   applyFiltersAndRender();
@@ -439,6 +495,18 @@ function analysisTagsHTML(item, className = '') {
   return className && tags ? `<div class="${className}">${tags}</div>` : tags;
 }
 
+function locatifSummaryHTML(item) {
+  const locatif = item?.analyses?.locatif;
+  if (!locatif || locatif.available === false) return '';
+  const annualRevenue = Number(locatif.revenuBrutAnnuel);
+  const netYield = Number(locatif.rendementNetPct);
+  const lines = [];
+  if (Number.isFinite(annualRevenue)) lines.push(`${formatPrice(annualRevenue)} brut/an`);
+  if (Number.isFinite(netYield)) lines.push(`${netYield.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}% net annuel`);
+  if (!lines.length) return '';
+  return `<div class="card-locatif-summary" aria-label="Synthèse locative">${lines.map(line => `<span>${esc(line)}</span>`).join('')}</div>`;
+}
+
 function latestAnalysis(item) {
   if (item && item.latestAnalysis) return item.latestAnalysis;
   return availableAnalysisTypes(item).map(type => ({ type, ...(item.analyses[type] || {}) }))
@@ -510,20 +578,10 @@ function renderGallery() {
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
       // Ne pas ouvrir la visionneuse si clic sur un bouton action
-      if (e.target.closest('.card-btn-delete') || e.target.closest('.card-btn-map') || e.target.closest('.card-btn-tag')) return;
+      if (e.target.closest('.card-options') || e.target.closest('.card-btn-tag')) return;
       openProperty(filtered[parseInt(card.dataset.idx)]);
     });
   });
-
-  // Boutons carte
-  grid.querySelectorAll('.card-btn-map').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const idx = parseInt(btn.dataset.idx);
-      showOnMap(idx);
-    });
-  });
-
 
   // Boutons tag sélection
   grid.querySelectorAll('.card-btn-tag').forEach(btn => {
@@ -535,17 +593,21 @@ function renderGallery() {
     });
   });
 
-  // Menu « Plus d’options »
-  grid.querySelectorAll('.card-btn-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  grid.querySelectorAll('[data-option-action]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
+      btn.closest('.card-options')?.classList.remove('open');
       const idx = parseInt(btn.dataset.idx);
-      openDeleteModal(idx);
+      const action = btn.dataset.optionAction;
+      if (action === 'map') await showOnMap(idx);
+      if (action === 'delete') openDeleteModal(idx);
+      if (action === 'a_visiter' || action === 'visite') await toggleSelection(idx, action);
     });
   });
 }
 
 function cardHTML(item, idx) {
+  const pricePerSqm = formatPricePerSqm(item);
   const imgSrc = getImageUrl(item);
   const imgEl  = imgSrc
     ? `<img class="card-img" src="${esc(imgSrc)}" alt="${esc(item.title || '')}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
@@ -555,29 +617,37 @@ function cardHTML(item, idx) {
   const sel = normalizedSelection(item.selection);
   const badge = selectionBadgeHTML(sel);
 
-  const btnShort = selectionButtonHTML(idx, 'shortlist', 'card-btn-tag');
-  const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag');
+  const btnShort = selectionButtonHTML(idx, 'shortlist', 'card-btn-tag', item);
+  const btnEcart = selectionButtonHTML(idx, 'ecartee', 'card-btn-tag', item);
 
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
       ${badge}
-      <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}${analysisTagsHTML(item, 'card-analysis-tags')}${scoreCircleHTML(item)}</div>
+      <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}${analysisTagsHTML(item, 'card-analysis-tags')}${locatifSummaryHTML(item)}${scoreCircleHTML(item)}</div>
       <div class="card-body">
         <div class="card-tags">
-          ${selectionTagHTML(sel)}
+          ${sel === 'shortlist' ? '' : selectionTagHTML(sel)}
         </div>
         <div class="card-title">${esc(item.title || 'Annonce immobilière')}</div>
         <div class="card-meta">
           ${item.price   ? `<span class="card-price">${formatPrice(item.price)}</span>` : ''}
           ${item.surface ? `<span>${item.surface} m²</span>` : ''}
+          ${pricePerSqm ? `<span>${pricePerSqm}</span>` : ''}
           ${item.rooms   ? `<span>${item.rooms}</span>` : ''}
         </div>
         <div class="card-location">${esc(getLoc(item))}</div>
         <div class="card-actions">
           ${btnShort}
           ${btnEcart}
-          <button class="card-btn-map" data-idx="${idx}" title="Voir sur la carte">🗺</button>
-          <button class="card-btn-delete" data-idx="${idx}" title="Plus d’options" aria-label="Plus d’options">•••</button>
+          <div class="card-options">
+            <button class="card-btn-more" type="button" title="Plus d’options" aria-label="Plus d’options" aria-haspopup="menu" aria-expanded="false">•••</button>
+            <div class="card-options-menu" role="menu">
+              <button type="button" role="menuitem" data-option-action="map" data-idx="${idx}">Voir sur la carte</button>
+              <button type="button" role="menuitem" data-option-action="a_visiter" data-idx="${idx}">A visiter</button>
+              <button type="button" role="menuitem" data-option-action="visite" data-idx="${idx}">Visité</button>
+              <button type="button" role="menuitem" class="danger" data-option-action="delete" data-idx="${idx}">Supprimer</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>`;
@@ -770,13 +840,36 @@ async function renderMap(focusedItem = null) {
       });
     }
 
-    popup.querySelectorAll('[data-popup-tag]').forEach(function(btn) {
+    var popupCard = popup.querySelector('.map-card-popup .card');
+    if (popupCard && !popupCard._bound) {
+      popupCard._bound = true;
+      popupCard.addEventListener('click', function(event) {
+        if (event.target.closest('.card-options') || event.target.closest('.card-btn-tag')) return;
+        openProperty(filtered[parseInt(popupCard.dataset.idx)]);
+      });
+    }
+
+    popup.querySelectorAll('.card-btn-tag').forEach(function(btn) {
       if (btn._bound) return;
       btn._bound = true;
       btn.addEventListener('click', function() {
-        var popupIdx = parseInt(btn.dataset.popupIdx);
-        var tagVal   = btn.dataset.popupTag;
+        var popupIdx = parseInt(btn.dataset.idx);
+        var tagVal   = btn.dataset.sel;
         toggleSelection(popupIdx, tagVal);
+        map.closePopup();
+        renderMap();
+      });
+    });
+
+    popup.querySelectorAll('[data-option-action]').forEach(function(btn) {
+      if (btn._bound) return;
+      btn._bound = true;
+      btn.addEventListener('click', async function() {
+        var popupIdx = parseInt(btn.dataset.idx);
+        var action = btn.dataset.optionAction;
+        btn.closest('.card-options')?.classList.remove('open');
+        if (action === 'delete') openDeleteModal(popupIdx);
+        if (action === 'a_visiter' || action === 'visite') await toggleSelection(popupIdx, action);
         map.closePopup();
         renderMap();
       });
@@ -786,28 +879,7 @@ async function renderMap(focusedItem = null) {
 
 
 function popupHTML(item, idx) {
-  const imgSrc = getImageUrl(item);
-  const sel = normalizedSelection(item.selection);
-
-  const btnStyle = 'flex:1;padding:6px 4px;border-radius:3px;cursor:pointer;font-size:11px;font-weight:600;text-align:center;border:1px solid';
-  const activeStyles = { shortlist: '#7ec99a;background:#d6f0df;color:#145a2e', a_visiter: '#78bce8;background:#e2f3fd;color:#174b70', visite: '#1769aa;background:#dcecf8;color:#0d4775', ecartee: '#d97373;background:#fce8e8;color:#831515' };
-  const popupButtons = Object.keys(SELECTIONS).map(key => `<button data-popup-tag="${key}" data-popup-idx="${idx}" style="${btnStyle} ${sel === key ? activeStyles[key] : '#d0ccc3;background:#edeae3;color:#5a5850'}">${SELECTIONS[key].icon} ${SELECTIONS[key].label}</button>`).join('');
-
-  return `
-    <div style="font-family:Inter,sans-serif;font-size:13px;min-width:220px;color:#16150f;">
-      ${imgSrc ? `<img src="${esc(imgSrc)}" style="width:100%;height:110px;object-fit:cover;border-radius:3px;margin-bottom:8px;" loading="lazy">` : ''}
-      <div style="font-weight:600;margin-bottom:4px;line-height:1.3;">${esc(item.title || 'Annonce')}</div>
-      ${selectionTagHTML(sel)}${analysisTagsHTML(item)}${scoreTextHTML(item)}
-      ${item.price ? `<div style="font-family:'JetBrains Mono',monospace;color:#7a4108;font-weight:700;margin-bottom:2px;">${formatPrice(item.price)}</div>` : ''}
-      ${item.surface ? `<div style="color:#9a9890;font-size:12px;margin-bottom:6px;">${item.surface} m²</div>` : ''}
-      <div style="display:flex;gap:5px;margin-bottom:6px;">
-        ${popupButtons}
-      </div>
-      <div style="display:flex;gap:5px;">
-        <a href="${propertyUrl(item)}" data-open-property="${idx}" style="${btnStyle} #16150f;background:#16150f;color:#f5f3ee;flex:1;text-decoration:none;display:block;">Voir Fiche</a>
-        ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="${btnStyle} #d0ccc3;background:#edeae3;color:#16150f;flex:1;text-decoration:none;display:block;">→ Annonce</a>` : ''}
-      </div>
-    </div>`;
+  return `<div class="map-card-popup">${cardHTML(item, idx)}<a href="${propertyUrl(item)}" data-open-property="${idx}" class="map-card-open">Voir Fiche</a></div>`;
 }
 
 // ── Visionneuse d'annonce ──────────────────────────────────────
@@ -1090,9 +1162,9 @@ function selectionBadgeHTML(selection) {
   return option ? `<div class="card-selection-badge badge-${selection.replace('_', '-')}">${option.badge}</div>` : '';
 }
 
-function selectionButtonHTML(idx, selection, className) {
+function selectionButtonHTML(idx, selection, className, item = filtered[idx]) {
   const option = SELECTIONS[selection];
-  const active = filtered[idx].selection === selection ? ` tag-${selection}-active` : '';
+  const active = item && item.selection === selection ? ` tag-${selection}-active` : '';
   return `<button class="${className}${active}" data-idx="${idx}" data-sel="${selection}" title="${option.label}" aria-label="${option.label}">${option.icon}</button>`;
 }
 
@@ -1120,14 +1192,7 @@ let deleteTargetIdx = null;
 function openDeleteModal(idx) {
   deleteTargetIdx = idx;
   const item = filtered[idx];
-  const selection = item ? normalizedSelection(item.selection) : '';
-  document.getElementById('listing-options-title').textContent = item ? item.title || 'Cette annonce' : 'Cette annonce';
   document.getElementById('delete-modal-title').textContent = item ? item.title || 'cette annonce' : 'cette annonce';
-  document.querySelectorAll('[data-modal-selection]').forEach(button => {
-    const active = selection === button.dataset.modalSelection;
-    button.classList.toggle('active', active);
-    button.setAttribute('aria-pressed', String(active));
-  });
   document.getElementById('delete-modal').classList.add('open');
 }
 
@@ -1187,6 +1252,13 @@ function getDept(item) {
 function formatPrice(price) {
   if (!price) return '';
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
+}
+
+function formatPricePerSqm(item) {
+  const price = Number(item && item.price);
+  const surface = Number(item && item.surface);
+  if (!price || !surface) return '';
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price / surface) + '/m²';
 }
 
 function esc(str) {
