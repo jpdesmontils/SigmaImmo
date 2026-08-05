@@ -3,9 +3,10 @@
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/analysis_types.php';
 require_once __DIR__ . '/dvf_service.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 if (PHP_SAPI !== 'cli') exit(1);
 define('DATA_DIR', __DIR__ . '/../data/');
-define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
 define('JOBS_DIR', DATA_DIR . 'analyses/jobs/');
 $id = $argv[1] ?? ''; $type = $argv[2] ?? '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) || !validAnalysisType($type)) exit(1);
@@ -71,7 +72,7 @@ try {
     discardFilesForDeletedListing($id, $jobPath);
 }
 function loadEnv($path) { if (!is_file($path)) return; foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) { $line = trim($line); if ($line === '' || $line[0] === '#') continue; $line = preg_replace('/^export\s+/', '', $line); if (!preg_match('/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/', $line, $m)) continue; $value = trim($m[2]); if (strlen($value) > 1 && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) $value = substr($value, 1, -1); putenv($m[1] . '=' . $value); $_ENV[$m[1]] = $value; } }
-function findFavorite($id) { $items = json_decode(@file_get_contents(FAVORITES_FILE), true) ?: []; foreach ($items as $item) if (isset($item['id']) && (string)$item['id'] === $id) return $item; return null; }
+function findFavorite($id) { return (new PropertyRepository(sigma_db()))->find($id); }
 function discardFilesForDeletedListing($id, $jobPath, $resultPath = null) { if (findFavorite($id)) return false; if ($resultPath) @unlink($resultPath); @unlink($jobPath); return true; }
 function promptInputVariables($listing) {
     $dpe = strtoupper(trim((string)(isset($listing['dpe']) ? $listing['dpe'] : '')));

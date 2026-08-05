@@ -7,6 +7,8 @@
 
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/analysis_types.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -24,14 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 // ── Config ────────────────────────────────────────────────────
 define('DATA_DIR', __DIR__ . '/../data/');
-define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
 define('ANALYSIS_JOBS_DIR', DATA_DIR . 'analyses/jobs/');
 
 // ── Journalisation ─────────────────────────────────────────────
 appLog('app', 'listings.request', [
     'method' => $_SERVER['REQUEST_METHOD'],
     'query' => $_GET,
-    'favorites_exists' => file_exists(FAVORITES_FILE)
+    'storage' => 'sqlite'
 ]);
 
 // ── Query params ──────────────────────────────────────────────
@@ -40,7 +41,7 @@ $sort = isset($_GET['sort']) ? $_GET['sort'] : 'date_desc';
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
 
 // ── Load data ─────────────────────────────────────────────────
-$items = array_values(loadJson(FAVORITES_FILE, []));
+$items = (new PropertyRepository(sigma_db()))->allActive();
 
 // Expose uniquement la disponibilité locale des analyses, jamais leur contenu.
 foreach ($items as &$item) {
@@ -99,7 +100,6 @@ $response = [
     'total' => $total,
     'count' => count($items),
     'items' => $items,
-    'debug' => ['favorites_file' => fileInfo(FAVORITES_FILE)],
     'ts' => time()
 ];
 
@@ -174,16 +174,6 @@ function sortValue($item, $field) {
 
 function numericValue($value) {
     return is_numeric($value) ? (float)$value : null;
-}
-
-function fileInfo($file) {
-    return [
-        'path' => $file,
-        'exists' => file_exists($file),
-        'size' => file_exists($file) ? filesize($file) : 0,
-        'writable' => file_exists($file) ? is_writable($file) : null,
-        'modified' => file_exists($file) ? filemtime($file) : null
-    ];
 }
 
 function jsonError($code, $msg) {

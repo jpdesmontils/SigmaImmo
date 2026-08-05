@@ -2,6 +2,8 @@
 /** Lecture et mise à jour de la fiche mutualisée d'une annonce. */
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/analysis_types.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, PATCH, DELETE, OPTIONS');
@@ -9,15 +11,13 @@ header('Access-Control-Allow-Headers: Content-Type');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 define('DATA_DIR', __DIR__ . '/../data/');
-define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
 define('SETTINGS_FILE', DATA_DIR . 'settings.json');
 $id = isset($_GET['id']) ? (string) $_GET['id'] : '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id)) respond(400, ['ok' => false, 'error' => 'Identifiant invalide.']);
 
-$favorites = readJson(FAVORITES_FILE, []);
-$key = null;
-foreach ($favorites as $candidateKey => $item) if (is_array($item) && (string)($item['id'] ?? '') === $id) { $key = $candidateKey; break; }
-if ($key === null) respond(404, ['ok' => false, 'error' => 'Annonce introuvable.']);
+$propertyRepo = new PropertyRepository(sigma_db());
+$listing = $propertyRepo->find($id);
+if (!$listing) respond(404, ['ok' => false, 'error' => 'Annonce introuvable.']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     $payload = json_decode(file_get_contents('php://input'), true);
@@ -25,36 +25,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     // Les compléments enrichissent les champs canoniques : aucun second objet
     // de paramètres n'est créé et une synchronisation conserve ces valeurs.
     $fields = ['address' => 'text', 'location' => 'text', 'price' => 'number', 'surface' => 'number', 'rooms' => 'text', 'terrain' => 'number', 'dpe' => 'energy', 'ges' => 'energy', 'primaryResidenceCity' => 'required_text', 'notes' => 'notes', 'visitAt' => 'datetime', 'agentName' => 'text', 'agentPhone' => 'phone', 'agentEmail' => 'email'];
-    $previousAddress = isset($favorites[$key]['address']) ? trim((string)$favorites[$key]['address']) : '';
+    $previousAddress = isset($listing['address']) ? trim((string)$listing['address']) : '';
     foreach ($fields as $field => $kind) if (array_key_exists($field, $payload)) {
         $value = $payload[$field];
-        if ($kind === 'number') $favorites[$key][$field] = $value === '' || $value === null ? null : max(0, (float)$value);
+        if ($kind === 'number') $listing[$field] = $value === '' || $value === null ? null : max(0, (float)$value);
         elseif ($kind === 'energy') {
             $energy = strtoupper(trim((string)$value));
             if (!preg_match('/^[A-G]$/', $energy)) respond(400, ['ok' => false, 'error' => 'La note énergétique doit être comprise entre A et G.']);
-            $favorites[$key][$field] = $energy;
+            $listing[$field] = $energy;
         } elseif ($kind === 'datetime') {
             $date = trim((string)$value);
             if ($date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $date)) respond(400, ['ok' => false, 'error' => 'La date de visite est invalide.']);
-            $favorites[$key][$field] = $date;
+            $listing[$field] = $date;
         } elseif ($kind === 'required_text') {
             $text = mb_substr(trim(strip_tags((string)$value)), 0, 120);
             if ($text === '') respond(400, ['ok' => false, 'error' => 'La ville de résidence principale est obligatoire.']);
-            $favorites[$key][$field] = $text;
+            $listing[$field] = $text;
         } elseif ($kind === 'email') {
             $email = mb_substr(trim((string)$value), 0, 254);
             if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) respond(400, ['ok' => false, 'error' => 'L’adresse e-mail de l’agent est invalide.']);
-            $favorites[$key][$field] = $email;
+            $listing[$field] = $email;
         } elseif ($kind === 'phone') {
             $phone = mb_substr(trim(strip_tags((string)$value)), 0, 40);
             if ($phone !== '' && !preg_match('/^[0-9+().\s-]+$/', $phone)) respond(400, ['ok' => false, 'error' => 'Le téléphone de l’agent est invalide.']);
-            $favorites[$key][$field] = $phone;
-        } elseif ($kind === 'notes') $favorites[$key][$field] = mb_substr(trim(strip_tags((string)$value)), 0, 10000);
-        else $favorites[$key][$field] = mb_substr(trim(strip_tags((string)$value)), 0, 300);
+            $listing[$field] = $phone;
+        } elseif ($kind === 'notes') $listing[$field] = mb_substr(trim(strip_tags((string)$value)), 0, 10000);
+        else $listing[$field] = mb_substr(trim(strip_tags((string)$value)), 0, 300);
     }
-    $favorites[$key]['updatedAt'] = time() * 1000;
-    writeJson(FAVORITES_FILE, $favorites);
-    if (array_key_exists('address', $payload) && $previousAddress !== (isset($favorites[$key]['address']) ? $favorites[$key]['address'] : '')) {
+    $listing['updatedAt'] = time() * 1000;
+    $propertyRepo->updateFields($id, $listing);
+    if (array_key_exists('address', $payload) && $previousAddress !== (isset($listing['address']) ? $listing['address'] : '')) {
         $priceAnalysis = DATA_DIR . 'analyses/prix/' . $id . '.json';
         if (is_file($priceAnalysis)) @unlink($priceAnalysis);
     }
@@ -73,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
 if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'PATCH'], true)) respond(405, ['ok' => false, 'error' => 'Method not allowed']);
 
 $settings = readSettings();
-$listing = $favorites[$key];
 if (!isset($listing['primaryResidenceCity']) || trim((string)$listing['primaryResidenceCity']) === '') $listing['primaryResidenceCity'] = $settings['primaryResidenceCity'];
 $summaries = analysisSummaries(DATA_DIR, $id);
 $jobPath = DATA_DIR . 'analyses/jobs/' . $id . '.json';
@@ -110,5 +109,4 @@ function readSettings() {
     return $settings;
 }
 function readJson($path, $default) { if (!is_file($path)) return $default; $value = json_decode(file_get_contents($path), true); return is_array($value) ? $value : $default; }
-function writeJson($path, $value) { if (file_put_contents($path, json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) === false) respond(500, ['ok' => false, 'error' => 'Écriture impossible.']); }
 function respond($status, $payload) { http_response_code($status); echo json_encode($payload, JSON_UNESCAPED_UNICODE); exit; }

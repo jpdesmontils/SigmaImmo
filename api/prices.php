@@ -2,6 +2,8 @@
 /** Comparables et positionnement de prix issus des mutations DVF. */
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/dvf_service.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -12,11 +14,8 @@ $id = isset($_GET['id']) ? (string)$_GET['id'] : '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id)) priceRespond(400, ['ok' => false, 'error' => 'Identifiant invalide.']);
 $logContext = ['request_id' => uniqid('dvf-', true), 'id' => $id, 'method' => $_SERVER['REQUEST_METHOD']];
 appLog('app', 'dvf.request_started', $logContext);
-$favoritesFile = __DIR__ . '/../data/favorites.json';
 $dataDirectory = __DIR__ . '/../data/';
-$favorites = is_file($favoritesFile) ? json_decode(file_get_contents($favoritesFile), true) : [];
-$listing = null;
-foreach ((array)$favorites as $item) if (is_array($item) && (string)($item['id'] ?? '') === $id) { $listing = $item; break; }
+$listing = (new PropertyRepository(sigma_db()))->find($id);
 if (!$listing) {
     appLog('app', 'dvf.request_rejected', $logContext + ['step' => 'find_listing', 'reason' => 'listing_not_found']);
     priceRespond(404, ['ok' => false, 'error' => 'Annonce introuvable.']);

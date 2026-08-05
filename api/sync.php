@@ -6,6 +6,8 @@
 // ============================================================
 
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -18,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { jsonError(405, 'Method not allow
 // ── Config ────────────────────────────────────────────────────
 define('API_KEY',       file_get_contents('keyfile.txt') ?: 'CHANGE_ME');
 define('DATA_DIR',      __DIR__ . '/../data/');
-define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
 define('MAX_FAVORITES', 1000);
 
 // ── Auth ──────────────────────────────────────────────────────
@@ -46,9 +47,9 @@ jsonOk(['ok' => true, 'stats' => $stats, 'ts' => time()]);
 
 // ── Favoris ───────────────────────────────────────────────────
 function processFavorites($incoming) {
-    // Charger et s'assurer que le store est keyed par id
-    $raw   = loadJson(FAVORITES_FILE, array());
-    $store = deduplicateStore($raw, 'id');
+    // Charger SQLite et s'assurer que le store est keyed par id.
+    $repo = new PropertyRepository(sigma_db());
+    $store = deduplicateStore($repo->allActive(), 'id');
     $added = 0; $updated = 0;
 
     appLog('app', 'sync.favorites_received', [
@@ -106,8 +107,9 @@ function processFavorites($incoming) {
         $store = array_slice($store, 0, MAX_FAVORITES, true);
     }
 
-    // Sauvegarder en objet associatif (pas array_values) pour garder les clés
-    saveJsonObject(FAVORITES_FILE, $store);
+    foreach ($store as $item) {
+        $repo->upsert($item);
+    }
     return array('favorites_added' => $added, 'favorites_updated' => $updated);
 }
 
@@ -192,33 +194,6 @@ function sanitizeEnergyRating($value) {
 function normalizeUrl($url) {
     $parts = parse_url($url);
     return trim($parts['path'] ?? $url, '/');
-}
-
-function loadJson($file, $default) {
-    if (!file_exists($file)) return $default;
-    $content = file_get_contents($file);
-    $decoded = json_decode($content, true);
-    return is_array($decoded) ? $decoded : $default;
-}
-
-// Sauvegarder un objet associatif (garde les clés)
-function saveJsonObject($file, $data) {
-    $dir = dirname($file);
-    if (!is_dir($dir)) mkdir($dir, 0755, true);
-    $data = cleanUtf8($data);
-    file_put_contents($file, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-}
-
-function cleanUtf8($value) {
-    if (is_string($value)) {
-        return iconv('UTF-8', 'UTF-8//IGNORE', $value);
-    }
-    if (is_array($value)) {
-        foreach ($value as $k => $v) {
-            $value[$k] = cleanUtf8($v);
-        }
-    }
-    return $value;
 }
 
 function jsonOk($data) {

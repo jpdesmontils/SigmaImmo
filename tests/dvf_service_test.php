@@ -58,13 +58,13 @@ dvfAssert(5000.0, $summary['median_price_per_sqm'], 'La médiane doit être calc
 dvfAssert(20.0, $summary['asking_gap_percent'], 'L’écart au prix demandé doit être exprimé en pourcentage.');
 dvfAssert(300000.0, $summary['estimated_value'], 'La valeur centrale doit appliquer la médiane à la surface.');
 
-echo "-- Extraction du contexte d’une annonce favorites.json (repli texte)\n";
+echo "-- Extraction du contexte d’une annonce export JSON historique (repli texte)\n";
 $context = dvfListingContext([
     'title' => 'Appartement avec balcon', 'surface' => null, 'surfaceText' => 'Surface 72,5 m²',
     'price' => null, 'priceText' => '315 000 €', 'location' => '', 'coords' => ['lat' => '48.8', 'lng' => '2.3'],
 ]);
-dvfAssert(72.5, $context['surface'], 'La surface textuelle de favorites.json doit servir de repli.');
-dvfAssert(315000.0, $context['price'], 'Le prix textuel de favorites.json doit servir de repli.');
+dvfAssert(72.5, $context['surface'], 'La surface textuelle de export JSON historique doit servir de repli.');
+dvfAssert(315000.0, $context['price'], 'Le prix textuel de export JSON historique doit servir de repli.');
 dvfAssert(48.8, $context['latitude'], 'Les coordonnées déjà enregistrées doivent éviter d’exiger une adresse.');
 dvfAssert('', $context['query'], 'Une adresse vide doit être acceptée lorsque des coordonnées existent.');
 
@@ -133,7 +133,7 @@ $historicalRows = dvfLoadCommuneYears(2025, function($year) use (&$loadedYears) 
 dvfAssert([2025, 2024, 2023, 2022], $loadedYears, 'Quatre années avec données doivent être chargées même si le premier millésime dépasse 400 lignes.');
 dvfAssert(404, count($historicalRows), 'Toutes les lignes des quatre millésimes doivent être conservées.');
 
-echo "-- Test avec l’exemple fourni : favorites.json / annonce A91obcjachbl6ue3 (Coursan)\n";
+echo "-- Test avec l’exemple fourni : export JSON historique / annonce A91obcjachbl6ue3 (Coursan)\n";
 $favoriteExample = [
     'id' => 'A91obcjachbl6ue3',
     'title' => 'Maison de 5 pièces de 117 m² située à Coursan',
