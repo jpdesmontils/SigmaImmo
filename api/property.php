@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 define('DATA_DIR', __DIR__ . '/../data/');
 define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
+define('SETTINGS_FILE', DATA_DIR . 'settings.json');
 $id = isset($_GET['id']) ? (string) $_GET['id'] : '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id)) respond(400, ['ok' => false, 'error' => 'Identifiant invalide.']);
 
@@ -23,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     if (!is_array($payload)) respond(400, ['ok' => false, 'error' => 'Corps JSON invalide.']);
     // Les compléments enrichissent les champs canoniques : aucun second objet
     // de paramètres n'est créé et une synchronisation conserve ces valeurs.
-    $fields = ['address' => 'text', 'location' => 'text', 'price' => 'number', 'surface' => 'number', 'rooms' => 'text', 'terrain' => 'number', 'dpe' => 'energy', 'ges' => 'energy', 'notes' => 'notes', 'visitAt' => 'datetime', 'agentName' => 'text', 'agentPhone' => 'phone', 'agentEmail' => 'email'];
+    $fields = ['address' => 'text', 'location' => 'text', 'price' => 'number', 'surface' => 'number', 'rooms' => 'text', 'terrain' => 'number', 'dpe' => 'energy', 'ges' => 'energy', 'primaryResidenceCity' => 'required_text', 'notes' => 'notes', 'visitAt' => 'datetime', 'agentName' => 'text', 'agentPhone' => 'phone', 'agentEmail' => 'email'];
     $previousAddress = isset($favorites[$key]['address']) ? trim((string)$favorites[$key]['address']) : '';
     foreach ($fields as $field => $kind) if (array_key_exists($field, $payload)) {
         $value = $payload[$field];
@@ -36,6 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
             $date = trim((string)$value);
             if ($date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $date)) respond(400, ['ok' => false, 'error' => 'La date de visite est invalide.']);
             $favorites[$key][$field] = $date;
+        } elseif ($kind === 'required_text') {
+            $text = mb_substr(trim(strip_tags((string)$value)), 0, 120);
+            if ($text === '') respond(400, ['ok' => false, 'error' => 'La ville de résidence principale est obligatoire.']);
+            $favorites[$key][$field] = $text;
         } elseif ($kind === 'email') {
             $email = mb_substr(trim((string)$value), 0, 254);
             if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) respond(400, ['ok' => false, 'error' => 'L’adresse e-mail de l’agent est invalide.']);
@@ -67,29 +72,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
 }
 if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'PATCH'], true)) respond(405, ['ok' => false, 'error' => 'Method not allowed']);
 
+$settings = readSettings();
 $listing = $favorites[$key];
+if (!isset($listing['primaryResidenceCity']) || trim((string)$listing['primaryResidenceCity']) === '') $listing['primaryResidenceCity'] = $settings['primaryResidenceCity'];
 $summaries = analysisSummaries(DATA_DIR, $id);
 $jobPath = DATA_DIR . 'analyses/jobs/' . $id . '.json';
 $job = readJson($jobPath, null);
 if ($job) expireStaleJob($jobPath, $job);
-respond(200, ['ok' => true, 'listing' => $listing, 'analyses' => $summaries, 'job' => $job, 'requirements' => analysisRequirements($listing)]);
+respond(200, ['ok' => true, 'listing' => $listing, 'settings' => $settings, 'analyses' => $summaries, 'job' => $job, 'requirements' => analysisRequirements($listing)]);
 
 function analysisRequirements($listing) {
-    // Les trois prompts ne reçoivent qu'`annonce_complete` (le trajet patrimonial
-    // est calculé en interne). Ces champs sont les données minimales effectivement
-    // nécessaires aux calculs demandés dans les prompts.
+    // Ces champs sont les données minimales effectivement nécessaires aux calculs
+    // demandés dans les prompts, y compris les variables explicites injectées.
     $definitions = [
         'price' => ['label' => 'Prix du bien', 'type' => 'number', 'suffix' => '€'],
         'surface' => ['label' => 'Surface habitable', 'type' => 'number', 'suffix' => 'm²'],
         'location' => ['label' => 'Commune ou localisation', 'type' => 'text'],
+        'dpe' => ['label' => 'DPE', 'type' => 'text', 'pattern' => '[A-Ga-g]', 'maxlength' => '1'],
+        'ges' => ['label' => 'GES', 'type' => 'text', 'pattern' => '[A-Ga-g]', 'maxlength' => '1'],
+        'primaryResidenceCity' => ['label' => 'Ville de résidence principale', 'type' => 'text'],
     ];
     $result = [];
     foreach (analysisTypes() as $type) {
         $missing = [];
         foreach ($definitions as $field => $definition) if (!isset($listing[$field]) || $listing[$field] === '' || $listing[$field] === null) $missing[] = ['field' => $field] + $definition;
-        $result[$type] = ['promptVariables' => $type === 'patrimonial' ? ['annonce_complete', 'analyse_trajet', 'analyse_prix'] : ['annonce_complete'], 'missing' => $missing];
+        $variables = ['annonce_complete', 'dpe', 'ges'];
+        if ($type === 'patrimonial') $variables = array_merge($variables, ['ville_residence_principale', 'analyse_trajet', 'analyse_prix']);
+        $result[$type] = ['promptVariables' => $variables, 'missing' => $missing];
     }
     return $result;
+}
+function readSettings() {
+    $settings = readJson(SETTINGS_FILE, []);
+    $city = isset($settings['primaryResidenceCity']) ? mb_substr(trim(strip_tags((string)$settings['primaryResidenceCity'])), 0, 120) : '';
+    if ($city === '') $city = 'Paris';
+    $settings['primaryResidenceCity'] = $city;
+    return $settings;
 }
 function readJson($path, $default) { if (!is_file($path)) return $default; $value = json_decode(file_get_contents($path), true); return is_array($value) ? $value : $default; }
 function writeJson($path, $value) { if (file_put_contents($path, json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) === false) respond(500, ['ok' => false, 'error' => 'Écriture impossible.']); }

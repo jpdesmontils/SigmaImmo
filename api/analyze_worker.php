@@ -21,7 +21,9 @@ try {
     $listing = findFavorite($id);
     if (!$listing) throw new RuntimeException('Annonce favorite introuvable.');
     markRunning($jobPath, $id, $type);
+    $inputVariables = promptInputVariables($listing);
     $listingJson = json_encode($listing, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    $baseReplacements = ['{{annonce_complete}}' => $listingJson, '{{dpe}}' => $inputVariables['dpe'], '{{ges}}' => $inputVariables['ges']];
     if ($type === 'patrimonial') {
         $priceAnalysis = dvfReadAnalysis($id, DATA_DIR);
         if (!$priceAnalysis || !dvfAnalysisMatchesListing($priceAnalysis, $listing)) {
@@ -29,19 +31,23 @@ try {
             $priceAnalysis = dvfCreateAnalysis($id, $listing, DATA_DIR, ['id' => $id, 'source' => 'patrimonial_worker']);
             aiLog('analysis.price_data_succeeded', ['id' => $id, 'type' => $type, 'captured_at' => $priceAnalysis['captured_at']]);
         }
-        $travel = runAnalysisStage($apiKey, $model, 'ana_trajet_paris', ['{{annonce_complete}}' => $listingJson], $id, $type);
+        $travel = runAnalysisStage($apiKey, $model, 'ana_trajet_rp', $baseReplacements + ['{{ville_residence_principale}}' => $inputVariables['ville_residence_principale']], $id, $type);
         applyTravelScore($travel);
         $analysis = runAnalysisStage($apiKey, $model, 'ana_patrimonial', [
             '{{annonce_complete}}' => $listingJson,
+            '{{dpe}}' => $inputVariables['dpe'],
+            '{{ges}}' => $inputVariables['ges'],
+            '{{ville_residence_principale}}' => $inputVariables['ville_residence_principale'],
             '{{analyse_trajet}}' => json_encode($travel, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
             '{{analyse_prix}}' => json_encode($priceAnalysis['result'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
         ], $id, $type);
+        $analysis['accessibilite_depuis_rp'] = $travel;
         $analysis['accessibilite_depuis_paris'] = $travel;
         $analysis['notation']['axes']['accessibilite']['score'] = $travel['evaluation']['score'] ?? null;
         $analysis['sources'] = array_merge($analysis['sources'] ?? [], $travel['sources'] ?? []);
         applyPatrimonialScore($analysis);
     } else {
-        $analysis = runAnalysisStage($apiKey, $model, 'ana_' . $type, ['{{annonce_complete}}' => $listingJson], $id, $type);
+        $analysis = runAnalysisStage($apiKey, $model, 'ana_' . $type, $baseReplacements, $id, $type);
     }
     $dir = DATA_DIR . 'analyses/' . $type . '/';
     if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) throw new RuntimeException('Répertoire d’analyse inaccessible.');
@@ -67,6 +73,13 @@ try {
 function loadEnv($path) { if (!is_file($path)) return; foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) { $line = trim($line); if ($line === '' || $line[0] === '#') continue; $line = preg_replace('/^export\s+/', '', $line); if (!preg_match('/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/', $line, $m)) continue; $value = trim($m[2]); if (strlen($value) > 1 && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) $value = substr($value, 1, -1); putenv($m[1] . '=' . $value); $_ENV[$m[1]] = $value; } }
 function findFavorite($id) { $items = json_decode(@file_get_contents(FAVORITES_FILE), true) ?: []; foreach ($items as $item) if (isset($item['id']) && (string)$item['id'] === $id) return $item; return null; }
 function discardFilesForDeletedListing($id, $jobPath, $resultPath = null) { if (findFavorite($id)) return false; if ($resultPath) @unlink($resultPath); @unlink($jobPath); return true; }
+function promptInputVariables($listing) {
+    $dpe = strtoupper(trim((string)(isset($listing['dpe']) ? $listing['dpe'] : '')));
+    $ges = strtoupper(trim((string)(isset($listing['ges']) ? $listing['ges'] : '')));
+    $city = trim((string)(isset($listing['primaryResidenceCity']) ? $listing['primaryResidenceCity'] : ''));
+    if ($city === '') $city = 'Paris';
+    return ['dpe' => $dpe, 'ges' => $ges, 'ville_residence_principale' => $city];
+}
 function runAnalysisStage($apiKey, $model, $promptName, $replacements, $id, $type) {
     $template = @file_get_contents(DATA_DIR . 'prompts/' . $promptName . '.txt');
     if (!$template) throw new RuntimeException('Prompt d’analyse introuvable ou vide : ' . $promptName . '.');
