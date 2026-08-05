@@ -11,7 +11,6 @@ header('Access-Control-Allow-Headers: Content-Type');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 define('DATA_DIR', __DIR__ . '/../data/');
-define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
 define('JOBS_DIR', DATA_DIR . 'analyses/jobs/');
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {

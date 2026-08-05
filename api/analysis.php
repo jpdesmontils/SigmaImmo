@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/analysis_types.php';
+require_once __DIR__ . '/../app/Database/bootstrap.php';
+require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 $id = isset($_GET['id']) ? (string)$_GET['id'] : '';
@@ -9,16 +11,12 @@ $file = __DIR__ . '/../data/analyses/' . $type . '/' . $id . '.json';
 if (!is_file($file)) { http_response_code(404); echo json_encode(['ok' => false, 'error' => 'Analyse introuvable']); exit; }
 $analysis = json_decode(file_get_contents($file), true);
 if (!is_array($analysis)) { http_response_code(500); echo json_encode(['ok' => false, 'error' => 'Analyse invalide']); exit; }
-$favoritesFile = __DIR__ . '/../data/favorites.json';
-$favorites = is_file($favoritesFile) ? json_decode(file_get_contents($favoritesFile), true) : [];
+$favorite = (new PropertyRepository(sigma_db()))->find($id);
 $listing = null;
-if (is_array($favorites)) foreach ($favorites as $favorite) {
-    if (is_array($favorite) && (string)($favorite['id'] ?? '') === $id) {
-        $listing = [
-            'images' => array_values(array_filter((array) ($favorite['images'] ?? ($favorite['imageUrl'] ?? '')))),
-            'url' => $favorite['url'] ?? $favorite['destinationUrl'] ?? null,
-        ];
-        break;
-    }
+if ($favorite) {
+    $listing = [
+        'images' => array_values(array_filter((array) ($favorite['images'] ?? ($favorite['imageUrl'] ?? '')))),
+        'url' => $favorite['url'] ?? ($favorite['destinationUrl'] ?? null),
+    ];
 }
 echo json_encode(['ok' => true, 'analysis' => $analysis, 'listing' => $listing], JSON_UNESCAPED_UNICODE);

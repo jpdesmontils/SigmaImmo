@@ -17,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo json_encode(['error' => 'Method not allowed']); exit; }
 
 define('DATA_DIR',       __DIR__ . '/../data/');
-define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
 
 $body = file_get_contents('php://input');
 $data = json_decode($body, true);

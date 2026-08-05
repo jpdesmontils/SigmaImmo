@@ -11,7 +11,6 @@ header('Access-Control-Allow-Headers: Content-Type');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 define('DATA_DIR', __DIR__ . '/../data/');
-define('FAVORITES_FILE', DATA_DIR . 'favorites.json');
 define('SETTINGS_FILE', DATA_DIR . 'settings.json');
 $id = isset($_GET['id']) ? (string) $_GET['id'] : '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id)) respond(400, ['ok' => false, 'error' => 'Identifiant invalide.']);
