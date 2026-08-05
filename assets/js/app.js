@@ -626,7 +626,7 @@ function cardHTML(item, idx) {
       <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}${analysisTagsHTML(item, 'card-analysis-tags')}${locatifSummaryHTML(item)}${scoreCircleHTML(item)}</div>
       <div class="card-body">
         <div class="card-tags">
-          ${selectionTagHTML(sel)}
+          ${sel === 'shortlist' ? '' : selectionTagHTML(sel)}
         </div>
         <div class="card-title">${esc(item.title || 'Annonce immobilière')}</div>
         <div class="card-meta">

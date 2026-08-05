@@ -278,7 +278,7 @@
     .card-media:after { content:"";position:absolute;inset:auto 0 0;height:48%;background:linear-gradient(180deg, transparent, rgba(22,21,15,.52));pointer-events:none;z-index:2; }
 
     .card-analysis-tags { position:absolute;top:12px;right:12px;z-index:9;display:flex;flex-direction:column;align-items:flex-end;gap:5px; }
-    .card-score { position:absolute;right:13px;bottom:13px;z-index:9;width:56px;height:56px;border-radius:50%;background:rgba(22,21,15,.82);box-shadow:0 0 0 1px rgba(255,255,255,.24);display:grid;place-items:center; }
+    .card-score { position:absolute;right:13px;bottom:13px;z-index:9;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.1);box-shadow:0 0 0 1px rgba(255,255,255,.24);display:grid;place-items:center; }
     .card-score svg { position:absolute;inset:0;width:56px;height:56px;transform:rotate(-90deg); }
     .card-score-inner { position:relative;display:flex;flex-direction:column;align-items:center;font-family:var(--font-m);font-weight:700;line-height:1;color:#f5f3ee; }
     .card-score-value { font-size:16px;letter-spacing:-.02em; }
@@ -291,7 +291,7 @@
     .tag-locatif { background:#e7f0fb;color:#245987;border:1px solid #b9d0e8; }
     .tag-patrimonial { background:#eee9f8;color:#62448a;border:1px solid #cfc1e6; }
     .tag-mdb { background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border); }
-    .card-locatif-summary { position:absolute;top:48px;right:12px;z-index:9;min-width:150px;padding:9px 12px;background:rgba(22,21,15,.82);color:#f5f3ee;border:1px solid rgba(255,255,255,.14);border-radius:0;font-family:var(--font-m);line-height:1.4;backdrop-filter:blur(8px); }
+    .card-locatif-summary { position:absolute;left:12px;bottom:8px;z-index:9;min-width:150px;padding:9px 12px;background:rgba(22,21,15,.82);color:#f5f3ee;border:1px solid rgba(255,255,255,.14);border-radius:0;font-family:var(--font-m);line-height:1.4;backdrop-filter:blur(8px); }
     .card-locatif-summary span { display:block; }
     .card-locatif-summary span:first-child { font-size:13px;font-weight:700;letter-spacing:.01em; }
     .card-locatif-summary span:not(:first-child) { font-size:11px;font-weight:500;color:rgba(245,243,238,.72);margin-top:2px; }
@@ -803,6 +803,7 @@
       .card-analysis-tags { top:6px;right:6px;gap:3px; }
       .card-analysis-tags .tag { font-size:8px;padding:2px 5px; }
       .card-score { width:45px;height:45px;right:7px;bottom:7px; }
+      .card-locatif-summary { left:7px;bottom:7px;min-width:120px;padding:7px 9px; }
       .card-score svg { width:45px;height:45px; }
       .card-score-value { font-size:14px; }
       .selection-btn { min-height:44px; }
