@@ -294,6 +294,8 @@
     .tag-locatif { background:#e7f0fb;color:#245987;border:1px solid #b9d0e8; }
     .tag-patrimonial { background:#eee9f8;color:#62448a;border:1px solid #cfc1e6; }
     .tag-mdb { background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border); }
+    .card-locatif-summary { position:absolute;top:38px;right:8px;z-index:9;min-width:132px;padding:8px 10px;background:#f4f8ff;color:#111;border:1px solid #d8e5f4;font:13px/1.15 Georgia, serif;box-shadow:0 2px 8px #16150f1a; }
+    .card-locatif-summary span { display:block; }
 
     .card-title {
       font-size: 14px;
@@ -321,9 +323,16 @@
       display: flex;
       gap: 6px;
       margin-top: 8px;
+      overflow: visible;
     }
+    .card-options { position: relative; flex: 1; }
+    .card-options-menu { display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:30;min-width:168px;padding:5px;background:var(--surface);border:1px solid var(--border);border-radius:4px;box-shadow:0 12px 30px #16150f33; }
+    .card-options:hover .card-options-menu, .card-options:focus-within .card-options-menu { display:block; }
+    .card-options-menu button { display:block;width:100%;padding:8px 10px;border:0;background:transparent;color:var(--text);text-align:left;font-size:12px;cursor:pointer;border-radius:3px; }
+    .card-options-menu button:hover { background:var(--surface3); }
+    .card-options-menu button.danger { color:var(--danger); }
     /* Boutons uniformes sur les cartes */
-    .card-btn-map, .card-btn-delete, .card-btn-tag {
+    .card-btn-map, .card-btn-delete, .card-btn-tag, .card-btn-more {
       flex: 1;
       padding: 5px 0;
       border-radius: 3px;
@@ -338,7 +347,7 @@
       line-height: 1.4;
       display: block;
     }
-    .card-btn-map:hover    { background: var(--text);      color: var(--bg);     border-color: var(--text); }
+    .card-btn-map:hover, .card-btn-more:hover { background: var(--text);      color: var(--bg);     border-color: var(--text); }
     .card-btn-delete:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
     .card-btn-tag:hover    { background: var(--surface3);  color: var(--text); }
     .tag-shortlist-active { background: var(--go-bg)     !important; color: var(--go)     !important; border-color: var(--go-border)     !important; }

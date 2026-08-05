@@ -31,6 +31,10 @@ function analysisSummaries($dataDir, $id) {
             'analyzedAt' => date(DATE_ATOM, $timestamp !== false ? $timestamp : filemtime($file)),
             'score' => analysisScoreValue($analysis, $type),
         ];
+        if ($type === 'locatif') {
+            $summaries[$type]['revenuBrutAnnuel'] = locatifAnnualGrossRevenue($analysis);
+            $summaries[$type]['rendementNetPct'] = locatifNetYield($analysis);
+        }
     }
     return $summaries;
 }
@@ -49,6 +53,26 @@ function analysisDateValue($analysis, $type) {
     if (isset($analysis['analyzedAt'])) return $analysis['analyzedAt'];
     if (isset($analysis['meta']['date_analyse'])) return $analysis['meta']['date_analyse'];
     return isset($analysis['date_analyse']) ? $analysis['date_analyse'] : null;
+}
+
+function locatifAnnualGrossRevenue($analysis) {
+    $value = $analysis['annonce']['revenus']['total_annonce_an'] ?? null;
+    if (!is_numeric($value)) return null;
+    return round((float)$value);
+}
+
+function locatifNetYield($analysis) {
+    $value = $analysis['exec_summary']['rendement_net_min_pct'] ?? null;
+    if (!is_numeric($value) && isset($analysis['financement']['scenarios']) && is_array($analysis['financement']['scenarios'])) {
+        foreach ($analysis['financement']['scenarios'] as $scenario) {
+            if (isset($scenario['rendement_net_pct']) && is_numeric($scenario['rendement_net_pct'])) {
+                $value = $scenario['rendement_net_pct'];
+                break;
+            }
+        }
+    }
+    if (!is_numeric($value)) return null;
+    return round((float)$value, 1);
 }
 
 function analysisScoreValue($analysis, $type) {
