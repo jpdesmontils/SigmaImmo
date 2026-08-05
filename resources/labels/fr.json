@@ -1,0 +1,51 @@
+{
+  "layout": {
+    "brand": "SigmaImmo"
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "email": "Email",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "register_prompt": "Pas encore de compte ?",
+      "register_cta": "Inscription"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "name": "Nom",
+      "email": "Email",
+      "password": "Mot de passe",
+      "submit": "Créer mon compte",
+      "login_prompt": "Déjà inscrit ?",
+      "login_cta": "Connexion"
+    },
+    "account": {
+      "title": "Mon compte",
+      "connected": "Connecté.",
+      "email": "Email",
+      "plan": "Plan",
+      "favorites": "Favoris",
+      "unlimited": "illimités",
+      "logout": "Déconnexion"
+    }
+  },
+  "errors": {
+    "auth": {
+      "invalid_email": "Email invalide.",
+      "password_too_short": "Le mot de passe doit contenir au moins 8 caractères.",
+      "email_already_exists": "Un compte existe déjà avec cet email.",
+      "invalid_credentials": "Identifiants invalides."
+    },
+    "property": {
+      "quota_reached": "Quota gratuit atteint : 10 favoris maximum."
+    },
+    "template": {
+      "not_found": "Template introuvable.",
+      "not_readable": "Template illisible."
+    },
+    "labels": {
+      "invalid_json": "Fichier de labels invalide."
+    }
+  }
+}

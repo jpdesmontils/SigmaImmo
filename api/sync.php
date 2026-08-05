@@ -8,6 +8,9 @@
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/../app/Database/bootstrap.php';
 require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
+require_once __DIR__ . '/../app/Repositories/UserRepository.php';
+require_once __DIR__ . '/../app/Services/AuditLogger.php';
+require_once __DIR__ . '/../app/Services/PlanService.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -54,8 +57,11 @@ jsonOk(['ok' => true, 'stats' => $stats, 'ts' => time()]);
 // ── Favoris ───────────────────────────────────────────────────
 function processFavorites($incoming) {
     // Charger SQLite et s'assurer que le store est keyed par id.
-    $repo = new PropertyRepository(sigma_db());
-    $store = deduplicateStore($repo->allActive(), 'id');
+    $pdo = sigma_db();
+    $repo = new PropertyRepository($pdo);
+    $legacyUser = (new UserRepository($pdo))->ensureLegacyImportUser();
+    $audit = new AuditLogger($pdo);
+    $store = deduplicateStore($repo->allActive($legacyUser['id']), 'id');
     $added = 0; $updated = 0;
 
     appLog('app', 'sync.favorites_received', [
@@ -87,7 +93,11 @@ function processFavorites($incoming) {
         }
 
         if (!isset($store[$key])) {
-            $store[$key] = sanitizeListing($listing);
+            $listing = sanitizeListing($listing);
+            $listing['userId'] = (int)$legacyUser['id'];
+            $listing['visibility'] = 'shared';
+            $store[$key] = $listing;
+            $audit->log('property.created', $legacyUser['id'], (string)$key, array('source' => 'sync.global_api_key'));
             $added++;
         } else {
             // Merge : ne pas écraser les coords déjà présentes
@@ -102,6 +112,8 @@ function processFavorites($incoming) {
                 $merged['coords'] = $existing['coords'];
             }
             $merged['updatedAt'] = time() * 1000;
+            $merged['userId'] = (int)$legacyUser['id'];
+            $merged['visibility'] = 'shared';
             $store[$key] = $merged;
             $updated++;
         }
@@ -114,7 +126,7 @@ function processFavorites($incoming) {
     }
 
     foreach ($store as $item) {
-        $repo->upsert($item);
+        $repo->upsert($item, $legacyUser);
     }
     return array('favorites_added' => $added, 'favorites_updated' => $updated);
 }

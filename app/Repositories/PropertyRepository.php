@@ -10,26 +10,45 @@ class PropertyRepository
         $this->pdo = $pdo ?: DatabaseConnection::get();
     }
 
-    public function allActive()
+    public function allActive($userId = null)
     {
-        $rows = $this->pdo->query('SELECT * FROM properties WHERE deleted_at IS NULL ORDER BY COALESCE(captured_at, 0) DESC')->fetchAll();
+        if ($userId === null) {
+            $rows = $this->pdo->query('SELECT * FROM properties WHERE deleted_at IS NULL ORDER BY COALESCE(captured_at, 0) DESC')->fetchAll();
+        } else {
+            $stmt = $this->pdo->prepare('SELECT * FROM properties WHERE user_id = :user_id AND deleted_at IS NULL ORDER BY COALESCE(captured_at, 0) DESC');
+            $stmt->execute(array(':user_id' => (int)$userId));
+            $rows = $stmt->fetchAll();
+        }
         return array_map(array($this, 'rowToListing'), $rows);
     }
 
-    public function find($id)
+    public function countActiveByUser($userId)
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM properties WHERE id = :id AND deleted_at IS NULL');
-        $stmt->execute(array(':id' => $id));
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM properties WHERE user_id = :user_id AND deleted_at IS NULL');
+        $stmt->execute(array(':user_id' => (int)$userId));
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function find($id, $userId = null)
+    {
+        if ($userId === null) {
+            $stmt = $this->pdo->prepare('SELECT * FROM properties WHERE id = :id AND deleted_at IS NULL');
+            $stmt->execute(array(':id' => $id));
+        } else {
+            $stmt = $this->pdo->prepare('SELECT * FROM properties WHERE id = :id AND user_id = :user_id AND deleted_at IS NULL');
+            $stmt->execute(array(':id' => $id, ':user_id' => (int)$userId));
+        }
         $row = $stmt->fetch();
         return $row ? $this->rowToListing($row) : null;
     }
 
-    public function upsert($listing)
+    public function upsert($listing, $user = null)
     {
         $listing = $this->sanitizeListing($listing);
         if (empty($listing['id'])) {
             return false;
         }
+        $userId = is_array($user) && isset($user['id']) ? (int)$user['id'] : (isset($listing['userId']) ? (int)$listing['userId'] : null);
         $existing = $this->find($listing['id']);
         if ($existing) {
             foreach (array('address', 'location', 'price', 'surface', 'rooms', 'terrain') as $field) {
@@ -39,7 +58,18 @@ class PropertyRepository
             }
         }
         $now = gmdate('c');
-        $columns = array('id', 'visibility', 'source', 'source_url', 'title', 'location', 'address', 'price', 'price_text', 'surface', 'surface_text', 'rooms', 'bedrooms', 'terrain', 'dpe', 'ges', 'description', 'image_url', 'images_json', 'features_json', 'coords_json', 'agency', 'price_reduction', 'photo_count', 'selection', 'notes', 'visit_at', 'agent_name', 'agent_phone', 'agent_email', 'raw_json', 'captured_at', 'scraped_at', 'created_at', 'updated_at', 'deleted_at');
+        $columns = array('id', 'user_id', 'visibility', 'source', 'source_url', 'title', 'location', 'address', 'price', 'price_text', 'surface', 'surface_text', 'rooms', 'bedrooms', 'terrain', 'dpe', 'ges', 'description', 'image_url', 'images_json', 'features_json', 'coords_json', 'agency', 'price_reduction', 'photo_count', 'selection', 'notes', 'visit_at', 'agent_name', 'agent_phone', 'agent_email', 'raw_json', 'captured_at', 'scraped_at', 'created_at', 'updated_at', 'deleted_at');
+        if ($userId !== null) $listing['userId'] = $userId;
+        if (is_array($user)) {
+            require_once dirname(__DIR__) . '/Services/PlanService.php';
+            $planService = new PlanService();
+            if (!$existing && !$planService->canAddFavorite($user, $this->countActiveByUser($user['id']))) {
+                throw new RuntimeException('property.quota_reached');
+            }
+            if (!isset($listing['visibility'])) {
+                $listing['visibility'] = $planService->defaultVisibility($user);
+            }
+        }
         $params = $this->params($listing, $now, $existing ? $existing['createdAt'] : $now);
         if ($existing) {
             $assignments = array();
@@ -86,7 +116,7 @@ class PropertyRepository
     private function params($l, $now, $createdAt)
     {
         return array(
-            ':id' => (string)$l['id'], ':visibility' => 'shared', ':source' => isset($l['source']) ? $l['source'] : 'ga_favorite', ':source_url' => isset($l['url']) ? $l['url'] : '',
+            ':id' => (string)$l['id'], ':user_id' => isset($l['userId']) && $l['userId'] ? (int)$l['userId'] : null, ':visibility' => isset($l['visibility']) && in_array($l['visibility'], array('shared', 'private'), true) ? $l['visibility'] : 'shared', ':source' => isset($l['source']) ? $l['source'] : 'ga_favorite', ':source_url' => isset($l['url']) ? $l['url'] : '',
             ':title' => isset($l['title']) ? $l['title'] : '', ':location' => isset($l['location']) ? $l['location'] : '', ':address' => isset($l['address']) ? $l['address'] : '',
             ':price' => isset($l['price']) && is_numeric($l['price']) ? (float)$l['price'] : null, ':price_text' => isset($l['priceText']) ? $l['priceText'] : '',
             ':surface' => isset($l['surface']) && is_numeric($l['surface']) ? (float)$l['surface'] : null, ':surface_text' => isset($l['surfaceText']) ? $l['surfaceText'] : '',
@@ -110,6 +140,8 @@ class PropertyRepository
         $item['images'] = $this->decode($row['images_json'], array());
         $item['features'] = $this->decode($row['features_json'], array());
         $item['coords'] = $this->decode($row['coords_json'], null);
+        $item['userId'] = isset($row['user_id']) ? $row['user_id'] : null;
+        $item['visibility'] = isset($row['visibility']) ? $row['visibility'] : 'shared';
         $item['createdAt'] = $row['created_at'];
         $item['updatedAt'] = $row['updated_at'];
         return $item;

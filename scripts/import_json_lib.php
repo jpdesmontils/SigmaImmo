@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../app/Database/Migrator.php';
 require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
+require_once __DIR__ . '/../app/Repositories/UserRepository.php';
 
 function importPropertiesJsonFile($importPath)
 {
@@ -28,11 +29,15 @@ function importPropertiesJsonFile($importPath)
         exit(1);
     }
 
-    $repo = new PropertyRepository();
+    $pdo = DatabaseConnection::get();
+    $repo = new PropertyRepository($pdo);
+    $legacyUser = (new UserRepository($pdo))->ensureLegacyImportUser();
     $count = 0;
     foreach ($decoded as $item) {
         if (!is_array($item)) continue;
-        if ($repo->upsert($item)) $count++;
+        $item['userId'] = (int)$legacyUser['id'];
+        $item['visibility'] = 'shared';
+        if ($repo->upsert($item, $legacyUser)) $count++;
     }
 
     return array(
