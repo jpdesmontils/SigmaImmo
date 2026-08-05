@@ -28,6 +28,22 @@ class Migrator
             if ($sql === false) {
                 throw new RuntimeException('Migration illisible: ' . $file);
             }
+            $requiresForeignKeysOff = stripos($sql, 'PRAGMA foreign_keys = OFF') !== false;
+            if ($requiresForeignKeysOff) {
+                $this->pdo->exec('PRAGMA foreign_keys = OFF');
+                try {
+                    $this->pdo->exec($sql);
+                    $stmt = $this->pdo->prepare('INSERT INTO schema_migrations (migration, applied_at) VALUES (:migration, :applied_at)');
+                    $stmt->execute(array(':migration' => $name, ':applied_at' => gmdate('c')));
+                    $this->pdo->exec('PRAGMA foreign_keys = ON');
+                    $ran[] = $name;
+                } catch (Exception $e) {
+                    $this->pdo->exec('PRAGMA foreign_keys = ON');
+                    throw $e;
+                }
+                continue;
+            }
+
             $this->pdo->beginTransaction();
             try {
                 $this->pdo->exec($sql);
