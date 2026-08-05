@@ -74,26 +74,14 @@ if ($q !== '') {
 
 // ── Sort ──────────────────────────────────────────────────────
 usort($items, function($a, $b) use ($sort) {
-    if ($sort === 'price_asc') {
-        return numericValue($a, 'price') - numericValue($b, 'price');
-    }
-
-    if ($sort === 'price_desc') {
-        return numericValue($b, 'price') - numericValue($a, 'price');
-    }
-
-    if ($sort === 'surface_desc') {
-        return numericValue($b, 'surface') - numericValue($a, 'surface');
-    }
-
-    if ($sort === 'surface_asc') {
-        return numericValue($a, 'surface') - numericValue($b, 'surface');
-    }
-
-    $ca = isset($a['capturedAt']) ? $a['capturedAt'] : 0;
-    $cb = isset($b['capturedAt']) ? $b['capturedAt'] : 0;
-
-    return $cb - $ca;
+    list($field, $order) = normalizedSort($sort);
+    $va = sortValue($a, $field);
+    $vb = sortValue($b, $field);
+    $aHasValue = $va !== null;
+    $bHasValue = $vb !== null;
+    if ($aHasValue !== $bHasValue) return $aHasValue ? -1 : 1;
+    if (!$aHasValue) return 0;
+    return $order === 'asc' ? $va - $vb : $vb - $va;
 });
 
 // ── Limit ─────────────────────────────────────────────────────
@@ -165,12 +153,27 @@ function activeAnalysisStatus($job) {
     return $expiresAt !== false && $expiresAt > time() ? 'running' : null;
 }
 
-function numericValue($item, $field) {
-    if (!isset($item[$field]) || !is_numeric($item[$field])) {
-        return 0;
-    }
+function normalizedSort($sort) {
+    $parts = explode('_', (string)$sort);
+    $allowedFields = ['date', 'price', 'surface', 'score', 'yield', 'revenue', 'cashflow'];
+    $field = in_array(isset($parts[0]) ? $parts[0] : '', $allowedFields, true) ? $parts[0] : 'date';
+    $order = (isset($parts[1]) && $parts[1] === 'asc') ? 'asc' : 'desc';
+    return [$field, $order];
+}
 
-    return (float)$item[$field];
+function sortValue($item, $field) {
+    $locatif = isset($item['analyses']['locatif']) && is_array($item['analyses']['locatif']) ? $item['analyses']['locatif'] : [];
+    if ($field === 'price') return numericValue(isset($item['price']) ? $item['price'] : null);
+    if ($field === 'surface') return numericValue(isset($item['surface']) ? $item['surface'] : null);
+    if ($field === 'score') return numericValue(isset($item['latestAnalysis']['score']) ? $item['latestAnalysis']['score'] : null);
+    if ($field === 'yield') return numericValue(isset($locatif['rendementNetPct']) ? $locatif['rendementNetPct'] : null);
+    if ($field === 'revenue') return numericValue(isset($locatif['revenuBrutAnnuel']) ? $locatif['revenuBrutAnnuel'] : null);
+    if ($field === 'cashflow') return numericValue(isset($locatif['cashflowMensuel']) ? $locatif['cashflowMensuel'] : null);
+    return numericValue(isset($item['capturedAt']) ? $item['capturedAt'] : null);
+}
+
+function numericValue($value) {
+    return is_numeric($value) ? (float)$value : null;
 }
 
 function fileInfo($file) {

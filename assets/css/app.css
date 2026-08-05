@@ -182,6 +182,11 @@
       color: var(--bg);
     }
 
+    .sort-row {
+      display: flex;
+      gap: 8px;
+    }
+
     .sort-select {
       width: 100%;
       background: var(--bg);

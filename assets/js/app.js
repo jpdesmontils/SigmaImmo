@@ -143,9 +143,11 @@ function initFilters() {
     filters.surfMax = e.target.value ? parseFloat(e.target.value) : null;
     debounced();
   });
-  document.getElementById('f-sort').addEventListener('change', e => {
-    filters.sort = e.target.value;
-    applyFiltersAndRender();
+  ['f-sort-field', 'f-sort-order'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      filters.sort = selectedSortValue();
+      applyFiltersAndRender();
+    });
   });
 
   document.getElementById('btn-reset').addEventListener('click', resetFilters);
@@ -211,7 +213,8 @@ function restoreGalleryState() {
     if (!saved) return;
     filters.city = saved.city || ''; filters.priceMin = saved.priceMin ?? null; filters.priceMax = saved.priceMax ?? null; filters.surfMin = saved.surfMin ?? null; filters.surfMax = saved.surfMax ?? null; filters.sort = saved.sort || 'date_desc';
     filters.userSelections = new Set(saved.userSelections || []); filters.analysisTypes = new Set(saved.analysisTypes || []); currentView = ['gallery','list','map'].includes(saved.view) ? saved.view : 'gallery';
-    const values = {'f-city':filters.city,'f-price-min':filters.priceMin,'f-price-max':filters.priceMax,'f-surf-min':filters.surfMin,'f-surf-max':filters.surfMax,'f-sort':filters.sort}; Object.entries(values).forEach(([key,value])=>{const input=document.getElementById(key);if(input)input.value=value??''}); syncFilterButtons();
+    syncSortControls();
+    const values = {'f-city':filters.city,'f-price-min':filters.priceMin,'f-price-max':filters.priceMax,'f-surf-min':filters.surfMin,'f-surf-max':filters.surfMax}; Object.entries(values).forEach(([key,value])=>{const input=document.getElementById(key);if(input)input.value=value??''}); syncFilterButtons();
     document.querySelectorAll('.view-btn').forEach(button=>button.classList.toggle('active',button.dataset.view===currentView)); ['gallery','list','map'].forEach(view=>document.getElementById('view-'+view).classList.toggle('active',view===currentView));
     pendingGalleryScroll = Number(saved.scrollY) || 0;
   } catch (_) {}
@@ -235,26 +238,52 @@ function hasScore(item) {
   return Number.isFinite(Number(item.latestAnalysis?.score)) && item.latestAnalysis?.score !== null && item.latestAnalysis?.score !== '';
 }
 
+function selectedSortValue() {
+  return document.getElementById('f-sort-field').value + '_' + document.getElementById('f-sort-order').value;
+}
+
+function syncSortControls() {
+  const [field, order] = normalizedSort(filters.sort).split('_');
+  filters.sort = field + '_' + order;
+  document.getElementById('f-sort-field').value = field;
+  document.getElementById('f-sort-order').value = order;
+}
+
+function normalizedSort(sort) {
+  const parts = String(sort || 'date_desc').split('_');
+  const field = ['date', 'price', 'surface', 'score', 'yield', 'revenue', 'cashflow'].includes(parts[0]) ? parts[0] : 'date';
+  const order = parts[1] === 'asc' ? 'asc' : 'desc';
+  return field + '_' + order;
+}
+
 function compareListings(a, b, sort) {
-  const [sortField, sortOrder] = sort.split('_');
-
-  if (sortField === 'score') {
-    const aHasScore = hasScore(a);
-    const bHasScore = hasScore(b);
-    if (aHasScore !== bHasScore) return aHasScore ? -1 : 1;
-    if (!aHasScore) return 0;
-    return sortOrder === 'asc'
-      ? Number(a.latestAnalysis.score) - Number(b.latestAnalysis.score)
-      : Number(b.latestAnalysis.score) - Number(a.latestAnalysis.score);
-  }
-
-  let va, vb;
-  switch (sortField) {
-    case 'price':   va = a.price   || Infinity; vb = b.price   || Infinity; break;
-    case 'surface': va = a.surface || 0;        vb = b.surface || 0;        break;
-    default:        va = a.capturedAt || 0;     vb = b.capturedAt || 0;
-  }
+  const [sortField, sortOrder] = normalizedSort(sort).split('_');
+  const va = sortValue(a, sortField);
+  const vb = sortValue(b, sortField);
+  const aHasValue = Number.isFinite(va);
+  const bHasValue = Number.isFinite(vb);
+  if (aHasValue !== bHasValue) return aHasValue ? -1 : 1;
+  if (!aHasValue) return 0;
   return sortOrder === 'asc' ? va - vb : vb - va;
+}
+
+function sortValue(item, sortField) {
+  const locatif = item?.analyses?.locatif || {};
+  switch (sortField) {
+    case 'price': return numericSortValue(item?.price);
+    case 'surface': return numericSortValue(item?.surface);
+    case 'score': return hasScore(item) ? Number(item.latestAnalysis.score) : NaN;
+    case 'yield': return numericSortValue(locatif.rendementNetPct);
+    case 'revenue': return numericSortValue(locatif.revenuBrutAnnuel);
+    case 'cashflow': return numericSortValue(locatif.cashflowMensuel);
+    default: return numericSortValue(item?.capturedAt);
+  }
+}
+
+function numericSortValue(value) {
+  if (value === null || value === '') return NaN;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : NaN;
 }
 
 function resetFilters() {
@@ -272,7 +301,7 @@ function resetFilters() {
   document.getElementById('f-price-max').value = '';
   document.getElementById('f-surf-min').value  = '';
   document.getElementById('f-surf-max').value  = '';
-  document.getElementById('f-sort').value      = 'date_desc';
+  syncSortControls();
   syncFilterButtons();
 
   applyFiltersAndRender();
