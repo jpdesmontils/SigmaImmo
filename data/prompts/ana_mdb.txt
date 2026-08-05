@@ -5,6 +5,10 @@ Tu es un marchand de biens du top 3 %, spécialisé dans les opérations de tran
 ## Annonce à analyser
 {{annonce_complete}}
 
+## Diagnostics énergétiques obligatoires
+DPE : {{dpe}}
+GES : {{ges}}
+
 ## Cadre d'analyse obligatoire
 
 ### 1. Qualification de l'opération
