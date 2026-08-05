@@ -30,7 +30,6 @@ function analysisSummaries($dataDir, $id) {
             'available' => true,
             'analyzedAt' => date(DATE_ATOM, $timestamp !== false ? $timestamp : filemtime($file)),
             'score' => analysisScoreValue($analysis, $type),
-            'metrics' => analysisMetricValues($analysis, $type),
         ];
     }
     return $summaries;
@@ -79,40 +78,4 @@ function expireStaleJob($path, &$job) {
     $job['error'] = 'Le worker ne répond plus ou le délai de réponse du LLM a expiré.';
     file_put_contents($path, json_encode($job, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX);
     if (function_exists('aiLog')) aiLog('analysis.worker_expired', ['id' => $job['id'] ?? null, 'type' => $job['type'] ?? null]);
-}
-
-
-function analysisMetricValues($analysis, $type) {
-    if ($type !== 'locatif') return [];
-
-    $revenue = nestedValue($analysis, [
-        ['revenus', 'total_annonce_an'],
-        ['revenus', 'total_reconstitue_an'],
-    ]);
-
-    $yield = nestedValue($analysis, [
-        ['exec_summary', 'rendement_net_min_pct'],
-        ['exec_summary', 'rendement_net_max_pct'],
-        ['financement', 'scenarios', 0, 'rendement_net_pct'],
-    ]);
-
-    return [
-        'annualGrossRevenue' => is_numeric($revenue) ? round((float) $revenue, 0) : null,
-        'netYield' => is_numeric($yield) ? round((float) $yield, 1) : null,
-    ];
-}
-
-function nestedValue($source, $paths) {
-    foreach ($paths as $path) {
-        $value = $source;
-        foreach ($path as $key) {
-            if (!is_array($value) || !array_key_exists($key, $value)) {
-                $value = null;
-                break;
-            }
-            $value = $value[$key];
-        }
-        if ($value !== null && $value !== '') return $value;
-    }
-    return null;
 }
