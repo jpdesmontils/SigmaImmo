@@ -607,6 +607,7 @@ function renderGallery() {
 }
 
 function cardHTML(item, idx) {
+  const pricePerSqm = formatPricePerSqm(item);
   const imgSrc = getImageUrl(item);
   const imgEl  = imgSrc
     ? `<img class="card-img" src="${esc(imgSrc)}" alt="${esc(item.title || '')}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
@@ -631,6 +632,7 @@ function cardHTML(item, idx) {
         <div class="card-meta">
           ${item.price   ? `<span class="card-price">${formatPrice(item.price)}</span>` : ''}
           ${item.surface ? `<span>${item.surface} m²</span>` : ''}
+          ${pricePerSqm ? `<span>${pricePerSqm}</span>` : ''}
           ${item.rooms   ? `<span>${item.rooms}</span>` : ''}
         </div>
         <div class="card-location">${esc(getLoc(item))}</div>
@@ -1250,6 +1252,13 @@ function getDept(item) {
 function formatPrice(price) {
   if (!price) return '';
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
+}
+
+function formatPricePerSqm(item) {
+  const price = Number(item && item.price);
+  const surface = Number(item && item.surface);
+  if (!price || !surface) return '';
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price / surface) + '/m²';
 }
 
 function esc(str) {
