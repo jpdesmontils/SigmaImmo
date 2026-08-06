@@ -3,5 +3,5 @@ app.sqlite-*
 *.sqlite-journal
 *.sqlite-shm
 *.sqlite-wal
-logs/*
-!logs/.gitkeep
+log/*
+!log/.gitkeep

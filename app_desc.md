@@ -6,7 +6,7 @@ SigmaImmo, affichée dans l'interface sous les noms ImmoAgg ou ImmoAggregator, e
 
 ## Écrans de l'application web
 
-### Page d'accueil / landing page (`index.html`)
+### Page d'accueil / landing page (`public/index.html`)
 
 - Présentation du positionnement de l'outil : centraliser les annonces et fournir un score pour décider.
 - Mise en avant du parcours principal : capturer, centraliser, décider.
@@ -14,7 +14,7 @@ SigmaImmo, affichée dans l'interface sous les noms ImmoAgg ou ImmoAggregator, e
 - Illustrations par captures d'écran de la galerie et d'une analyse locative.
 - Boutons d'accès vers la galerie applicative.
 
-### Galerie des annonces (`app.html`)
+### Galerie des annonces (`public/app.html`)
 
 - Écran principal de consultation des annonces sauvegardées.
 - Header avec logo, compteur de favoris et sélecteur de vue.
@@ -70,7 +70,7 @@ SigmaImmo, affichée dans l'interface sous les noms ImmoAgg ou ImmoAggregator, e
 - Injection d'un bloc « Source annonce » lorsqu'un guide ou une fiche est consulté depuis une annonce.
 - Réexécution des scripts nécessaires après chargement dynamique pour conserver les onglets et simulateurs interactifs.
 
-### Fiche du bien (`fiche-bien.html`)
+### Fiche du bien (`public/fiche-bien.html`)
 
 - Page dédiée à une annonce sauvegardée.
 - Navigation de retour vers la galerie.
@@ -137,7 +137,7 @@ SigmaImmo, affichée dans l'interface sous les noms ImmoAgg ou ImmoAggregator, e
 - Champs de suivi de visite et de contact agent lorsque disponibles dans l'API.
 - Persistance des informations dans les données de favoris.
 
-### Fiche d'investissement patrimonial (`templates/fiche-investissement-patrimonial.html`)
+### Fiche d'investissement patrimonial (`app/Views/fiche-investissement-patrimonial.html`)
 
 - Modèle de restitution d'analyse patrimoniale.
 - Onglets : Synthèse, Paris → destination, Patrimoine, Optimisations, Financement, Risques, Sources.
@@ -148,7 +148,7 @@ SigmaImmo, affichée dans l'interface sous les noms ImmoAgg ou ImmoAggregator, e
 - Leviers d'optimisation et scénarios financiers.
 - Sources générales, sources d'accessibilité et avertissements.
 
-### Fiche d'investissement locatif (`templates/fiche-investissement-locatif.html`)
+### Fiche d'investissement locatif (`app/Views/fiche-investissement-locatif.html`)
 
 - Modèle de restitution d'analyse locative.
 - Onglets : Exec summary, Synthèse axes, Détail KPI, Revenus & lots, Scénarios financiers, Risques & upsides, Sources.
@@ -158,7 +158,7 @@ SigmaImmo, affichée dans l'interface sous les noms ImmoAgg ou ImmoAggregator, e
 - Scénarios de financement.
 - Risques classés par criticité et opportunités d'amélioration.
 
-### Fiche d'opportunité marchand de biens (`templates/fiche-investissement-mdb.html`)
+### Fiche d'opportunité marchand de biens (`app/Views/fiche-investissement-mdb.html`)
 
 - Modèle de restitution d'analyse MDB.
 - Affichage de la qualification, de la faisabilité et de la complexité.
@@ -176,7 +176,7 @@ SigmaImmo, affichée dans l'interface sous les noms ImmoAgg ou ImmoAggregator, e
 - Simulateur interactif : acquisition, frais, financement, travaux, lots, prix de vente, TVA, objectif de marge.
 - Calculs de marge brute, marge nette, rendement sur fonds propres, point mort, PMA et alertes.
 
-### Guide opérationnel — Investissement locatif (`guide-investissement-locatif.html`)
+### Guide opérationnel — Investissement locatif (`public/guide-investissement-locatif.html`)
 
 - Guide stratégique pour un investissement locatif avec 125 k€ d'apport.
 - Onglets : Cadrage financier, Bilan type, Départements, Villes cibles, Process opérationnel, Typologies, Fiscalité, Simulateur.

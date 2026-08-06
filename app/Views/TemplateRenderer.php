@@ -5,7 +5,7 @@ class TemplateRenderer
 
     public function __construct($templatesDir = null)
     {
-        $this->templatesDir = $templatesDir ?: dirname(dirname(__DIR__)) . '/templates';
+        $this->templatesDir = $templatesDir ?: __DIR__;
     }
 
     public function render($template, array $context = array())

@@ -1,2 +1,2 @@
 /api/.env
-/log/**/*.log
+/storage/log/**/*.log

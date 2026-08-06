@@ -4,10 +4,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
-const styles = fs.readFileSync(path.join(root, 'assets/css/guides.css'), 'utf8');
+const styles = fs.readFileSync(path.join(root, 'public/assets/css/guides.css'), 'utf8');
 const guides = [
-  'guide-mdb-division-parcellaire.html',
-  'guide-investissement-locatif.html',
+  'public/guide-mdb-division-parcellaire.html',
+  'public/guide-investissement-locatif.html',
 ];
 const dataUis = ['guide-mdb', 'guide-locatif'];
 

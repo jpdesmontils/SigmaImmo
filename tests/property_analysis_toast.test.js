@@ -2,9 +2,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
-const script = fs.readFileSync(require.resolve('../assets/js/property.js'), 'utf8');
-const notifications = fs.readFileSync(require.resolve('../assets/js/analysis-notifications.js'), 'utf8');
-const styles = fs.readFileSync(require.resolve('../assets/css/notifications.css'), 'utf8');
+const script = fs.readFileSync(require.resolve('../public/assets/js/property.js'), 'utf8');
+const notifications = fs.readFileSync(require.resolve('../public/assets/js/analysis-notifications.js'), 'utf8');
+const styles = fs.readFileSync(require.resolve('../public/assets/css/notifications.css'), 'utf8');
 
 test('notifie les fins d’analyse en succès comme en erreur', () => {
   assert.match(notifications, /\['completed', 'failed'\]\.includes\(job\.status\)/);
