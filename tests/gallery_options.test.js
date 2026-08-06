@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
-const script = fs.readFileSync(require.resolve('../assets/js/app.js'), 'utf8');
-const page = fs.readFileSync(require.resolve('../app.html'), 'utf8');
+const script = fs.readFileSync(require.resolve('../public/assets/js/app.js'), 'utf8');
+const page = fs.readFileSync(require.resolve('../public/app.html'), 'utf8');
 
 test('les actions secondaires sont placées dans le menu déroulant Plus d’options', () => {
   const cardFunction = script.slice(script.indexOf('function cardHTML'), script.indexOf('// ── Vue Liste'));

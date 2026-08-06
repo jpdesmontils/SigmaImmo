@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const source = fs.readFileSync(require.resolve('../templates/js/fiche.js'), 'utf8').replace('  render();', '  window.testApi = { negotiationContext };');
+const source = fs.readFileSync(require.resolve('../public/assets/js/fiche.js'), 'utf8').replace('  render();', '  window.testApi = { negotiationContext };');
 const context = {
   URL,
   URLSearchParams,

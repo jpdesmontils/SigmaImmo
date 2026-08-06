@@ -23,7 +23,7 @@ foreach ($requiredLabelKeys as $key) {
     assertTrue($labels->get($key, null) !== null, 'missing label key ' . $key);
 }
 
-$renderer = new TemplateRenderer(__DIR__ . '/../templates');
+$renderer = new TemplateRenderer(__DIR__ . '/../app/Views');
 $loginHtml = $renderer->renderWithLayout('app/auth/login', 'layouts/auth', array(
     'brand' => $labels->get('layout.brand'),
     'page_title' => $labels->get('auth.login.title'),
@@ -59,7 +59,7 @@ assertContains($accountHtml, '11 illimités', 'account quota rendered');
 assertTrue(strpos($accountHtml, '{{') === false, 'all account placeholders are rendered');
 
 foreach ($templates as $template) {
-    $path = __DIR__ . '/../templates/' . $template . '.mustache';
+    $path = __DIR__ . '/../app/Views/' . $template . '.mustache';
     assertTrue(is_file($path), 'template exists ' . $template);
 }
 

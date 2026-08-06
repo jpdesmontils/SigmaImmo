@@ -18,6 +18,6 @@ $reader = new cAPI_Processor($pdo, $route, $other, array('id'=>'shared-one')); $
 $hidden = false; try { (new cAPI_Processor($pdo, $route, $other, array('id'=>'private-one')))->process('GET', null); } catch (APIException $e) { $hidden = $e->status() === 404; } assertApi($hidden, 'private property is hidden from another user');
 $blocked = false; try { (new cAPI_Processor($pdo, $route, $other, array('id'=>'shared-one')))->process('PATCH', array('title'=>'stolen')); } catch (APIException $e) { $blocked = $e->status() === 403; } assertApi($blocked, 'shared property remains writable only by its owner');
 $created = (new cAPI_Processor($pdo, $route, $other))->process('POST', array('id'=>'other-one','title'=>'Other','visibility'=>'private')); assertApi($created['data']['user_id'] === (int)$other['id'], 'generic create assigns ownership');
-$routes = json_decode(file_get_contents(__DIR__ . '/../api/v1/routes_wl.json'), true); assertApi(is_array($routes) && count($routes['routes']) >= 6, 'route whitelist declares API v1 resources');
+$routes = json_decode(file_get_contents(__DIR__ . '/../public/api/routes_wl.json'), true); assertApi(is_array($routes) && count($routes['routes']) >= 6, 'route whitelist declares API v1 resources');
 unlink($tmp); echo "api_v1_test ok\n";
 function assertApi($condition, $message) { if (!$condition) { fwrite(STDERR, 'Assertion failed: ' . $message . "\n"); exit(1); } }

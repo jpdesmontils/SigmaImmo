@@ -1,6 +1,6 @@
 <?php
 /** Journalisation JSONL centralisée, sans données secrètes. */
-define('LOG_DIR', __DIR__ . '/../log/');
+define('LOG_DIR', __DIR__ . '/../storage/log/');
 function appLog($channel, $event, array $context = []) {
     $safeChannel = preg_replace('/[^a-z0-9_-]/i', '_', $channel);
     $directory = LOG_DIR . ($safeChannel === 'ai' ? 'ai/' : '');

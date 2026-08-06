@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const source = fs.readFileSync(require.resolve('../assets/js/property.js'), 'utf8')
+const source = fs.readFileSync(require.resolve('../public/assets/js/property.js'), 'utf8')
   .replace('  load();', '  window.priceTestApi = { validTab, priceContent, medianCardStyle, priceMarkerColor, priceHouseColor, priceTransactionPopup, priceHousePopup, hasCoordinates, resolvePropertyId };');
 const panel = { innerHTML: '', querySelectorAll() { return []; } };
 const context = {

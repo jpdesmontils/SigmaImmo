@@ -12,7 +12,7 @@ class APIApplication
         try {
             $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : null; $this->cors($origin);
             if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); return; }
-            $routeData = $this->jsonFile($this->root . '/api/v1/routes_wl.json'); $path = parse_url(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH);
+            $routeData = $this->jsonFile($this->root . '/public/api/routes_wl.json'); $path = parse_url(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH);
             $apiPosition = strpos($path, '/api/v1'); if ($apiPosition > 0) $path = substr($path, $apiPosition);
             list($route, $params, $allowed) = $this->match($routeData['routes'], $path, $_SERVER['REQUEST_METHOD']);
             if ($route && isset($route['resource']) && isset($routeData['resources'][$route['resource']])) $route = array_merge($routeData['resources'][$route['resource']], $route);
@@ -38,7 +38,7 @@ class APIApplication
     }
     private function cors($origin)
     {
-        if (!$origin) return; $config = $this->jsonFile($this->root . '/api/v1/CORS.json'); if (!in_array($origin, $config['allowed_origins'], true)) throw new APIException(403, 'cors.origin_forbidden', 'Origine CORS interdite.');
+        if (!$origin) return; $config = $this->jsonFile($this->root . '/public/api/CORS.json'); if (!in_array($origin, $config['allowed_origins'], true)) throw new APIException(403, 'cors.origin_forbidden', 'Origine CORS interdite.');
         header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS'); header('Access-Control-Allow-Headers: Authorization, Content-Type');
     }
     private function jsonFile($path) { $data = is_file($path) ? json_decode(file_get_contents($path), true) : null; if (!is_array($data)) throw new APIException(500, 'configuration.invalid', 'Configuration API invalide.'); return $data; }

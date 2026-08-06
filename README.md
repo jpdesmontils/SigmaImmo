@@ -8,7 +8,7 @@ Cette version expose exclusivement l'API JSON v1 sur SQLite. Les routes sont ver
 
 - PHP 7.0.33 compatible CLI et serveur web.
 - Extension PHP PDO SQLite activée (`pdo_sqlite`).
-- Un serveur HTTP capable de servir le dossier du projet ou le routeur PHP intégré pour un lancement local.
+- Un serveur HTTP dont le DocumentRoot peut pointer vers `public/`, ou le routeur PHP intégré pour un lancement local.
 - Une clé OpenAI uniquement si vous lancez les analyses IA.
 
 ## Installation
@@ -80,8 +80,13 @@ L'ancien script `scripts/import_favorites_json.php` reste disponible comme alias
 Pour un lancement local simple avec le serveur PHP intégré :
 
 ```bash
-php -S 127.0.0.1:8000 router.php
+php -S 127.0.0.1:8000 -t public public/router.php
 ```
+
+En production, configurez également le DocumentRoot du serveur HTTP sur le
+répertoire `public/`. Le code applicatif, les vues, les migrations, les scripts,
+les prompts et les données runtime restent ainsi hors de l'espace publiquement
+accessible.
 
 Puis ouvrez la landing page publique :
 
@@ -112,35 +117,37 @@ En production, préférez définir les variables dans la configuration du servic
 
 - `storage/app.sqlite` : base SQLite applicative runtime.
 - `storage/*.sqlite-wal`, `storage/*.sqlite-shm`, `storage/*.sqlite-journal` : fichiers internes SQLite ignorés par Git.
-- `data/analyses/` : sources historiques à importer avant activation de l'API v1 ; elles ne sont jamais lues par les nouveaux endpoints ou workers.
-- `storage/logs/` et `log/` : logs runtime selon les scripts existants.
+- `storage/analyses/` : sources historiques à importer avant activation de l'API v1 ; elles ne sont jamais lues par les nouveaux endpoints ou workers.
+- `storage/log/` : emplacement unique des logs runtime.
+- `resources/prompts/` : prompts applicatifs versionnés.
+- `app/Views/` : emplacement central des classes de présentation et des templates HTML/Mustache.
 
 ## Vérification rapide
 
 ```bash
 php scripts/migrate.php
 php scripts/import_properties_json.php /chemin/vers/export.json
-php scripts/import_analyses_sqlite.php /chemin/vers/data/analyses
+php scripts/import_analyses_sqlite.php /chemin/vers/storage/analyses
 php -l app/Database/Connection.php app/Database/Migrator.php app/Database/bootstrap.php app/Repositories/PropertyRepository.php scripts/migrate.php scripts/import_properties_json.php
 ```
 
 ## Notes de production v0
 
-- Donnez au user système du serveur web les droits de lecture/écriture sur `storage/` et `data/`.
+- Donnez au user système du serveur web les droits de lecture/écriture sur `storage/`.
 - Utilisez un chemin absolu pour `SIGMAIMMO_SQLITE_PATH` en production.
-- Sauvegardez régulièrement `storage/app.sqlite` et les artefacts utiles dans `data/`.
+- Sauvegardez régulièrement `storage/app.sqlite` et les artefacts utiles dans `storage/`.
 - Ne commitez jamais `api/.env`, `storage/app.sqlite` ni les fichiers SQLite WAL/journal.
 
 ## API JSON v1
 
-`api/v1/routes_wl.json` est l'unique liste blanche des routes. Une table absente de cette configuration n'est pas exposée. Le processeur générique `cAPI_Processor` fournit `GET`, `POST`, `PUT`, `PATCH` et `DELETE`; les synchronisations, tags, analyses et quotas utilisent des sous-classes spécialisées.
+`public/api/routes_wl.json` est l'unique liste blanche des routes. Une table absente de cette configuration n'est pas exposée. Le processeur générique `cAPI_Processor` fournit `GET`, `POST`, `PUT`, `PATCH` et `DELETE`; les synchronisations, tags, analyses et quotas utilisent des sous-classes spécialisées.
 
-Toutes les réponses utilisent les clés `data`, `error` et `meta`. Les biens `shared` sont lisibles par tous les utilisateurs authentifiés, mais seul leur propriétaire peut les modifier. Les anciens scripts `/api/*.php` répondent désormais avec HTTP 410 via Apache ou `router.php`.
+Toutes les réponses utilisent les clés `data`, `error` et `meta`. Les biens `shared` sont lisibles par tous les utilisateurs authentifiés, mais seul leur propriétaire peut les modifier. Les anciens scripts `/api/*.php` répondent désormais avec HTTP 410 via Apache ou `public/router.php`.
 
 Avant le déploiement, importez obligatoirement les analyses historiques :
 
 ```bash
-php scripts/import_analyses_sqlite.php data/analyses
+php scripts/import_analyses_sqlite.php storage/analyses
 ```
 
 Une ligne déjà présente dans SQLite reste prioritaire. Après contrôle du résultat, archivez les fichiers sources hors du répertoire applicatif.
@@ -157,4 +164,4 @@ Le secret n'est affiché qu'une fois et seul son SHA-256 est stocké. Utilisez-l
 curl -H 'Authorization: Bearer VOTRE_TOKEN' http://127.0.0.1:8000/api/v1/properties
 ```
 
-Les origines autorisées sont déclarées dans `api/v1/CORS.json`. Remplacez impérativement `chrome-extension://REMPLACER_PAR_ID_EXTENSION` par l'identifiant publié de l'extension avant le déploiement.
+Les origines autorisées sont déclarées dans `public/api/CORS.json`. Remplacez impérativement `chrome-extension://REMPLACER_PAR_ID_EXTENSION` par l'identifiant publié de l'extension avant le déploiement.

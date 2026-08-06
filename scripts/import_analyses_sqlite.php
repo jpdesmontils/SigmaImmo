@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../app/Database/bootstrap.php';
 
-$root = isset($argv[1]) ? rtrim($argv[1], '/') : dirname(__DIR__) . '/data/analyses';
+$root = isset($argv[1]) ? rtrim($argv[1], '/') : dirname(__DIR__) . '/storage/analyses';
 if (!is_dir($root)) { fwrite(STDERR, "Répertoire d'analyses introuvable: " . $root . "\n"); exit(1); }
 $pdo = sigma_db(); $imported = 0; $skipped = 0; $now = gmdate('c');
 $pdo->beginTransaction();

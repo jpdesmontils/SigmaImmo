@@ -3,8 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const source = fs.readFileSync(require.resolve('../templates/js/fiche.js'), 'utf8').replace('  render();', '  window.testApi = { patrimonialContext, renderTemplate };');
-const templateSource = fs.readFileSync(require.resolve('../templates/fiche-investissement-patrimonial.html'), 'utf8');
+const source = fs.readFileSync(require.resolve('../public/assets/js/fiche.js'), 'utf8').replace('  render();', '  window.testApi = { patrimonialContext, renderTemplate };');
+const templateSource = fs.readFileSync(require.resolve('../app/Views/fiche-investissement-patrimonial.html'), 'utf8');
 const template = templateSource.match(/<script id="fiche-template" type="x-template">([\s\S]*?)<\/script>/)[1];
 const context = {
   URL,
