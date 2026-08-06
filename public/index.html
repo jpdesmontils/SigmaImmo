@@ -1,143 +1,97 @@
 <!DOCTYPE html>
 <html lang="fr" data-ui="landing">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ImmoAgg — Vos annonces centralisées, vos décisions chiffrées</title>
-<meta name="description" content="ImmoAgg regroupe vos annonces immobilières dans une galerie unique et les transforme en analyse chiffrée — score, rendement, comparables notariés.">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="assets/css/design-system.css">
-<link rel="stylesheet" href="assets/css/landing.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BienAuFait — Les bonnes affaires immobilières, avant les autres</title>
+  <meta name="description" content="BienAuFait détecte, centralise et analyse les annonces immobilières pour les investisseurs actifs et les marchands de biens qui veulent décider vite, sur des chiffres.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/design-system.css">
+  <link rel="stylesheet" href="assets/css/landing.css">
 </head>
 <body>
-
 <header class="site-header">
-  <div class="site-logo">Immo<span>Agg</span></div>
-  <div class="site-header-right">
-    <a class="site-back" href="app.html">Ouvrir ma galerie →</a>
-  </div>
+  <a class="site-logo" href="index.html" aria-label="BienAuFait, accueil"><span class="logo-mark">B</span>BienAuFait<span class="logo-dot">.</span></a>
+  <nav class="site-nav" aria-label="Navigation principale">
+    <a href="#methode">La méthode</a><a href="#analyses">Les analyses</a><a href="plugin.html">Extension Chrome</a>
+  </nav>
+  <a class="header-cta" href="auth/register.php">Créer mon espace</a>
 </header>
 
-<!-- ── Hero ─────────────────────────────────────────────── -->
-<section class="hero">
-  <div class="hero-grid">
-    <div class="hero-text">
-      <div class="hero-eyebrow">Outil personnel de veille immobilière</div>
-      <h1 class="hero-title">Toutes vos annonces au même endroit.<br><em>Un score pour trancher.</em></h1>
-      <p class="hero-sub">ImmoAgg capture les annonces que vous sauvegardez et les transforme en analyse chiffrée — rendement, marge, risques — pour décider sans tableur ni impression sur photos.</p>
-      <div class="hero-kpis">
-        <div class="hkpi"><div class="hkpi-v">1 clic</div><div class="hkpi-s">Capture depuis l'extension Chrome</div></div>
-        <div class="hkpi"><div class="hkpi-v g">3</div><div class="hkpi-s">Analyses chiffrées : Patrimonial, Locatif, MDB</div></div>
-        <div class="hkpi"><div class="hkpi-v g">10 transactions</div><div class="hkpi-s">Comparables dans le même secteur</div></div>
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow"><span></span> La veille immobilière des investisseurs actifs</p>
+      <h1>Arrêtez de chercher.<br><em>Commencez à décider.</em></h1>
+      <p class="hero-lead">BienAuFait transforme le bruit des portails immobiliers en opportunités exploitables : des annonces déjà triées, vos trouvailles centralisées et chaque bien confronté aux chiffres qui comptent.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="auth/register.php">Accéder à BienAuFait <span>→</span></a>
+        <a class="btn btn-ghost" href="plugin.html">Installer l’extension</a>
       </div>
-      <div class="hero-cta">
-        <a class="btn-primary" href="app.html">Ouvrir ma galerie →</a>
-      </div>
+      <p class="micro-proof">Pour les investisseurs qui réalisent au moins 2 acquisitions par an et les marchands de biens qui passent à l’action.</p>
     </div>
-    <div class="hero-visual">
-      <div class="shot-frame">
-        <img src="assets/img/screenshots/galerie.png" alt="Galerie ImmoAgg : annonces filtrables en grille, avec tags ShortList/Écartés et score de décision.">
-      </div>
+    <div class="hero-product">
+      <div class="product-label"><span>●</span> Votre radar d’opportunités</div>
+      <div class="shot-frame"><img src="assets/img/screenshots/galerie.png" alt="Galerie BienAuFait avec annonces, filtres, scores et indicateurs financiers."></div>
+      <div class="floating-stat"><strong>1 espace</strong><span>pour chercher, comparer et trancher</span></div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── Pourquoi ─────────────────────────────────────────── -->
-<section class="section">
-  <div class="stitle">Pourquoi cet outil</div>
-  <div class="why-grid">
-    <div class="why-col">
-      <h3>Le problème</h3>
-      <p>Une recherche sérieuse fait vite exploser le nombre d'onglets, de favoris épars entre plusieurs sites et de notes prises à la main. Comparer un rendement locatif ou une marge de revente au jugé devient vite peu fiable.</p>
-    </div>
-    <div class="why-col">
-      <h3>La réponse</h3>
-      <p>ImmoAgg centralise chaque annonce sauvegardée et calcule, pour l'objectif choisi, un score et un chiffrage complets — appuyés sur l'historique des transactions notariées du secteur.</p>
-    </div>
-  </div>
-</section>
+  <section class="signal-strip" aria-label="Fonctionnalités clés">
+    <div><strong>Flux qualifié</strong><span>Des annonces triées en amont</span></div>
+    <div><strong>Capture en 1 clic</strong><span>Depuis votre navigateur</span></div>
+    <div><strong>3 stratégies</strong><span>Locatif · Patrimonial · MDB</span></div>
+    <div><strong>Données DVF</strong><span>Le prix face au marché réel</span></div>
+  </section>
 
-<!-- ── Preuve : une vraie analyse ───────────────────────── -->
-<section class="section alt">
-  <div class="stitle">La différence</div>
-  <div class="proof-grid">
-    <div class="proof-text">
-      <h2 class="proof-title">Un score, pas une impression</h2>
-      <p>Chaque analyse traduit un bien en décision : rendement net, cash-flow mensuel, points de vigilance et verdict Go / Go conditionnel / No-go. Voici un extrait réel, tel qu'affiché dans l'outil.</p>
-    </div>
-    <div class="proof-visual">
-      <div class="shot-frame">
-        <img src="assets/img/screenshots/analyse-locatif.png" alt="Analyse Investissement locatif dans ImmoAgg : score 71/100, rendement net 6,1 %, cash-flow de 279 à 482 € par mois.">
-      </div>
-      <p class="shot-caption">Analyse « Investissement locatif » — immeuble à Perpignan, 164 500 € : score 71/100, rendement net 6,1 %, cash-flow 279 à 482 €/mois.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ── 3 piliers ────────────────────────────────────────── -->
-<section class="section">
-  <div class="stitle">Comment il vous sert</div>
-  <div class="pillar-grid">
-    <div class="pillar-card">
-      <div class="pillar-num">01</div>
-      <div class="pillar-title">Capturer</div>
-      <p>Un clic depuis l'extension Chrome ajoute prix, surface, photos et description à la galerie — sans ressaisie, avec géocodage automatique.</p>
-    </div>
-    <div class="pillar-card">
-      <div class="pillar-num">02</div>
-      <div class="pillar-title">Centraliser</div>
-      <p>Toutes les annonces sauvegardées dans une galerie unique : grille, liste triable ou carte, filtres ville/prix/surface, tags ShortList et Écartés.</p>
-    </div>
-    <div class="pillar-card">
-      <div class="pillar-num">03</div>
-      <div class="pillar-title">Décider</div>
-      <p>3 analyses chiffrées — Patrimonial, Locatif, Marchand de biens — appuyées sur les transactions notariées du secteur, avec les guides opérationnels associés.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ── Comment ça marche ────────────────────────────────── -->
-<section class="section alt">
-  <div class="stitle">Comment ça marche</div>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-body">
-        <div class="step-title">Capturer</div>
-        <p>Sur une annonce qui vous intéresse, un clic sur l'extension Chrome l'ajoute à votre galerie.</p>
+  <section class="problem section-wrap">
+    <div class="section-kicker">Le coût du bruit</div>
+    <div class="problem-grid">
+      <h2>Une bonne affaire ne vous attend pas pendant que vous recoupez cinq onglets.</h2>
+      <div>
+        <p>Les investisseurs réguliers ne manquent pas d’annonces. Ils manquent d’un système pour repérer le signal, documenter une hypothèse et écarter rapidement les faux positifs.</p>
+        <p class="accent-copy">BienAuFait raccourcit le chemin entre « cette annonce semble intéressante » et « voici pourquoi je fais — ou non — une offre ».</p>
       </div>
     </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-body">
-        <div class="step-title">Trier</div>
-        <p>Filtrez par ville, prix ou surface, comparez en liste ou sur la carte, classez en ShortList ou Écartés.</p>
+  </section>
+
+  <section class="workflow" id="methode">
+    <div class="section-wrap">
+      <div class="section-heading"><div><div class="section-kicker light">Votre nouveau réflexe</div><h2>Du sourcing à la décision,<br>sans rupture.</h2></div><p>Deux portes d’entrée. Une seule méthode de qualification.</p></div>
+      <div class="workflow-grid">
+        <article><span class="step-index">01</span><div class="step-icon">⌁</div><h3>Recevez le signal</h3><p>Consultez un flux d’annonces triées et qualifiées en amont pour concentrer votre attention là où une opération peut exister.</p><small>FLUX QUALIFIÉ</small></article>
+        <article><span class="step-index">02</span><div class="step-icon">＋</div><h3>Ajoutez vos trouvailles</h3><p>Capturez depuis l’extension Chrome le prix, la surface, les photos et la description d’une annonce, sans ressaisie.</p><small>EXTENSION CHROME</small></article>
+        <article><span class="step-index">03</span><div class="step-icon">◎</div><h3>Comparez sans biais</h3><p>Filtrez, classez en ShortList, explorez sur la carte et confrontez le prix demandé aux transactions DVF du secteur.</p><small>GALERIE + CARTE</small></article>
+        <article><span class="step-index">04</span><div class="step-icon">↗</div><h3>Décidez sur les chiffres</h3><p>Mesurez rendement, cash-flow, marge, risques et conditions de réussite avant de mobiliser votre temps et votre capital.</p><small>SCORE + VERDICT</small></article>
       </div>
     </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div class="step-body">
-        <div class="step-title">Analyser &amp; décider</div>
-        <p>Lancez l'analyse adaptée à votre objectif et obtenez un score, des comparables notariés et une lecture chiffrée du bien.</p>
+  </section>
+
+  <section class="analysis section-wrap" id="analyses">
+    <div class="section-heading dark"><div><div class="section-kicker">Un bien, trois lectures</div><h2>Votre stratégie change.<br>Le niveau d’exigence reste.</h2></div><p>Chaque analyse restitue un verdict lisible, ses hypothèses et les conditions qui rendent l’opération défendable.</p></div>
+    <div class="analysis-grid">
+      <div class="analysis-shot"><div class="shot-frame"><img src="assets/img/screenshots/analyse-locatif.png" alt="Analyse locative BienAuFait avec score, rendement net et cash-flow."></div></div>
+      <div class="strategy-list">
+        <article><span>01</span><div><h3>Investissement locatif</h3><p>Rendement brut et net, revenus par lot, coût total, cash-flow, scénarios de financement, risques et leviers.</p></div></article>
+        <article><span>02</span><div><h3>Marchand de biens</h3><p>Faisabilité, complexité, marge nette, prix maximum d’acquisition et écart à négocier.</p></div></article>
+        <article><span>03</span><div><h3>Stratégie patrimoniale</h3><p>Qualité de l’emplacement, accessibilité, valeur prudente, potentiel et scénarios financiers.</p></div></article>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── CTA final ────────────────────────────────────────── -->
-<section class="cta-final">
-  <h2>Prêt à passer à la galerie ?</h2>
-  <p>Vos annonces déjà sauvegardées vous attendent.</p>
-  <a class="btn-primary" href="app.html">Ouvrir ma galerie →</a>
-</section>
+  <section class="precision">
+    <div class="section-wrap precision-grid"><div><div class="section-kicker light">La conviction, documentée</div><h2>Un score n’a de valeur que si vous savez ce qu’il contient.</h2></div><div class="precision-points"><p><strong>Prix objectivé</strong><span>Comparables issus des mutations DVF, médiane locale et fourchette de contre-offre.</span></p><p><strong>Décision explicable</strong><span>Points forts, vigilances, risques, conditions et sources restent visibles.</span></p><p><strong>Mémoire d’investisseur</strong><span>Notes, contacts, visites et statuts suivent chaque opportunité dans le temps.</span></p></div></div>
+  </section>
 
-<footer class="site-footer">
-  <span>ImmoAgg</span>
-</footer>
-
+  <section class="final-cta">
+    <p class="eyebrow"><span></span> Passez du volume à la valeur</p>
+    <h2>La prochaine bonne affaire<br>mérite mieux qu’un favori.</h2>
+    <p>Centralisez votre veille. Qualifiez plus vite. Décidez avec méthode.</p>
+    <div class="hero-actions centered"><a class="btn btn-light" href="auth/register.php">Créer mon espace <span>→</span></a><a class="btn btn-outline" href="plugin.html">Découvrir l’extension</a></div>
+  </section>
+</main>
+<footer class="site-footer"><a class="site-logo" href="index.html"><span class="logo-mark">B</span>BienAuFait<span class="logo-dot">.</span></a><p>La veille immobilière qui mène à une décision.</p><div><a href="https://bienaufait.fr">bienaufait.fr</a><a href="https://dev.bienaufait.fr">dev.bienaufait.fr</a></div></footer>
 </body>
 </html>

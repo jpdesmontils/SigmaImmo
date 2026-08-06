@@ -1,5 +1,18 @@
 # SigmaImmo — v0 SQLite
 
+## Générer l’extension Chrome téléchargeable
+
+Le ZIP proposé sur `public/plugin.html` est construit depuis la source de
+`chrome-plugin` afin d’éviter tout écart entre la version publiée et le dépôt :
+
+```bash
+./scripts/build_chrome_plugin.sh
+```
+
+Le fichier généré est `public/downloads/bienaufait-extension-chrome.zip`. Ce
+fichier binaire est volontairement ignoré par Git : exécutez la commande lors
+du build ou du déploiement afin que le lien de téléchargement soit disponible.
+
 SigmaImmo est un MVP PHP monolithique qui agrège des favoris immobiliers, affiche les annonces côté serveur/statique et expose des APIs JSON pour l'application et l'extension Chrome.
 
 Cette version expose exclusivement l'API JSON v1 sur SQLite. Les routes sont versionnées, authentifiées par token utilisateur et limitées par une liste blanche.

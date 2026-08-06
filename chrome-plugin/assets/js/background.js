@@ -1,5 +1,5 @@
 // ============================================================
-// ImmoAggregator — Background Service Worker
+// BienAuFait — Background Service Worker
 // Agrège les données des content scripts et les envoie au serveur
 // ============================================================
 
@@ -9,7 +9,7 @@ const QUEUE_VERSION_KEY = 'immo_queue_version';
 const QUEUE_VERSION = 2;
 
 const DEFAULT_CONFIG = {
-  serverUrl: 'https://solenis-studio.fr/sigma-immo/api/v1/sync',
+  serverUrl: 'https://bienaufait.fr/api/v1/sync',
   apiToken: '',
   autoSync: true,
   syncIntervalMinutes: 5
@@ -20,7 +20,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   const { [CONFIG_KEY]: cfg } = await chrome.storage.local.get(CONFIG_KEY);
   if (!cfg) {
     await chrome.storage.local.set({ [CONFIG_KEY]: DEFAULT_CONFIG });
-    console.log('[ImmoAgg] Config initialisée avec les valeurs par défaut');
+    console.log('[BienAuFait] Config initialisée avec les valeurs par défaut');
   }
   // La version précédente conservait toute la collection localement. Cette
   // migration la vide afin qu'une annonce supprimée ne soit jamais recréée.
@@ -72,7 +72,7 @@ async function handleFavorites(listings, sendResponse) {
     }
   }
   await saveQueue(queue);
-  console.log(`[ImmoAgg] ${added} nouveaux favoris, ${listings.length - added} mis à jour`);
+  console.log(`[BienAuFait] ${added} nouveaux favoris, ${listings.length - added} mis à jour`);
   sendResponse({ ok: true, added });
   await autoSync();
 }
@@ -84,7 +84,7 @@ async function handleListing(listing, sendResponse) {
     // Enrichit un favori existant avec les détails de la fiche
     queue.favorites[key] = { ...queue.favorites[key], ...listing, enrichedAt: Date.now() };
     await saveQueue(queue);
-    console.log(`[ImmoAgg] Favori enrichi : ${listing.url}`);
+    console.log(`[BienAuFait] Favori enrichi : ${listing.url}`);
   }
   sendResponse({ ok: true });
 }
@@ -99,11 +99,11 @@ async function autoSync() {
 async function flushQueue() {
   const { [CONFIG_KEY]: cfg } = await chrome.storage.local.get(CONFIG_KEY);
 
-  console.group('[ImmoAgg][SYNC] flushQueue');
+  console.group('[BienAuFait][SYNC] flushQueue');
   console.log('Config:', cfg);
 
   if (!cfg?.serverUrl || cfg.serverUrl.includes('YOUR_SERVER')) {
-    console.warn('[ImmoAgg][SYNC] Serveur non configuré, sync ignorée');
+    console.warn('[BienAuFait][SYNC] Serveur non configuré, sync ignorée');
     console.groupEnd();
     return { ok: false, reason: 'SERVER_NOT_CONFIGURED' };
   }
@@ -113,7 +113,7 @@ async function flushQueue() {
   console.log('Queue count:', { favorites: favorites.length });
 
   if (favorites.length === 0) {
-    console.warn('[ImmoAgg][SYNC] Queue vide');
+    console.warn('[BienAuFait][SYNC] Queue vide');
     console.groupEnd();
     return { ok: true, reason: 'EMPTY_QUEUE' };
   }
@@ -124,8 +124,8 @@ async function flushQueue() {
   };
 
   try {
-    console.log('[ImmoAgg][SYNC] POST:', cfg.serverUrl);
-    console.log('[ImmoAgg][SYNC] Payload size:', JSON.stringify(payload).length);
+    console.log('[BienAuFait][SYNC] POST:', cfg.serverUrl);
+    console.log('[BienAuFait][SYNC] Payload size:', JSON.stringify(payload).length);
 
     const res = await fetch(cfg.serverUrl, {
       method: 'POST',
@@ -138,14 +138,14 @@ async function flushQueue() {
 
     const raw = await res.text();
  
-    console.log('[ImmoAgg][SYNC] HTTP status:', res.status);
-    console.log('[ImmoAgg][SYNC] Raw response:', raw);
+    console.log('[BienAuFait][SYNC] HTTP status:', res.status);
+    console.log('[BienAuFait][SYNC] Raw response:', raw);
 
     let result = null;
     try {
       result = JSON.parse(raw);
     } catch (e) {
-      console.error('[ImmoAgg][SYNC] Réponse non JSON:', e.message);
+      console.error('[BienAuFait][SYNC] Réponse non JSON:', e.message);
     }
 
     if (res.ok) {
@@ -158,17 +158,17 @@ async function flushQueue() {
       }
       await saveQueue(currentQueue);
       await chrome.storage.local.set({ immo_last_sync: Date.now() });
-      console.log('[ImmoAgg][SYNC] Sync OK:', result);
+      console.log('[BienAuFait][SYNC] Sync OK:', result);
       console.groupEnd();
       return { ok: true, result };
     }
 
-    console.error('[ImmoAgg][SYNC] Sync échouée:', res.status, result || raw);
+    console.error('[BienAuFait][SYNC] Sync échouée:', res.status, result || raw);
     console.groupEnd();
     return { ok: false, status: res.status, result, raw };
 
   } catch (e) {
-    console.error('[ImmoAgg][SYNC] Erreur fetch:', e.name, e.message, e.stack);
+    console.error('[BienAuFait][SYNC] Erreur fetch:', e.name, e.message, e.stack);
     console.groupEnd();
     return { ok: false, error: e.message };
   }
