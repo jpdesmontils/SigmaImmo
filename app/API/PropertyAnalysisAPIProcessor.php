@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/cAPI_Processor.php';
 require_once dirname(dirname(__DIR__)) . '/api/analysis_types.php';
+require_once dirname(dirname(__DIR__)) . '/api/logger.php';
 class PropertyAnalysisAPIProcessor extends cAPI_Processor
 {
     public function process($method, $body)
@@ -15,7 +16,7 @@ class PropertyAnalysisAPIProcessor extends cAPI_Processor
         if (!function_exists('exec') || !is_executable(PHP_BINARY)) throw new APIException(503, 'analysis.worker_unavailable', 'Le worker d’analyse est indisponible.');
         $now = gmdate('c'); $stmt = $this->pdo->prepare('INSERT INTO analysis_jobs (property_id,type,status,queued_at,created_at,updated_at) VALUES (:property_id,:type,\'queued\',:now,:now,:now)'); $stmt->execute(array(':property_id' => $propertyId, ':type' => $type, ':now' => $now));
         $jobId = (int)$this->pdo->lastInsertId();
-        $log = dirname(dirname(__DIR__)) . '/storage/log/analysis-worker.log';
+        $log = ensureAppLogDirectory() . 'analysis-worker.log';
         $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(dirname(__DIR__)) . '/api/analyze_worker.php') . ' ' . escapeshellarg($propertyId) . ' ' . escapeshellarg($type) . ' >> ' . escapeshellarg($log) . ' 2>&1 &';
         @exec($command);
         return array('data' => array('id' => $jobId, 'property_id' => $propertyId, 'type' => $type, 'status' => 'queued'), 'meta' => array());

@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $auth->login($email, isset($_POST['password']) ? $_POST['password'] : '');
         session_regenerate_id(true);
         $_SESSION['user_id'] = (int)$user['id'];
-        header('Location: /auth/account.php');
+        header('Location: /app.html');
         exit;
     } catch (Exception $e) {
         $error = auth_error_label($e->getMessage());
