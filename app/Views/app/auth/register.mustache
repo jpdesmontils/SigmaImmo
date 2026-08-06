@@ -1,27 +1,44 @@
-<section class="price-position" aria-labelledby="auth-title">
-  <div class="stitle">Espace personnel</div>
-  <h1 id="auth-title">{{labels.title}}</h1>
-  {{#has_error}}
-  <div class="alerts" role="alert">
-    <p class="alert d">{{error}}</p>
-  </div>
-  {{/has_error}}
-  <form method="post">
-    <label class="finance-input" for="register-name">
-      {{labels.name}}
-      <input id="register-name" name="name" autocomplete="name" value="{{name}}">
-    </label>
-    <label class="finance-input" for="register-email">
-      {{labels.email}}
-      <input id="register-email" name="email" type="email" required autocomplete="email" value="{{email}}">
-    </label>
-    <label class="finance-input" for="register-password">
-      {{labels.password}}
-      <input id="register-password" name="password" type="password" required minlength="8" autocomplete="new-password">
-    </label>
-    <div class="recalculate-actions">
-      <button type="submit" data-type="submit">{{labels.submit}}</button>
+<div class="auth-shell">
+  <aside class="auth-aside">
+    <div class="auth-brand">{{brand}}</div>
+    <div class="auth-aside-body">
+      <div class="auth-aside-eyebrow">Créer un compte</div>
+      <h1 class="auth-aside-title">Rejoignez les investisseurs qui décident avec les données.</h1>
+      <ul class="auth-aside-points">
+        <li>10 favoris gratuits, sans carte bancaire</li>
+        <li>Fiches d'analyse locatif, patrimonial et marchand de biens</li>
+        <li>Extension Chrome pour importer vos annonces en un clic</li>
+      </ul>
     </div>
-  </form>
-</section>
-<p class="notice">{{labels.login_prompt}} <a href="/auth/login.php">{{labels.login_cta}}</a></p>
+    <div class="auth-aside-foot">{{brand}} · Analyse immobilière</div>
+  </aside>
+  <main class="auth-main">
+    <div class="auth-card">
+      <a class="auth-back" href="/app.html">← Retour à la galerie</a>
+      <div class="auth-card-head">
+        <h2 class="auth-title" id="auth-title">{{labels.title}}</h2>
+        <p class="auth-subtitle">Quelques secondes pour créer votre espace.</p>
+      </div>
+      {{#has_error}}
+      <div class="auth-alert auth-alert-error" role="alert">{{error}}</div>
+      {{/has_error}}
+      <form method="post" class="auth-form" novalidate aria-labelledby="auth-title">
+        <div class="auth-field">
+          <label for="register-name">{{labels.name}}</label>
+          <input id="register-name" name="name" autocomplete="name" value="{{name}}">
+        </div>
+        <div class="auth-field">
+          <label for="register-email">{{labels.email}}</label>
+          <input id="register-email" name="email" type="email" required autocomplete="email" value="{{email}}">
+        </div>
+        <div class="auth-field">
+          <label for="register-password">{{labels.password}}</label>
+          <input id="register-password" name="password" type="password" required minlength="8" autocomplete="new-password">
+          <small>8 caractères minimum.</small>
+        </div>
+        <button class="auth-submit" type="submit">{{labels.submit}}</button>
+      </form>
+      <p class="auth-footer">{{labels.login_prompt}} <a href="/auth/login.php">{{labels.login_cta}}</a></p>
+    </div>
+  </main>
+</div>

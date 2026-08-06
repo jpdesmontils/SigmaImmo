@@ -1,40 +1,59 @@
-<div class="stitle">Espace personnel</div>
-<h1>{{labels.title}}</h1>
-<div class="alerts">
-  <p class="alert g">{{labels.connected}}</p>
-</div>
-
-<section class="detail-block" aria-label="Informations du compte">
-  <div class="detail-hdr"><h2 class="detail-hdr-name">Informations du compte</h2></div>
-  <div class="krow"><span class="klbl">{{labels.email}}</span><strong class="kval">{{email}}</strong></div>
-  <div class="krow"><span class="klbl">{{labels.plan}}</span><strong class="kval">{{plan}}</strong></div>
-  <div class="krow"><span class="klbl">{{labels.favorites}}</span><strong class="kval">{{favorites_count}}{{favorites_limit}}</strong></div>
-</section>
-
-<section class="price-position" aria-labelledby="api-tokens-title">
-  <div class="stitle">Accès développeur</div>
-  <h2 id="api-tokens-title">Tokens API</h2>
-  {{#has_issued_token}}
-  <div class="alerts" role="status">
-    <p class="alert g"><strong>Copiez ce token maintenant :</strong> <code>{{issued_token}}</code></p>
-  </div>
-  {{/has_issued_token}}
-  <form method="post">
-    <input type="hidden" name="csrf_token" value="{{csrf_token}}">
-    <label class="finance-input" for="token-label">
-      Libellé
-      <input id="token-label" name="token_label" maxlength="120" value="Extension Chrome">
-    </label>
-    <div class="recalculate-actions">
-      <button type="submit" data-type="submit">Créer un token</button>
+<div class="account-shell">
+  <header class="account-header">
+    <div>
+      <div class="account-eyebrow">Espace personnel</div>
+      <h1 class="account-title">{{labels.title}}</h1>
     </div>
-  </form>
-  <ul class="list">
-    {{#tokens}}<li><strong>{{label}}</strong> — créé le {{created_at}}{{#last_used_at}}, utilisé le {{last_used_at}}{{/last_used_at}}</li>{{/tokens}}
-    {{^tokens}}<li>Aucun token.</li>{{/tokens}}
-  </ul>
-</section>
+    <span class="account-badge">{{labels.connected}}</span>
+  </header>
 
-<div class="recalculate-actions">
-  <a href="/auth/logout.php">{{labels.logout}}</a>
+  <section class="account-section" aria-label="Informations du compte">
+    <h2 class="account-section-title">Informations du compte</h2>
+    <div class="account-panel">
+      <div class="account-row">
+        <span class="account-row-label">{{labels.email}}</span>
+        <strong class="account-row-value">{{email}}</strong>
+      </div>
+      <div class="account-row">
+        <span class="account-row-label">{{labels.plan}}</span>
+        <strong class="account-row-value">{{plan}}</strong>
+      </div>
+      <div class="account-row">
+        <span class="account-row-label">{{labels.favorites}}</span>
+        <strong class="account-row-value">{{favorites_count}}{{favorites_limit}}</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="account-section" aria-labelledby="api-tokens-title">
+    <h2 class="account-section-title" id="api-tokens-title">Accès développeur — Tokens API</h2>
+    <div class="account-panel">
+      <div class="account-panel-body">
+        {{#has_issued_token}}
+        <div class="auth-alert auth-alert-success" role="status">
+          <span>Copiez ce token maintenant, il ne sera plus affiché : <code class="account-token-code">{{issued_token}}</code></span>
+        </div>
+        {{/has_issued_token}}
+        <form method="post" class="auth-form">
+          <input type="hidden" name="csrf_token" value="{{csrf_token}}">
+          <div class="auth-field">
+            <label for="token-label">Libellé</label>
+            <input id="token-label" name="token_label" maxlength="120" value="Extension Chrome">
+          </div>
+          <button class="auth-submit" type="submit">Créer un token</button>
+        </form>
+      </div>
+      <ul class="account-token-list">
+        {{#tokens}}
+        <li>
+          <span class="account-token-name">{{label}}</span>
+          <span class="account-token-meta">créé le {{created_at}}{{#last_used_at}}, utilisé le {{last_used_at}}{{/last_used_at}}</span>
+        </li>
+        {{/tokens}}
+        {{^tokens}}<li class="account-empty">Aucun token.</li>{{/tokens}}
+      </ul>
+    </div>
+  </section>
+
+  <a class="account-logout" href="/auth/logout.php">{{labels.logout}}</a>
 </div>
