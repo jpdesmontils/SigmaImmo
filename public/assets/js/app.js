@@ -25,6 +25,7 @@ let pendingGalleryScroll = null;
 const filters = {
   userSelections: new Set(),
   analysisTypes:  new Set(),
+  query:     '',
   city:      '',
   priceMin:  null,
   priceMax:  null,
@@ -50,9 +51,84 @@ document.addEventListener('DOMContentLoaded', async () => {
   initViewer();
   initDeleteModal();
   initCardOptionsMenus();
+  initUserMenu();
+  initSidebarCollapse();
   document.addEventListener('immoagg:open-analysis', openFinishedAnalysis);
   await loadData();
 });
+
+// ── Menu utilisateur (compte / déconnexion) ─────────────────────
+function initUserMenu() {
+  const container = document.getElementById('user-menu');
+  const trigger   = document.getElementById('user-menu-trigger');
+  if (!container || !trigger) return;
+
+  function closeMenu({ focusTrigger = false } = {}) {
+    if (!container.classList.contains('open')) return;
+    container.classList.remove('open');
+    trigger.setAttribute('aria-expanded', 'false');
+    if (focusTrigger) trigger.focus();
+  }
+  function openMenu() {
+    document.querySelector('.card-options.open')?.classList.remove('open');
+    container.classList.add('open');
+    trigger.setAttribute('aria-expanded', 'true');
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    container.classList.contains('open') ? closeMenu() : openMenu();
+  });
+  document.addEventListener('click', (e) => {
+    if (container.classList.contains('open') && !e.target.closest('#user-menu')) closeMenu();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && container.classList.contains('open')) closeMenu({ focusTrigger: true });
+  });
+
+  loadCurrentUser();
+}
+
+async function loadCurrentUser() {
+  const emailEl  = document.getElementById('user-menu-email');
+  const avatarEl = document.getElementById('user-avatar');
+  try {
+    const res = await fetch('api/v1/me');
+    const json = await res.json();
+    if (!res.ok || !json.data) throw new Error('unauthenticated');
+    const email = json.data.email || '';
+    if (emailEl)  emailEl.textContent = email;
+    if (avatarEl) avatarEl.textContent = email.slice(0, 2) || '??';
+  } catch (e) {
+    if (emailEl) emailEl.textContent = 'Connecté';
+  }
+}
+
+// ── Sidebar réductible (desktop) ────────────────────────────────
+const SIDEBAR_COLLAPSED_KEY = 'immoagg.sidebar.collapsed';
+
+function initSidebarCollapse() {
+  const btn    = document.getElementById('btn-sidebar-collapse');
+  const layout = document.querySelector('.layout');
+  if (!btn || !layout) return;
+
+  function apply(collapsed) {
+    layout.classList.toggle('sidebar-collapsed', collapsed);
+    btn.setAttribute('aria-expanded', String(!collapsed));
+    btn.textContent = collapsed ? '›' : '‹';
+    btn.title = collapsed ? 'Afficher la barre latérale' : 'Réduire la barre latérale';
+  }
+
+  let collapsed = false;
+  try { collapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1'; } catch (_) {}
+  apply(collapsed);
+
+  btn.addEventListener('click', () => {
+    collapsed = !layout.classList.contains('sidebar-collapsed');
+    apply(collapsed);
+    try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (_) {}
+  });
+}
 
 // ── Menu déroulant "options" des vignettes ──────────────────────
 // Le menu ne s'ouvre que sur clic du bouton •••, jamais au survol.
@@ -81,7 +157,9 @@ function initCardOptionsMenus() {
     const openMenu = document.querySelector('.card-options.open');
     if (!openMenu) return;
     openMenu.classList.remove('open');
-    openMenu.querySelector('.card-btn-more')?.setAttribute('aria-expanded', 'false');
+    const trigger = openMenu.querySelector('.card-btn-more');
+    trigger?.setAttribute('aria-expanded', 'false');
+    trigger?.focus();
   });
 }
 
@@ -156,6 +234,10 @@ function initFilters() {
   if (!document.getElementById('f-city')) return;
   const debounced = debounce(applyFiltersAndRender, 300);
 
+  document.getElementById('f-query').addEventListener('input', e => {
+    filters.query = e.target.value.toLowerCase().trim();
+    debounced();
+  });
   document.getElementById('f-city').addEventListener('input', e => {
     filters.city = e.target.value.toLowerCase().trim();
     debounced();
@@ -228,6 +310,7 @@ function applyFiltersAndRender() {
 
   console.log('[ImmoAgg] Filtré:', filtered.length, '/', allListings.length);
   document.getElementById('result-count').textContent = filtered.length;
+  renderActiveFilters();
 
   if (currentView === 'gallery') renderGallery();
   if (currentView === 'list')    renderList();
@@ -237,17 +320,17 @@ function applyFiltersAndRender() {
 }
 
 function persistGalleryState() {
-  try { localStorage.setItem(GALLERY_STATE_KEY, JSON.stringify({ city: filters.city, priceMin: filters.priceMin, priceMax: filters.priceMax, surfMin: filters.surfMin, surfMax: filters.surfMax, sort: filters.sort, userSelections: [...filters.userSelections], analysisTypes: [...filters.analysisTypes], listingIds: filtered.map(item => item.id), view: currentView, scrollY: window.scrollY })); } catch (_) {}
+  try { localStorage.setItem(GALLERY_STATE_KEY, JSON.stringify({ query: filters.query, city: filters.city, priceMin: filters.priceMin, priceMax: filters.priceMax, surfMin: filters.surfMin, surfMax: filters.surfMax, sort: filters.sort, userSelections: [...filters.userSelections], analysisTypes: [...filters.analysisTypes], listingIds: filtered.map(item => item.id), view: currentView, scrollY: window.scrollY })); } catch (_) {}
 }
 
 function restoreGalleryState() {
   try {
     const saved = JSON.parse(localStorage.getItem(GALLERY_STATE_KEY) || 'null');
     if (!saved) return;
-    filters.city = saved.city || ''; filters.priceMin = saved.priceMin ?? null; filters.priceMax = saved.priceMax ?? null; filters.surfMin = saved.surfMin ?? null; filters.surfMax = saved.surfMax ?? null; filters.sort = saved.sort || 'date_desc';
+    filters.query = saved.query || ''; filters.city = saved.city || ''; filters.priceMin = saved.priceMin ?? null; filters.priceMax = saved.priceMax ?? null; filters.surfMin = saved.surfMin ?? null; filters.surfMax = saved.surfMax ?? null; filters.sort = saved.sort || 'date_desc';
     filters.userSelections = new Set(saved.userSelections || []); filters.analysisTypes = new Set(saved.analysisTypes || []); currentView = ['gallery','list','map'].includes(saved.view) ? saved.view : 'gallery';
     syncSortControls();
-    const values = {'f-city':filters.city,'f-price-min':filters.priceMin,'f-price-max':filters.priceMax,'f-surf-min':filters.surfMin,'f-surf-max':filters.surfMax}; Object.entries(values).forEach(([key,value])=>{const input=document.getElementById(key);if(input)input.value=value??''}); syncFilterButtons();
+    const values = {'f-query':filters.query,'f-city':filters.city,'f-price-min':filters.priceMin,'f-price-max':filters.priceMax,'f-surf-min':filters.surfMin,'f-surf-max':filters.surfMax}; Object.entries(values).forEach(([key,value])=>{const input=document.getElementById(key);if(input)input.value=value??''}); syncFilterButtons();
     document.querySelectorAll('.view-btn').forEach(button=>button.classList.toggle('active',button.dataset.view===currentView)); ['gallery','list','map'].forEach(view=>document.getElementById('view-'+view).classList.toggle('active',view===currentView));
     pendingGalleryScroll = Number(saved.scrollY) || 0;
   } catch (_) {}
@@ -259,6 +342,10 @@ function listingMatchesFilters(item, activeFilters) {
   if (activeFilters.userSelections.size && !activeFilters.userSelections.has(userKey)) return false;
   if (activeFilters.analysisTypes.size && !availableAnalysisTypes(item).some(type => activeFilters.analysisTypes.has(type))) return false;
   if (activeFilters.withoutScore && hasScore(item)) return false;
+  if (activeFilters.query) {
+    const haystack = `${item.title || ''} ${item.description || ''}`.toLowerCase();
+    if (!haystack.includes(activeFilters.query)) return false;
+  }
   if (activeFilters.city && !getLoc(item).toLowerCase().includes(activeFilters.city)) return false;
   if (activeFilters.priceMin !== null && (item.price === null || item.price < activeFilters.priceMin)) return false;
   if (activeFilters.priceMax !== null && (item.price === null || item.price > activeFilters.priceMax)) return false;
@@ -322,6 +409,7 @@ function numericSortValue(value) {
 function resetFilters() {
   filters.userSelections.clear();
   filters.analysisTypes.clear();
+  filters.query     = '';
   filters.city      = '';
   filters.priceMin = null;
   filters.priceMax = null;
@@ -329,6 +417,7 @@ function resetFilters() {
   filters.surfMax  = null;
   filters.sort     = 'date_desc';
 
+  document.getElementById('f-query').value     = '';
   document.getElementById('f-city').value      = '';
   document.getElementById('f-price-min').value = '';
   document.getElementById('f-price-max').value = '';
@@ -339,6 +428,42 @@ function resetFilters() {
 
   applyFiltersAndRender();
 }
+
+// ── Chips de filtres actifs ──────────────────────────────────
+const USER_SELECTION_LABELS = { untagged: 'Sans tag', shortlist: '⭐ ShortList', a_visiter: 'A visiter', visite: 'Visité', ecartee: '✕ Écartés' };
+
+function renderActiveFilters() {
+  const container = document.getElementById('active-filters');
+  if (!container) return;
+
+  const chips = [];
+  if (filters.query) chips.push({ label: `Recherche : "${filters.query}"`, clear: clearQueryFilter });
+  if (filters.city)  chips.push({ label: `Ville : ${filters.city}`, clear: clearCityFilter });
+  if (filters.priceMin !== null || filters.priceMax !== null) {
+    const min = filters.priceMin !== null ? formatPrice(filters.priceMin) : '';
+    const max = filters.priceMax !== null ? formatPrice(filters.priceMax) : '';
+    chips.push({ label: `Prix : ${min || '0'} – ${max || '∞'}`, clear: clearPriceFilter });
+  }
+  if (filters.surfMin !== null || filters.surfMax !== null) {
+    const min = filters.surfMin !== null ? filters.surfMin + ' m²' : '';
+    const max = filters.surfMax !== null ? filters.surfMax + ' m²' : '';
+    chips.push({ label: `Surface : ${min || '0'} – ${max || '∞'}`, clear: clearSurfaceFilter });
+  }
+  filters.userSelections.forEach(value => chips.push({ label: USER_SELECTION_LABELS[value] || value, clear: () => clearUserSelection(value) }));
+  filters.analysisTypes.forEach(value => chips.push({ label: ANALYSIS_TYPES[value] || value, clear: () => clearAnalysisType(value) }));
+
+  container.innerHTML = chips.map((chip, i) => `<span class="filter-chip">${esc(chip.label)}<button type="button" data-chip-idx="${i}" aria-label="Retirer le filtre">✕</button></span>`).join('');
+  container.querySelectorAll('button[data-chip-idx]').forEach(btn => {
+    btn.addEventListener('click', () => chips[parseInt(btn.dataset.chipIdx)].clear());
+  });
+}
+
+function clearQueryFilter() { filters.query = ''; document.getElementById('f-query').value = ''; applyFiltersAndRender(); }
+function clearCityFilter() { filters.city = ''; document.getElementById('f-city').value = ''; applyFiltersAndRender(); }
+function clearPriceFilter() { filters.priceMin = null; filters.priceMax = null; document.getElementById('f-price-min').value = ''; document.getElementById('f-price-max').value = ''; applyFiltersAndRender(); }
+function clearSurfaceFilter() { filters.surfMin = null; filters.surfMax = null; document.getElementById('f-surf-min').value = ''; document.getElementById('f-surf-max').value = ''; applyFiltersAndRender(); }
+function clearUserSelection(value) { filters.userSelections.delete(value); syncFilterButtons(); applyFiltersAndRender(); }
+function clearAnalysisType(value) { filters.analysisTypes.delete(value); syncFilterButtons(); applyFiltersAndRender(); }
 
 // ── Navigation In App ─────────────────────────────────────────
 function initInAppNavigation() {

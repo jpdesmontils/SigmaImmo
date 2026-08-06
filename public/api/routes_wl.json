@@ -17,6 +17,7 @@
     {"path":"/api/v1/properties/{property_id}/analyses/{type}","methods":["GET","DELETE"],"processor":"PropertyAnalysisResultAPIProcessor","resource":"analyses","auth":"user"},
     {"path":"/api/v1/properties/{property_id}/prices","methods":["GET","POST"],"processor":"PropertyPriceAPIProcessor","resource":"analyses","auth":"user","body_optional":true},
     {"path":"/api/v1/settings","methods":["GET","PATCH"],"processor":"SettingsAPIProcessor","auth":"user"},
+    {"path":"/api/v1/me","methods":["GET"],"processor":"MeAPIProcessor","auth":"session"},
     {"path":"/api/v1/analyses","methods":["GET","POST"],"processor":"cAPI_Processor","resource":"analyses","auth":"token"},
     {"path":"/api/v1/analyses/{id}","methods":["GET","PUT","PATCH","DELETE"],"processor":"cAPI_Processor","resource":"analyses","auth":"token"},
     {"path":"/api/v1/analysis-jobs","methods":["GET","POST"],"processor":"cAPI_Processor","resource":"analysis_jobs","auth":"token"},

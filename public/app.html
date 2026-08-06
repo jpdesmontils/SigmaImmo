@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ImmoAggregator — Ma galerie</title>
+  <title>BienAuFait — Ma galerie</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="/assets/img/favicon/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="/assets/img/favicon/apple-touch-icon.png">
 
   <!-- Leaflet pour la carte -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -27,7 +30,7 @@
 <!-- ── Header ──────────────────────────────────────────────── -->
 <header class="header">
 <button class="btn-filters-mobile" id="btn-filters-mobile">☰ </button>
-  <button class="header-logo" id="header-logo" type="button" title="Afficher la galerie" aria-label="Afficher la galerie">Immo<span>Agg</span></button>
+  <button class="header-logo" id="header-logo" type="button" title="Afficher la galerie" aria-label="Afficher la galerie">Bien<span>AuFait</span></button>
   <div class="header-stats">
     <span>⭐ <b id="hdr-fav">—</b> favoris</span>
   </div>
@@ -39,6 +42,21 @@
     <button class="view-btn" data-view="map" title="Carte">🌐</button>
   </div>
 
+  <div class="header-sep" aria-hidden="true"></div>
+
+  <div class="user-menu" id="user-menu">
+    <button class="user-menu-trigger" id="user-menu-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="user-menu-dropdown" title="Mon compte">
+      <span class="user-avatar" id="user-avatar">…</span>
+    </button>
+    <div class="user-menu-dropdown" id="user-menu-dropdown" role="menu" aria-label="Menu du compte">
+      <div class="user-menu-email" id="user-menu-email">Chargement…</div>
+      <hr class="user-menu-separator">
+      <a class="user-menu-item" role="menuitem" href="/auth/account.php">Mon compte</a>
+      <hr class="user-menu-separator">
+      <a class="user-menu-item danger" role="menuitem" href="/auth/logout.php">Se déconnecter</a>
+    </div>
+  </div>
+
 </header>
 
 <!-- ── Layout ─────────────────────────────────────────────── -->
@@ -46,7 +64,7 @@
 <div class="layout">
 
   <!-- Sidebar -->
-  <aside class="sidebar" aria-label="Navigation et filtres">
+  <aside class="sidebar" id="sidebar" aria-label="Navigation et filtres">
 
 	<nav class="in-app-nav" aria-label="Navigation">
       <button class="in-app-nav-group-toggle" id="guides-toggle" aria-expanded="true" aria-controls="guides-list">
@@ -65,6 +83,9 @@
     <hr class="in-app-nav-separator">
 
     <div class="filter-group">
+      <h3>Recherche</h3><input class="filter-input" id="f-query" type="search" placeholder="Titre, description…">
+    </div>
+    <div class="filter-group">
       <h3>Ville</h3><input class="filter-input" id="f-city" type="text" placeholder="Ex: Paris, Lyon…">
     </div>
     <div class="filter-group"><h3>Prix (€)</h3><div class="range-row"><input class="filter-input" id="f-price-min" type="number" placeholder="Min"><input class="filter-input" id="f-price-max" type="number" placeholder="Max"></div></div>
@@ -77,11 +98,14 @@
 
   </aside>
 
+  <button class="sidebar-collapse-btn" id="btn-sidebar-collapse" type="button" aria-expanded="true" aria-controls="sidebar" title="Réduire la barre latérale">‹</button>
+
   <!-- Main -->
   <main class="main">
     <div class="result-bar">
       <span><b id="result-count">—</b> annonces</span>
     </div>
+    <div class="active-filters" id="active-filters"></div>
 
     <!-- Galerie -->
     <div id="view-gallery" class="active">
