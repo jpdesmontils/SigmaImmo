@@ -22,6 +22,13 @@ class PropertyRepository
         return array_map(array($this, 'rowToListing'), $rows);
     }
 
+    public function allAccessible($userId)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM properties WHERE deleted_at IS NULL AND (user_id = :user_id OR visibility = 'shared') ORDER BY COALESCE(captured_at, 0) DESC");
+        $stmt->execute(array(':user_id' => (int)$userId));
+        return array_map(array($this, 'rowToListing'), $stmt->fetchAll());
+    }
+
     public function countActiveByUser($userId)
     {
         $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM properties WHERE user_id = :user_id AND deleted_at IS NULL');
@@ -38,6 +45,14 @@ class PropertyRepository
             $stmt = $this->pdo->prepare('SELECT * FROM properties WHERE id = :id AND user_id = :user_id AND deleted_at IS NULL');
             $stmt->execute(array(':id' => $id, ':user_id' => (int)$userId));
         }
+        $row = $stmt->fetch();
+        return $row ? $this->rowToListing($row) : null;
+    }
+
+    public function findAccessible($id, $userId)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM properties WHERE id = :id AND deleted_at IS NULL AND (user_id = :user_id OR visibility = 'shared')");
+        $stmt->execute(array(':id' => $id, ':user_id' => (int)$userId));
         $row = $stmt->fetch();
         return $row ? $this->rowToListing($row) : null;
     }
