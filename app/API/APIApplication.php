@@ -19,7 +19,7 @@ class APIApplication
             if (!$route) { if ($allowed) throw new APIException(405, 'method.not_allowed', 'Méthode non autorisée.'); throw new APIException(404, 'route.not_found', 'Route introuvable.'); }
             $user = $this->authenticate(isset($route['auth']) ? $route['auth'] : 'token');
             $class = $route['processor']; $file = __DIR__ . '/' . $class . '.php'; if (!is_file($file)) throw new APIException(500, 'route.invalid', 'Processeur absent.'); require_once $file;
-            $body = null; if (in_array($_SERVER['REQUEST_METHOD'], array('POST','PUT','PATCH'), true)) { $raw = file_get_contents('php://input'); $body = json_decode($raw, true); if (!is_array($body)) throw new APIException(400, 'json.invalid', 'Corps JSON invalide.'); }
+            $body = null; if (in_array($_SERVER['REQUEST_METHOD'], array('POST','PUT','PATCH'), true)) { $body = $this->decodeBody(file_get_contents('php://input'), !empty($route['body_optional'])); }
             $processor = new $class(sigma_db(), $route, $user, $params); $result = $processor->process($_SERVER['REQUEST_METHOD'], $body);
             $this->respond(200, isset($result['data']) ? $result['data'] : null, null, isset($result['meta']) ? $result['meta'] : array());
         } catch (APIException $e) { $this->respond($e->status(), null, array('code' => $e->apiCode(), 'message' => $e->getMessage(), 'details' => $e->details()), array()); }
@@ -35,6 +35,13 @@ class APIApplication
         if ($mode === 'user') { require_once dirname(__DIR__) . '/Middleware/CurrentUserMiddleware.php'; $user = sigma_current_user(); if ($user) return $user; }
         $header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : ''; if (preg_match('/^Bearer\s+(.+)$/i', $header, $match)) { $user = (new ApiTokenService())->authenticate(trim($match[1])); if ($user) return $user; }
         throw new APIException(401, 'auth.unauthorized', 'Token absent ou invalide.');
+    }
+    protected function decodeBody($raw, $optional)
+    {
+        if ($optional && trim((string)$raw) === '') return array();
+        $body = json_decode($raw, true);
+        if (!is_array($body)) throw new APIException(400, 'json.invalid', 'Corps JSON invalide.');
+        return $body;
     }
     private function cors($origin)
     {
