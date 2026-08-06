@@ -1,5 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/Database/Connection.php';
+require_once dirname(dirname(__DIR__)) . '/api/logger.php';
 
 class AuditLogger
 {
@@ -21,6 +22,11 @@ class AuditLogger
             ':ip_address' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null,
             ':user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : null,
             ':created_at' => gmdate('c')
+        ));
+        appLog('app', $action, array(
+            'user_id' => $userId === null ? null : (int)$userId,
+            'property_id' => $propertyId,
+            'payload' => $payload
         ));
     }
 }
