@@ -48,6 +48,13 @@ class UserRepository
         return $stmt->rowCount() > 0;
     }
 
+    public function updatePasswordHash($id, $passwordHash)
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET password_hash = :password_hash, updated_at = :updated_at WHERE id = :id');
+        $stmt->execute(array(':id' => (int)$id, ':password_hash' => $passwordHash, ':updated_at' => gmdate('c')));
+        return $stmt->rowCount() > 0;
+    }
+
     public function touchLastLogin($id)
     {
         $stmt = $this->pdo->prepare('UPDATE users SET last_login_at = :last_login_at, updated_at = :updated_at WHERE id = :id');
