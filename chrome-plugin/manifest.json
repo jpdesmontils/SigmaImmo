@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ImmoAggregator",
+  "name": "BienAuFait",
   "version": "1.2.0",
-  "description": "Capture et enrichit vos annonces immobilières dans une galerie personnelle",
+  "description": "Capturez vos annonces immobilières et synchronisez-les avec votre espace BienAuFait",
   "permissions": [
     "storage",
     "activeTab",
@@ -13,7 +13,8 @@
   "host_permissions": [
     "https://www.green-acres.fr/*",
     "https://nominatim.openstreetmap.org/*",
-	"https://solenis-studio.fr/*"
+	"https://bienaufait.fr/*",
+	"https://dev.bienaufait.fr/*"
   ],
   "background": {
     "service_worker": "assets/js/background.js"

@@ -1,2 +1,3 @@
 /api/.env
 /storage/log/**/*.log
+/public/downloads/*.zip
