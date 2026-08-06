@@ -7,6 +7,7 @@ require_once __DIR__ . '/../app/Repositories/ApiTokenRepository.php';
 require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 require_once __DIR__ . '/../app/API/cAPI_Processor.php';
 require_once __DIR__ . '/../app/API/PropertyAPIProcessor.php';
+require_once __DIR__ . '/../app/API/PropertyAnalysisResultAPIProcessor.php';
 
 $pdo = sigma_db(); $auth = new AuthService(); $owner = $auth->register('owner@example.test', 'password123'); $other = $auth->register('other@example.test', 'password123');
 $tokenService = new ApiTokenService(new ApiTokenRepository($pdo)); $issued = $tokenService->issue($owner['id'], 'test');
@@ -19,6 +20,10 @@ $reader = new cAPI_Processor($pdo, $route, $other, array('id'=>'shared-one')); $
 $hidden = false; try { (new cAPI_Processor($pdo, $route, $other, array('id'=>'private-one')))->process('GET', null); } catch (APIException $e) { $hidden = $e->status() === 404; } assertApi($hidden, 'private property is hidden from another user');
 $propertyReader = new PropertyAPIProcessor($pdo, $route, $other); $propertyList = $propertyReader->process('GET', null); assertApi(count($propertyList['data']) === 1 && $propertyList['data'][0]['id'] === 'shared-one', 'property collection includes another user shared property but excludes their private property');
 $propertyDetail = (new PropertyAPIProcessor($pdo, $route, $other, array('id'=>'shared-one')))->process('GET', null); assertApi($propertyDetail['data']['listing']['id'] === 'shared-one', 'property detail uses the same shared visibility scope as the collection');
+$now = gmdate('c'); $analysisInsert = $pdo->prepare("INSERT INTO analyses (property_id,type,status,result_json,created_at,updated_at) VALUES (:property_id,'locatif','completed',:result_json,:now,:now)"); $analysisInsert->execute(array(':property_id'=>'shared-one', ':result_json'=>'{"score":82}', ':now'=>$now));
+$analysisRoute = array('table'=>'analyses','primary_key'=>'id','writable'=>array());
+$sharedAnalysis = (new PropertyAnalysisResultAPIProcessor($pdo, $analysisRoute, $other, array('property_id'=>'shared-one','type'=>'locatif')))->process('GET', null); assertApi($sharedAnalysis['data']['analysis']['score'] === 82, 'analysis result of a shared property is visible to another authenticated user');
+$analysisDeleteBlocked = false; try { (new PropertyAnalysisResultAPIProcessor($pdo, $analysisRoute, $other, array('property_id'=>'shared-one','type'=>'locatif')))->process('DELETE', null); } catch (APIException $e) { $analysisDeleteBlocked = $e->status() === 404; } assertApi($analysisDeleteBlocked, 'analysis result of a shared property remains deletable only by its owner');
 $blocked = false; try { (new cAPI_Processor($pdo, $route, $other, array('id'=>'shared-one')))->process('PATCH', array('title'=>'stolen')); } catch (APIException $e) { $blocked = $e->status() === 403; } assertApi($blocked, 'shared property remains writable only by its owner');
 $created = (new cAPI_Processor($pdo, $route, $other))->process('POST', array('id'=>'other-one','title'=>'Other','visibility'=>'private')); assertApi($created['data']['user_id'] === (int)$other['id'], 'generic create assigns ownership');
 $routes = json_decode(file_get_contents(__DIR__ . '/../public/api/routes_wl.json'), true); assertApi(is_array($routes) && count($routes['routes']) >= 6, 'route whitelist declares API v1 resources');
