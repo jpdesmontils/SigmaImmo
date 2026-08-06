@@ -158,7 +158,7 @@ function dvfWriteAnalysis($id, $dataDirectory, $analysis) {
     }
 }
 
-function dvfCreateAnalysis($id, $listing, $dataDirectory, $logContext = []) {
+function dvfCreateAnalysis($id, $listing, $dataDirectory, $logContext = [], $persistFile = true) {
     $context = dvfListingContext($listing);
     $propertyType = dvfPropertyType($context['type']);
     $missing = [];
@@ -179,7 +179,7 @@ function dvfCreateAnalysis($id, $listing, $dataDirectory, $logContext = []) {
     $source = ['name' => 'DVF — DGFiP / data.gouv.fr', 'url' => 'https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/', 'limitations' => 'Les données DVF décrivent des mutations enregistrées et ne reflètent ni l’état intérieur, ni les travaux, ni les conditions particulières de chaque vente.'];
     $result = ['source' => $source, 'captured_at' => $capturedAt, 'property' => ['asking_price' => $context['price'], 'surface' => $context['surface'], 'type' => $propertyType], 'location' => $origin, 'perimeter' => $selection['perimeter'], 'transactions' => $selection['items'], 'summary' => dvfSummary($selection['items'], $context['price'], $context['surface'])];
     $analysis = ['version' => 2, 'id' => $id, 'captured_at' => $capturedAt, 'input' => $context, 'api_data' => ['geocoding' => $origin, 'dvf_rows' => $rows], 'result' => $result];
-    dvfWriteAnalysis($id, $dataDirectory, $analysis);
+    if ($persistFile) dvfWriteAnalysis($id, $dataDirectory, $analysis);
     return $analysis;
 }
 

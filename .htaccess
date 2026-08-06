@@ -1,0 +1,4 @@
+RewriteEngine On
+RewriteRule ^api/v1(?:/.*)?$ api/v1/index.php [QSA,L]
+RewriteRule ^api/[^/]+\.php$ - [R=410,L]
+RewriteRule ^(app|fiche-bien|guide-investissement-locatif|guide-mdb-division-parcellaire)\.html$ protected_page.php?page=$1.html [QSA,L]

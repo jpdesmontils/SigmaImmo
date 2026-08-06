@@ -7,12 +7,13 @@ require_once __DIR__ . '/../app/Database/bootstrap.php';
 require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 if (PHP_SAPI !== 'cli') exit(1);
 define('DATA_DIR', __DIR__ . '/../data/');
-define('JOBS_DIR', DATA_DIR . 'analyses/jobs/');
 $id = $argv[1] ?? ''; $type = $argv[2] ?? '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) || !validAnalysisType($type)) exit(1);
-$jobPath = JOBS_DIR . $id . '.json';
-$job = json_decode(@file_get_contents($jobPath), true) ?: [];
-if (($job['status'] ?? '') !== 'queued' || ($job['type'] ?? '') !== $type) { aiLog('analysis.worker_skipped', ['id' => $id, 'type' => $type, 'status' => $job['status'] ?? null]); exit(1); }
+$pdo = sigma_db();
+$jobStmt = $pdo->prepare("SELECT * FROM analysis_jobs WHERE property_id = :id AND type = :type AND status = 'queued' ORDER BY id ASC LIMIT 1");
+$jobStmt->execute([':id' => $id, ':type' => $type]); $job = $jobStmt->fetch();
+if (!$job) { aiLog('analysis.worker_skipped', ['id' => $id, 'type' => $type, 'status' => null]); exit(1); }
+$jobId = (int)$job['id'];
 aiLog('analysis.worker_started', ['id' => $id, 'type' => $type]);
 try {
     loadEnv(__DIR__ . '/.env');
@@ -21,15 +22,16 @@ try {
     $model = getenv('OPENAI_MODEL') ?: 'gpt-5.3-chat-latest';
     $listing = findFavorite($id);
     if (!$listing) throw new RuntimeException('Annonce favorite introuvable.');
-    markRunning($jobPath, $id, $type);
+    updateJob($jobId, 'running', null);
     $inputVariables = promptInputVariables($listing);
     $listingJson = json_encode($listing, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     $baseReplacements = ['{{annonce_complete}}' => $listingJson, '{{dpe}}' => $inputVariables['dpe'], '{{ges}}' => $inputVariables['ges']];
     if ($type === 'patrimonial') {
-        $priceAnalysis = dvfReadAnalysis($id, DATA_DIR);
+        $priceAnalysis = readSqliteAnalysis($id, 'prix');
         if (!$priceAnalysis || !dvfAnalysisMatchesListing($priceAnalysis, $listing)) {
             aiLog('analysis.price_data_started', ['id' => $id, 'type' => $type]);
-            $priceAnalysis = dvfCreateAnalysis($id, $listing, DATA_DIR, ['id' => $id, 'source' => 'patrimonial_worker']);
+            $priceAnalysis = dvfCreateAnalysis($id, $listing, DATA_DIR, ['id' => $id, 'source' => 'patrimonial_worker'], false);
+            saveAnalysis($id, 'prix', $priceAnalysis);
             aiLog('analysis.price_data_succeeded', ['id' => $id, 'type' => $type, 'captured_at' => $priceAnalysis['captured_at']]);
         }
         $travel = runAnalysisStage($apiKey, $model, 'ana_trajet_rp', $baseReplacements + ['{{ville_residence_principale}}' => $inputVariables['ville_residence_principale']], $id, $type);
@@ -50,30 +52,40 @@ try {
     } else {
         $analysis = runAnalysisStage($apiKey, $model, 'ana_' . $type, $baseReplacements, $id, $type);
     }
-    $dir = DATA_DIR . 'analyses/' . $type . '/';
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) throw new RuntimeException('Répertoire d’analyse inaccessible.');
-    $resultPath = $dir . $id . '.json';
-    if (file_put_contents($resultPath, json_encode($analysis, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) === false) throw new RuntimeException('Écriture du fichier d’analyse impossible.');
-    // Une suppression peut avoir lieu pendant l’appel OpenAI : ne jamais recréer
-    // une analyse orpheline une fois que l’annonce a disparu des favoris.
-    if (discardFilesForDeletedListing($id, $jobPath, $resultPath)) {
+    if (!findFavorite($id)) {
+        deleteJob($jobId);
         aiLog('analysis.result_discarded_deleted_listing', ['id' => $id, 'type' => $type]);
         exit(0);
     }
-    aiLog('analysis.result_written', ['id' => $id, 'type' => $type, 'path' => $resultPath]);
-    finish($jobPath, ['id' => $id, 'type' => $type, 'status' => 'completed', 'finished_at' => gmdate('c'), 'error' => null]);
-    if (discardFilesForDeletedListing($id, $jobPath, $resultPath)) exit(0);
+    saveAnalysis($id, $type, $analysis);
+    aiLog('analysis.result_written', ['id' => $id, 'type' => $type, 'storage' => 'sqlite']);
+    updateJob($jobId, 'completed', null);
     aiLog('analysis.completed', ['id' => $id, 'type' => $type]);
 } catch (Throwable $error) {
     aiLog('analysis.failed', ['id' => $id, 'type' => $type, 'error' => $error->getMessage()]);
     if (findFavorite($id)) {
-        finish($jobPath, ['id' => $id, 'type' => $type, 'status' => 'failed', 'finished_at' => gmdate('c'), 'error' => $error->getMessage()]);
+        updateJob($jobId, 'failed', $error->getMessage());
+    } else {
+        deleteJob($jobId);
     }
-    discardFilesForDeletedListing($id, $jobPath);
 }
 function loadEnv($path) { if (!is_file($path)) return; foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) { $line = trim($line); if ($line === '' || $line[0] === '#') continue; $line = preg_replace('/^export\s+/', '', $line); if (!preg_match('/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/', $line, $m)) continue; $value = trim($m[2]); if (strlen($value) > 1 && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) $value = substr($value, 1, -1); putenv($m[1] . '=' . $value); $_ENV[$m[1]] = $value; } }
 function findFavorite($id) { return (new PropertyRepository(sigma_db()))->find($id); }
-function discardFilesForDeletedListing($id, $jobPath, $resultPath = null) { if (findFavorite($id)) return false; if ($resultPath) @unlink($resultPath); @unlink($jobPath); return true; }
+function readSqliteAnalysis($id, $type) { $stmt = sigma_db()->prepare('SELECT result_json FROM analyses WHERE property_id = :id AND type = :type AND status = \'completed\''); $stmt->execute(array(':id' => $id, ':type' => $type)); $value = json_decode((string)$stmt->fetchColumn(), true); return is_array($value) ? $value : null; }
+function updateJob($jobId, $status, $error) {
+    $now = gmdate('c'); $fields = array('status = :status', 'updated_at = :now', 'error = :error');
+    if ($status === 'running') $fields[] = 'started_at = :now';
+    if ($status === 'running') $fields[] = "lease_expires_at = datetime('now', '+620 seconds')";
+    if ($status === 'completed' || $status === 'failed') $fields[] = 'finished_at = :now';
+    $stmt = sigma_db()->prepare('UPDATE analysis_jobs SET ' . implode(',', $fields) . ' WHERE id = :id'); $stmt->execute(array(':status' => $status, ':now' => $now, ':error' => $error, ':id' => (int)$jobId));
+}
+function deleteJob($jobId) { $stmt = sigma_db()->prepare('DELETE FROM analysis_jobs WHERE id = :id'); $stmt->execute(array(':id' => (int)$jobId)); }
+function saveAnalysis($id, $type, $analysis) {
+    $now = gmdate('c'); $score = isset($analysis['score']) && is_numeric($analysis['score']) ? (float)$analysis['score'] : (isset($analysis['notation']['score_global']) && is_numeric($analysis['notation']['score_global']) ? (float)$analysis['notation']['score_global'] : null);
+    $params = array(':property_id' => $id, ':type' => $type, ':summary' => json_encode(array('score' => $score), JSON_UNESCAPED_UNICODE), ':result' => json_encode($analysis, JSON_UNESCAPED_UNICODE), ':score' => $score, ':now' => $now);
+    $update = sigma_db()->prepare('UPDATE analyses SET status=\'completed\',summary_json=:summary,result_json=:result,score=:score,updated_at=:now WHERE property_id=:property_id AND type=:type'); $update->execute($params);
+    if ($update->rowCount() === 0) { $insert = sigma_db()->prepare('INSERT INTO analyses (property_id,type,status,summary_json,result_json,score,created_at,updated_at) VALUES (:property_id,:type,\'completed\',:summary,:result,:score,:now,:now)'); $insert->execute($params); }
+}
 function promptInputVariables($listing) {
     $dpe = strtoupper(trim((string)(isset($listing['dpe']) ? $listing['dpe'] : '')));
     $ges = strtoupper(trim((string)(isset($listing['ges']) ? $listing['ges'] : '')));
@@ -152,5 +164,3 @@ function openAiErrorDetails($body, $curlError) {
     }
     return 'réponse refusée sans détail exploitable';
 }
-function markRunning($path, $id, $type) { finish($path, ['id' => $id, 'type' => $type, 'status' => 'running', 'started_at' => gmdate('c'), 'lease_expires_at' => gmdate('c', time() + 620), 'finished_at' => null, 'error' => null]); }
-function finish($path, $data) { $previous = json_decode(@file_get_contents($path), true) ?: []; file_put_contents($path, json_encode(array_merge($previous, $data), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX); }

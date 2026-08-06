@@ -9,8 +9,8 @@ const QUEUE_VERSION_KEY = 'immo_queue_version';
 const QUEUE_VERSION = 2;
 
 const DEFAULT_CONFIG = {
-  serverUrl: 'https://solenis-studio.fr/sigma-immo/api/sync.php',
-  apiKey: 'CHANGE_ME',
+  serverUrl: 'https://solenis-studio.fr/sigma-immo/api/v1/sync',
+  apiToken: '',
   autoSync: true,
   syncIntervalMinutes: 5
 };
@@ -131,7 +131,7 @@ async function flushQueue() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Api-Key': cfg.apiKey || ''
+        'Authorization': `Bearer ${cfg.apiToken || ''}`
       },
       body: JSON.stringify(payload)
     });
