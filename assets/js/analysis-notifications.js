@@ -1,7 +1,7 @@
 (() => {
   if (window.ImmoAnalysisNotifications) return;
   const STORAGE_KEY = 'immoagg.analysis.jobs';
-  const API_ROOT = new URL('api/', document.baseURI);
+  const API_ROOT = new URL('api/v1/', document.baseURI);
   const types = { patrimonial: 'Patrimoine', locatif: 'Locatif', mdb: 'Marchand de biens' };
   let timer;
   function pendingJobs() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch (_) { return {}; } }
@@ -13,12 +13,12 @@
     if (!entries.length) return;
     await Promise.all(entries.map(async tracked => {
       try {
-        const response = await fetch(new URL(`property.php?id=${encodeURIComponent(tracked.id)}`, API_ROOT));
+        const response = await fetch(new URL(`properties/${encodeURIComponent(tracked.id)}`, API_ROOT));
         if (!response.ok) return;
-        const payload = await response.json(), job = payload.job;
+        const payload = await response.json(), job = payload.data?.job;
         if (!job || job.type !== tracked.type || !['completed', 'failed'].includes(job.status)) return;
         delete jobs[tracked.id];
-        notify(tracked, job.status === 'completed', payload.listing?.title);
+        notify(tracked, job.status === 'completed', payload.data?.listing?.title);
       } catch (_) {}
     }));
     save(jobs);

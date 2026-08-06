@@ -1,5 +1,5 @@
 (() => {
-  const API_ROOT = new URL('api/', document.baseURI);
+  const API_ROOT = new URL('api/v1/', document.baseURI);
   const types = { patrimonial: 'Patrimoine', locatif: 'Locatif', mdb: 'Marchand de biens' };
   const app = document.getElementById('property-app');
   const resolvePropertyId = (container, search) => container?.dataset?.propertyId || new URLSearchParams(search).get('id');
@@ -20,12 +20,12 @@
 
   async function request(url, options) {
     const response = await fetch(url, options), payload = await response.json();
-    if (!response.ok) { const error = new Error(payload.error || `Erreur HTTP ${response.status}`); error.payload = payload; throw error; }
-    return payload;
+    if (!response.ok) { const error = new Error(payload.error?.message || `Erreur HTTP ${response.status}`); error.payload = payload.error; throw error; }
+    return payload.data;
   }
   async function load() {
     if (!id) return fail('Identifiant du bien manquant.');
-    try { data = await request(new URL(`property.php?id=${encodeURIComponent(id)}`, API_ROOT)); renderShell(); selectTab(validTab(localStorage.getItem(lastTabKey)) || 'annonce'); }
+    try { data = await request(new URL(`properties/${encodeURIComponent(id)}`, API_ROOT)); renderShell(); selectTab(validTab(localStorage.getItem(lastTabKey)) || 'annonce'); }
     catch (error) { fail(error.message); }
   }
   function validTab(value) { return ['annonce', 'notes', 'prix', ...Object.keys(types)].includes(value) ? value : null; }
@@ -42,7 +42,7 @@
   }
   function tabButton(key,label) { return `<button class="property-tab" role="tab" data-tab="${key}" aria-selected="false">${label}</button>`; }
   function listingSlider() { let ids = Array.isArray(galleryState.listingIds) && galleryState.listingIds.length ? galleryState.listingIds : [id]; if (!ids.includes(id)) ids = [id]; const index = ids.indexOf(id); return { previous: index > 0 ? ids[index-1] : null, next: index < ids.length-1 ? ids[index+1] : null, position: index+1, total: ids.length }; }
-  async function navigateListing(nextId) { if (!nextId) return; const active = validTab(localStorage.getItem(lastTabKey)) || 'annonce'; clearTimeout(pollTimer); id = nextId; history.replaceState(null, '', `?id=${encodeURIComponent(id)}`); try { data = await request(new URL(`property.php?id=${encodeURIComponent(id)}`, API_ROOT)); renderShell(); selectTab(active); scrollTo(0,0); } catch (error) { fail(error.message); } }
+  async function navigateListing(nextId) { if (!nextId) return; const active = validTab(localStorage.getItem(lastTabKey)) || 'annonce'; clearTimeout(pollTimer); id = nextId; history.replaceState(null, '', `?id=${encodeURIComponent(id)}`); try { data = await request(new URL(`properties/${encodeURIComponent(id)}`, API_ROOT)); renderShell(); selectTab(active); scrollTo(0,0); } catch (error) { fail(error.message); } }
   function selectTab(tab) {
     activeTab = tab; localStorage.setItem(lastTabKey, tab);
     app.querySelectorAll('[data-tab]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.tab === tab)));
@@ -51,7 +51,7 @@
   async function renderPrices(recalculate = false) {
     panel().innerHTML = state('prix', recalculate ? 'Recalcul du positionnement' : 'Recherche des ventes comparables', 'Interrogation des mutations DVF les plus récentes…', '<div class="analysis-spinner" aria-hidden="true"></div>');
     try {
-      const prices = await request(new URL(`prices.php?id=${encodeURIComponent(id)}`, API_ROOT), recalculate ? { method: 'POST' } : undefined);
+      const prices = await request(new URL(`properties/${encodeURIComponent(id)}/prices`, API_ROOT), recalculate ? { method: 'POST' } : undefined);
       if (localStorage.getItem(lastTabKey) !== 'prix') return;
       panel().innerHTML = priceContent(prices);
       panel().querySelector('[data-price-recalculate]').addEventListener('click', () => renderPrices(true));
@@ -147,7 +147,7 @@
     return `<div class="analysis-residence-options"><div class="property-field"><label for="${prefix}-primary-residence-city">Ville de résidence principale utilisée pour l’analyse</label><input id="${prefix}-primary-residence-city" name="primaryResidenceCity" maxlength="120" value="${esc(city)}" required><small>Cette ville sert d’origine au trajet de l’analyse patrimoniale.</small></div><label class="property-checkbox"><input type="checkbox" name="saveDefault" value="1" checked> Utiliser cette ville pour toutes les autres annonces par défaut</label></div>`;
   }
   async function saveDefaultResidenceCity(city) {
-    data.settings = (await request(new URL('settings.php', API_ROOT), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ primaryResidenceCity: city }) })).settings;
+    data.settings = await request(new URL('settings', API_ROOT), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ primaryResidenceCity: city }) });
   }
   async function persistResidenceOptions(form) {
     const city = form.get('primaryResidenceCity');
@@ -297,12 +297,12 @@
   async function analysisTemplate(type) { if (templateCache.has(type)) return templateCache.get(type); const response=await fetch(`templates/fiche-investissement-${type}.html`); if(!response.ok)throw new Error(`modèle HTTP ${response.status}`); const documentTemplate=new DOMParser().parseFromString(await response.text(),'text/html'); const template=documentTemplate.getElementById('fiche-template')?.innerHTML; if(!template)throw new Error('modèle de fiche absent'); templateCache.set(type,template); return template; }
   function state(type,title,message,actions,extra=''){return `<div class="analysis-state"><div class="analysis-state-card ${extra}"><div class="analysis-eyebrow">${type === 'prix' ? 'Données de marché' : `Analyse ${esc(types[type])}`}</div><h2>${esc(title)}</h2><p>${esc(message)}</p>${actions}</div></div>`}
   async function saveAddress(event){event.preventDefault();await saveFields({address:new FormData(event.currentTarget).get('address')});toast('Adresse enregistrée.');}
-  async function saveFields(fields){data=await request(new URL(`property.php?id=${encodeURIComponent(id)}`,API_ROOT),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});}
-  async function startAnalysis(type){try{await request(new URL('analyze.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,type})});window.ImmoAnalysisNotifications.track({id,type,title:data.listing.title});await refresh(type)}catch(error){toast(error.message)}}
+  async function saveFields(fields){data=await request(new URL(`properties/${encodeURIComponent(id)}`,API_ROOT),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});}
+  async function startAnalysis(type){try{await request(new URL(`properties/${encodeURIComponent(id)}/analyses`,API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type})});window.ImmoAnalysisNotifications.track({id,type,title:data.listing.title});await refresh(type)}catch(error){toast(error.message)}}
   function scheduleAnalysisRefresh(type){clearTimeout(pollTimer);pollTimer=setTimeout(()=>refresh(type),2500)}
   async function refresh(type){
     try{
-      data=await request(new URL(`property.php?id=${encodeURIComponent(id)}`,API_ROOT));
+      data=await request(new URL(`properties/${encodeURIComponent(id)}`,API_ROOT));
       const job=data.job;
       if(activeTab===type) renderAnalysis(type);
       else if(job&&job.type===type&&['queued','running'].includes(job.status)) scheduleAnalysisRefresh(type);
@@ -311,9 +311,9 @@
   }
   document.addEventListener?.('immoagg:open-analysis',event=>{if(String(event.detail.id)!==String(id))return;event.preventDefault();selectTab(event.detail.type)});
   function confirmDeletion(message, action){window.ImmoModal.open({title:'Confirmer la suppression',message,actions:[{label:'Annuler'},{label:'Supprimer',type:'delete',onClick:async()=>{try{await action()}catch(error){toast(error.message)}}}]})}
-  function deleteAnalysis(type){confirmDeletion(`Supprimer définitivement l’analyse ${types[type]} ?`,async()=>{await request(new URL(`property.php?id=${encodeURIComponent(id)}&type=${type}`,API_ROOT),{method:'DELETE'});await refresh(type)})}
-  async function updateSelection(selection){const current=data.listing.selection===selection?null:selection;await request(new URL('tag.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,selection:current})});data.listing.selection=current;renderListing();toast(current?'Classement enregistré.':'Classement retiré.');}
-  function deleteListing(){confirmDeletion('Supprimer définitivement cette annonce et toutes ses analyses ?',async()=>{await request(new URL('delete.php',API_ROOT),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});location.href='app.html'})}
+  function deleteAnalysis(type){confirmDeletion(`Supprimer définitivement l’analyse ${types[type]} ?`,async()=>{await request(new URL(`properties/${encodeURIComponent(id)}/analyses/${encodeURIComponent(type)}`,API_ROOT),{method:'DELETE'});await refresh(type)})}
+  async function updateSelection(selection){const current=data.listing.selection===selection?null:selection;await request(new URL(`properties/${encodeURIComponent(id)}`,API_ROOT),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({selection:current})});data.listing.selection=current;renderListing();toast(current?'Classement enregistré.':'Classement retiré.');}
+  function deleteListing(){confirmDeletion('Supprimer définitivement cette annonce et toutes ses analyses ?',async()=>{await request(new URL(`properties/${encodeURIComponent(id)}`,API_ROOT),{method:'DELETE'});location.href='app.html'})}
   function panel(){return document.getElementById('property-panel')}
   function toast(message,options={}){window.ImmoAnalysisNotifications.toast(message,options)}
   function fail(message){app.className='property-error';app.textContent=message}

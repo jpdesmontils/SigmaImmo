@@ -1,7 +1,7 @@
 (() => {
   const currentScript = document.currentScript;
   const scriptUrl = currentScript?.src || location.href;
-  const apiUrl = new URL('../../api/', scriptUrl);
+  const apiUrl = new URL('../../api/v1/', scriptUrl);
   const runtimeContext = window.__immoAnalysisContext || {};
   const defaultType = runtimeContext.type || currentScript?.dataset.analysisType || document.documentElement.dataset.analysisType;
   const query = new URLSearchParams(location.search);
@@ -174,9 +174,9 @@
   async function startRecalculation(button, selectedType) {
     button.disabled = true; button.textContent = '⌛'; button.title = 'Recalcul en cours';
     try {
-      const response = await fetch(new URL('analyze.php', apiUrl), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: activeAnalysisId, type: selectedType }) });
-      const payload = await response.json(); if (!response.ok) throw new Error(payload.error || 'Démarrage du recalcul impossible');
-      const poll = setInterval(async () => { try { const statusResponse = await fetch(`${new URL('analyze.php', apiUrl)}?id=${encodeURIComponent(activeAnalysisId)}`); const statusPayload = await statusResponse.json(); if (statusPayload.job?.status === 'completed') { clearInterval(poll); location.reload(); } if (statusPayload.job?.status === 'failed') { clearInterval(poll); resetButton(button); showRecalculationError(statusPayload.job.error || 'Une erreur inconnue est survenue.'); } } catch (_) {} }, 2500);
+      const response = await fetch(new URL(`properties/${encodeURIComponent(activeAnalysisId)}/analyses`, apiUrl), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: selectedType }) });
+      const payload = await response.json(); if (!response.ok) throw new Error(payload.error?.message || 'Démarrage du recalcul impossible');
+      const poll = setInterval(async () => { try { const statusResponse = await fetch(new URL(`properties/${encodeURIComponent(activeAnalysisId)}`, apiUrl)); const statusPayload = await statusResponse.json(); if (statusPayload.data?.job?.status === 'completed') { clearInterval(poll); location.reload(); } if (statusPayload.data?.job?.status === 'failed') { clearInterval(poll); resetButton(button); showRecalculationError(statusPayload.data.job.error || 'Une erreur inconnue est survenue.'); } } catch (_) {} }, 2500);
     } catch (error) { resetButton(button); showRecalculationError(error.message); }
   }
   function resetButton(button) { button.disabled = false; button.textContent = '↻'; button.title = 'Recalculer l’analyse'; }
@@ -191,16 +191,16 @@
     const contexts = { locatif: locatifContext, mdb: mdbContext, patrimonial: patrimonialContext };
     if (!analysisId || !contexts[type]) { app.className = 'error'; app.textContent = 'Identifiant ou type d’analyse manquant.'; return; }
     try {
-      const response = await fetch(`${new URL('analysis.php', apiUrl)}?id=${encodeURIComponent(analysisId)}&type=${type}`); const payload = await response.json();
-      if (!response.ok || !payload.analysis) throw new Error(payload.error || 'Analyse indisponible');
-      const context = contexts[type](payload.analysis);
+      const response = await fetch(new URL(`properties/${encodeURIComponent(analysisId)}/analyses/${encodeURIComponent(type)}`, apiUrl)); const payload = await response.json();
+      if (!response.ok || !payload.data?.analysis) throw new Error(payload.error?.message || 'Analyse indisponible');
+      const context = contexts[type](payload.data.analysis);
       const titles = { locatif: 'investissement locatif', mdb: 'MDB', patrimonial: 'Patrimonial optimisé' };
       document.title = `Fiche ${titles[type]} — ${context.reference || context.annonce_id || analysisId}`;
       const template = options.template || document.getElementById('fiche-template')?.innerHTML;
       if (!template) throw new Error('Modèle de fiche introuvable');
       if (!embedded) app.className = '';
       if (embedded) app.dataset.ui = `fiche-${type}`;
-      app.innerHTML = renderTemplate(template, context); if (embedded) app.querySelector('.site-header')?.remove(); setupTabs(app); setupFinanceEditor(app); setupGallery(app, payload.listing, context.listingUrl); if (!embedded) addRecalculateButton();
+      app.innerHTML = renderTemplate(template, context); if (embedded) app.querySelector('.site-header')?.remove(); setupTabs(app); setupFinanceEditor(app); setupGallery(app, payload.data.listing, context.listingUrl); if (!embedded) addRecalculateButton();
     } catch (error) { if (!embedded) app.className = 'error'; app.textContent = `Analyse indisponible : ${error.message}`; }
   }
   window.ImmoModal = { open: openModal };

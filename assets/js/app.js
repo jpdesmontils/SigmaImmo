@@ -4,8 +4,8 @@
 // ============================================================
 
 // ── Config ────────────────────────────────────────────────────
-const API_BASE_URL = 'api';
-const API_URL = `${API_BASE_URL}/listings.php`;
+const API_BASE_URL = 'api/v1';
+const API_URL = `${API_BASE_URL}/properties`;
 const GALLERY_STATE_KEY = 'immoagg.gallery.state';
 const SELECTIONS = {
   shortlist: { icon: '⭐', label: 'ShortList', badge: '⭐ ShortList' },
@@ -115,7 +115,7 @@ async function loadData() {
     console.log('[ImmoAgg] JSON ok, clés:', Object.keys(json));
 
     // Support results ET items selon version API
-    allListings = json.results || json.items || [];
+    allListings = json.data || [];
     console.log('[ImmoAgg] allListings:', allListings.length, 'entrées');
 
     if (allListings.length > 0) {
@@ -1137,13 +1137,13 @@ async function toggleSelection(idx, sel) {
   item.selection = newSel;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/tag.php`, {
-      method: 'POST',
+    const response = await fetch(`${API_BASE_URL}/properties/${encodeURIComponent(item.id)}`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.id, selection: newSel })
+      body: JSON.stringify({ selection: newSel })
     });
     const result = await response.json();
-    if (!response.ok || !result.ok || !result.updated) throw new Error(result.error || 'Tag non enregistré');
+    if (!response.ok || result.error) throw new Error(result.error?.message || 'Classement non enregistré');
   } catch(e) {
     item.selection = previousSel;
     console.warn('[ImmoAgg] Tag serveur échoué, modification annulée:', e);
@@ -1213,11 +1213,7 @@ async function confirmDelete() {
 
   // Appeler API suppression
   try {
-    await fetch(`${API_BASE_URL}/delete.php`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.id })
-    });
+    await fetch(`${API_BASE_URL}/properties/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
   } catch(e) {
     console.warn('[ImmoAgg] Suppression serveur échouée (locale OK):', e);
   }
