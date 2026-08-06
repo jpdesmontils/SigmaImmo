@@ -14,14 +14,14 @@ class PropertyAPIProcessor extends cAPI_Processor
 
     private function collection()
     {
-        $repo = new PropertyRepository($this->pdo); $items = $repo->allActive($this->user['id']);
+        $repo = new PropertyRepository($this->pdo); $items = $repo->allAccessible($this->user['id']);
         foreach ($items as &$item) $this->addAnalysisState($item); unset($item);
         return array('data' => $items, 'meta' => array('count' => count($items)));
     }
 
     private function detail($id)
     {
-        $listing = (new PropertyRepository($this->pdo))->find($id, $this->user['id']);
+        $listing = (new PropertyRepository($this->pdo))->findAccessible($id, $this->user['id']);
         if (!$listing) throw new APIException(404, 'resource.not_found', 'Annonce introuvable.');
         $settings = $this->settings();
         if (empty($listing['primaryResidenceCity'])) $listing['primaryResidenceCity'] = $settings['primaryResidenceCity'];
