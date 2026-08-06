@@ -87,6 +87,92 @@
     }
     .view-btn:hover:not(.active) { color: var(--header-text); }
 
+    /* ── Menu utilisateur ────────────────────────────────────── */
+    .header-sep { width: 1px; align-self: stretch; margin: 12px 0; background: rgba(245,243,238,.16); }
+
+    .user-menu { position: relative; }
+    .user-menu-trigger {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      padding: 0;
+      border: 1px solid rgba(245,243,238,.24);
+      border-radius: 50%;
+      background: rgba(245,243,238,.1);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .user-menu-trigger:hover, .user-menu-trigger[aria-expanded="true"] { border-color: var(--header-text); background: rgba(245,243,238,.18); }
+    .user-avatar {
+      font-family: var(--font-m);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: var(--header-text);
+      text-transform: uppercase;
+    }
+
+    .user-menu-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      z-index: 150;
+      min-width: 220px;
+      padding: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      box-shadow: 0 18px 38px #16150f33;
+    }
+    .user-menu.open .user-menu-dropdown { display: block; }
+    .user-menu-email {
+      padding: 10px 10px 8px;
+      font-family: var(--font-m);
+      font-size: 11px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+    .user-menu-separator { border: 0; border-top: 1px solid var(--border); margin: 2px 0; }
+    .user-menu-item {
+      display: block;
+      width: 100%;
+      padding: 9px 10px;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      border-radius: 0;
+    }
+    .user-menu-item:hover { background: var(--surface3); }
+    .user-menu-item.danger { color: var(--danger); }
+
+    /* ── Filtres actifs ──────────────────────────────────────── */
+    .active-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: -8px 0 16px; }
+    .active-filters:empty { display: none; margin: 0; }
+    .filter-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 6px 4px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border-hi);
+      background: var(--surface);
+      color: var(--text-2);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .filter-chip button {
+      display: flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px;
+      border: 0; border-radius: 50%;
+      background: var(--surface3);
+      color: var(--text);
+      font-size: 11px; line-height: 1;
+      cursor: pointer;
+    }
+    .filter-chip button:hover { background: var(--text); color: var(--bg); }
+
     /* ── Navigation In App ───────────────────────────────────── */
     .in-app-nav { display:flex; flex-direction:column; gap:4px; }
     .in-app-nav-title { font-family:var(--font-m); font-size:10px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); }
@@ -118,6 +204,33 @@
       position: sticky;
       top: 56px;
       height: calc(100vh - 56px);
+      transition: width .2s ease, padding .2s ease, opacity .15s ease;
+    }
+
+    .sidebar-collapse-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      align-self: flex-start;
+      position: sticky;
+      top: calc(56px + 16px);
+      width: 18px;
+      height: 44px;
+      margin-left: -1px;
+      padding: 0;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .sidebar-collapse-btn:hover { color: var(--text); border-color: var(--text); }
+
+    @media (min-width: 769px) {
+      .sidebar-collapse-btn { display: flex; }
+      .layout.sidebar-collapsed .sidebar { width: 0; padding: 20px 0; opacity: 0; pointer-events: none; }
     }
 
     .sidebar h3 {
@@ -474,6 +587,7 @@
     #in-app-content { min-height:calc(100vh - 96px); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
     .main.in-app-mode { padding:20px; }
     .main.in-app-mode .result-bar { display:none; }
+    .main.in-app-mode .active-filters { display:none; }
 
     /* ── Visionneuse d'annonce ───────────────────────────────── */
     .viewer {
