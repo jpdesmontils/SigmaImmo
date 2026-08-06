@@ -1,10 +1,40 @@
+<div class="stitle">Espace personnel</div>
 <h1>{{labels.title}}</h1>
-<p class="success">{{labels.connected}}</p>
-<p><strong>{{labels.email}} :</strong> {{email}}</p>
-<p><strong>{{labels.plan}} :</strong> {{plan}}</p>
-<p><strong>{{labels.favorites}} :</strong> {{favorites_count}}{{favorites_limit}}</p>
-<h2>Tokens API</h2>
-{{#has_issued_token}}<p class="success"><strong>Copiez ce token maintenant :</strong><br><code>{{issued_token}}</code></p>{{/has_issued_token}}
-<form method="post"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><label for="token-label">Libellé</label><input id="token-label" name="token_label" maxlength="120" value="Extension Chrome"><button type="submit">Créer un token</button></form>
-<ul>{{#tokens}}<li>{{label}} — créé le {{created_at}}{{#last_used_at}}, utilisé le {{last_used_at}}{{/last_used_at}}</li>{{/tokens}}{{^tokens}}<li>Aucun token.</li>{{/tokens}}</ul>
-<p><a href="/auth/logout.php">{{labels.logout}}</a></p>
+<div class="alerts">
+  <p class="alert g">{{labels.connected}}</p>
+</div>
+
+<section class="detail-block" aria-label="Informations du compte">
+  <div class="detail-hdr"><h2 class="detail-hdr-name">Informations du compte</h2></div>
+  <div class="krow"><span class="klbl">{{labels.email}}</span><strong class="kval">{{email}}</strong></div>
+  <div class="krow"><span class="klbl">{{labels.plan}}</span><strong class="kval">{{plan}}</strong></div>
+  <div class="krow"><span class="klbl">{{labels.favorites}}</span><strong class="kval">{{favorites_count}}{{favorites_limit}}</strong></div>
+</section>
+
+<section class="price-position" aria-labelledby="api-tokens-title">
+  <div class="stitle">Accès développeur</div>
+  <h2 id="api-tokens-title">Tokens API</h2>
+  {{#has_issued_token}}
+  <div class="alerts" role="status">
+    <p class="alert g"><strong>Copiez ce token maintenant :</strong> <code>{{issued_token}}</code></p>
+  </div>
+  {{/has_issued_token}}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{csrf_token}}">
+    <label class="finance-input" for="token-label">
+      Libellé
+      <input id="token-label" name="token_label" maxlength="120" value="Extension Chrome">
+    </label>
+    <div class="recalculate-actions">
+      <button type="submit" data-type="submit">Créer un token</button>
+    </div>
+  </form>
+  <ul class="list">
+    {{#tokens}}<li><strong>{{label}}</strong> — créé le {{created_at}}{{#last_used_at}}, utilisé le {{last_used_at}}{{/last_used_at}}</li>{{/tokens}}
+    {{^tokens}}<li>Aucun token.</li>{{/tokens}}
+  </ul>
+</section>
+
+<div class="recalculate-actions">
+  <a href="/auth/logout.php">{{labels.logout}}</a>
+</div>

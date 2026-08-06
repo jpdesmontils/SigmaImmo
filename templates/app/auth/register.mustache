@@ -1,14 +1,27 @@
-<h1>{{labels.title}}</h1>
-{{#has_error}}
-<p class="error">{{error}}</p>
-{{/has_error}}
-<form method="post">
-  <label>{{labels.name}}</label>
-  <input name="name" autocomplete="name" value="{{name}}">
-  <label>{{labels.email}}</label>
-  <input name="email" type="email" required autocomplete="email" value="{{email}}">
-  <label>{{labels.password}}</label>
-  <input name="password" type="password" required minlength="8" autocomplete="new-password">
-  <button type="submit">{{labels.submit}}</button>
-</form>
-<p>{{labels.login_prompt}} <a href="/auth/login.php">{{labels.login_cta}}</a></p>
+<section class="price-position" aria-labelledby="auth-title">
+  <div class="stitle">Espace personnel</div>
+  <h1 id="auth-title">{{labels.title}}</h1>
+  {{#has_error}}
+  <div class="alerts" role="alert">
+    <p class="alert d">{{error}}</p>
+  </div>
+  {{/has_error}}
+  <form method="post">
+    <label class="finance-input" for="register-name">
+      {{labels.name}}
+      <input id="register-name" name="name" autocomplete="name" value="{{name}}">
+    </label>
+    <label class="finance-input" for="register-email">
+      {{labels.email}}
+      <input id="register-email" name="email" type="email" required autocomplete="email" value="{{email}}">
+    </label>
+    <label class="finance-input" for="register-password">
+      {{labels.password}}
+      <input id="register-password" name="password" type="password" required minlength="8" autocomplete="new-password">
+    </label>
+    <div class="recalculate-actions">
+      <button type="submit" data-type="submit">{{labels.submit}}</button>
+    </div>
+  </form>
+</section>
+<p class="notice">{{labels.login_prompt}} <a href="/auth/login.php">{{labels.login_cta}}</a></p>
