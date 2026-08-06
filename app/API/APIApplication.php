@@ -32,6 +32,7 @@ class APIApplication
     private function authenticate($mode)
     {
         if ($mode === 'session') { require_once dirname(__DIR__) . '/Middleware/CurrentUserMiddleware.php'; $user = sigma_current_user(); if ($user) return $user; }
+        if ($mode === 'user') { require_once dirname(__DIR__) . '/Middleware/CurrentUserMiddleware.php'; $user = sigma_current_user(); if ($user) return $user; }
         $header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : ''; if (preg_match('/^Bearer\s+(.+)$/i', $header, $match)) { $user = (new ApiTokenService())->authenticate(trim($match[1])); if ($user) return $user; }
         throw new APIException(401, 'auth.unauthorized', 'Token absent ou invalide.');
     }
