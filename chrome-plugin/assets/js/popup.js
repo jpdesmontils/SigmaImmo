@@ -27,7 +27,7 @@ async function loadStats() {
 async function loadConfig() {
   config = await sendMsg({ type: 'GET_CONFIG' });
   $('cfg-server').value  = config.serverUrl  || '';
-  $('cfg-apikey').value  = config.apiKey     || '';
+  $('cfg-apikey').value  = config.apiToken   || '';
   $('cfg-gallery').value = config.galleryUrl || '';
   autoSyncOn = config.autoSync !== false;
   updateToggle();
@@ -75,7 +75,7 @@ $('btn-save-config').addEventListener('click', async () => {
   const newConfig = {
     ...config,
     serverUrl:  $('cfg-server').value.trim(),
-    apiKey:     $('cfg-apikey').value.trim(),
+    apiToken:   $('cfg-apikey').value.trim(),
     galleryUrl: $('cfg-gallery').value.trim(),
     autoSync:   autoSyncOn
   };

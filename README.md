@@ -2,7 +2,7 @@
 
 SigmaImmo est un MVP PHP monolithique qui agrège des favoris immobiliers, affiche les annonces côté serveur/statique et expose des APIs JSON pour l'application et l'extension Chrome.
 
-Cette version introduit un socle SQLite progressif : les lectures et écritures critiques des favoris passent par SQLite. Les fichiers JSON existants peuvent être importés manuellement, mais l'application ne relit plus implicitement `data/favorites.json`.
+Cette version expose exclusivement l'API JSON v1 sur SQLite. Les routes sont versionnées, authentifiées par token utilisateur et limitées par une liste blanche.
 
 ## Prérequis
 
@@ -80,19 +80,19 @@ L'ancien script `scripts/import_favorites_json.php` reste disponible comme alias
 Pour un lancement local simple avec le serveur PHP intégré :
 
 ```bash
-php -S 127.0.0.1:8000
+php -S 127.0.0.1:8000 router.php
 ```
 
-Puis ouvrez :
+Puis ouvrez la landing page publique :
 
 ```txt
-http://127.0.0.1:8000/app.html
+http://127.0.0.1:8000/
 ```
 
-Les endpoints API restent disponibles sous `/api`, par exemple :
+L'API est disponible sous `/api/v1`, par exemple :
 
 ```txt
-http://127.0.0.1:8000/api/listings.php
+http://127.0.0.1:8000/api/v1/properties
 ```
 
 ## Lancement avec variables d'environnement
@@ -112,7 +112,7 @@ En production, préférez définir les variables dans la configuration du servic
 
 - `storage/app.sqlite` : base SQLite applicative runtime.
 - `storage/*.sqlite-wal`, `storage/*.sqlite-shm`, `storage/*.sqlite-journal` : fichiers internes SQLite ignorés par Git.
-- `data/analyses/` : résultats d'analyses et jobs encore stockés sous forme de fichiers pendant cette étape.
+- `data/analyses/` : sources historiques à importer avant activation de l'API v1 ; elles ne sont jamais lues par les nouveaux endpoints ou workers.
 - `storage/logs/` et `log/` : logs runtime selon les scripts existants.
 
 ## Vérification rapide
@@ -120,6 +120,7 @@ En production, préférez définir les variables dans la configuration du servic
 ```bash
 php scripts/migrate.php
 php scripts/import_properties_json.php /chemin/vers/export.json
+php scripts/import_analyses_sqlite.php /chemin/vers/data/analyses
 php -l app/Database/Connection.php app/Database/Migrator.php app/Database/bootstrap.php app/Repositories/PropertyRepository.php scripts/migrate.php scripts/import_properties_json.php
 ```
 
@@ -129,3 +130,31 @@ php -l app/Database/Connection.php app/Database/Migrator.php app/Database/bootst
 - Utilisez un chemin absolu pour `SIGMAIMMO_SQLITE_PATH` en production.
 - Sauvegardez régulièrement `storage/app.sqlite` et les artefacts utiles dans `data/`.
 - Ne commitez jamais `api/.env`, `storage/app.sqlite` ni les fichiers SQLite WAL/journal.
+
+## API JSON v1
+
+`api/v1/routes_wl.json` est l'unique liste blanche des routes. Une table absente de cette configuration n'est pas exposée. Le processeur générique `cAPI_Processor` fournit `GET`, `POST`, `PUT`, `PATCH` et `DELETE`; les synchronisations, tags, analyses et quotas utilisent des sous-classes spécialisées.
+
+Toutes les réponses utilisent les clés `data`, `error` et `meta`. Les biens `shared` sont lisibles par tous les utilisateurs authentifiés, mais seul leur propriétaire peut les modifier. Les anciens scripts `/api/*.php` répondent désormais avec HTTP 410 via Apache ou `router.php`.
+
+Avant le déploiement, importez obligatoirement les analyses historiques :
+
+```bash
+php scripts/import_analyses_sqlite.php data/analyses
+```
+
+Une ligne déjà présente dans SQLite reste prioritaire. Après contrôle du résultat, archivez les fichiers sources hors du répertoire applicatif.
+
+Créez un token pour un utilisateur existant depuis la page `/auth/account.php`, depuis `POST /api/v1/tokens` avec une session PHP valide, ou en CLI :
+
+```bash
+php scripts/create_api_token.php utilisateur@example.test "Extension Chrome"
+```
+
+Le secret n'est affiché qu'une fois et seul son SHA-256 est stocké. Utilisez-le ainsi :
+
+```bash
+curl -H 'Authorization: Bearer VOTRE_TOKEN' http://127.0.0.1:8000/api/v1/properties
+```
+
+Les origines autorisées sont déclarées dans `api/v1/CORS.json`. Remplacez impérativement `chrome-extension://REMPLACER_PAR_ID_EXTENSION` par l'identifiant publié de l'extension avant le déploiement.

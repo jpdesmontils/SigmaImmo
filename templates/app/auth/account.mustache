@@ -3,4 +3,8 @@
 <p><strong>{{labels.email}} :</strong> {{email}}</p>
 <p><strong>{{labels.plan}} :</strong> {{plan}}</p>
 <p><strong>{{labels.favorites}} :</strong> {{favorites_count}}{{favorites_limit}}</p>
+<h2>Tokens API</h2>
+{{#has_issued_token}}<p class="success"><strong>Copiez ce token maintenant :</strong><br><code>{{issued_token}}</code></p>{{/has_issued_token}}
+<form method="post"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><label for="token-label">Libellé</label><input id="token-label" name="token_label" maxlength="120" value="Extension Chrome"><button type="submit">Créer un token</button></form>
+<ul>{{#tokens}}<li>{{label}} — créé le {{created_at}}{{#last_used_at}}, utilisé le {{last_used_at}}{{/last_used_at}}</li>{{/tokens}}{{^tokens}}<li>Aucun token.</li>{{/tokens}}</ul>
 <p><a href="/auth/logout.php">{{labels.logout}}</a></p>
