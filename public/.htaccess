@@ -2,5 +2,7 @@ RewriteEngine On
 ErrorDocument 404 /404.html
 ErrorDocument 500 /500.html
 RewriteRule ^api/v1(?:/.*)?$ api/index.php [QSA,L]
-RewriteRule ^api/[^/]+\.php$ - [R=410,L]
+# La réécriture ci-dessus repasse dans les règles avec api/index.php.
+# Seuls les anciens scripts PHP doivent répondre 410, pas le point d'entrée v1.
+RewriteRule ^api/(?!index\.php$)[^/]+\.php$ - [R=410,L]
 RewriteRule ^(app|fiche-bien|guide-investissement-locatif|guide-mdb-division-parcellaire)\.html$ protected_page.php?page=$1.html [QSA,L]
