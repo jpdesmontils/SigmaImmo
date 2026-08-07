@@ -5,11 +5,18 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const styles = fs.readFileSync(path.join(root, 'public/assets/css/guides.css'), 'utf8');
+const publicLayout = fs.readFileSync(path.join(root, 'app/Views/layouts/public.mustache'), 'utf8');
 const guides = [
   'public/guide-mdb-division-parcellaire.html',
   'public/guide-investissement-locatif.html',
 ];
 const dataUis = ['guide-mdb', 'guide-locatif'];
+
+function siteHeader(html) {
+  const match = html.match(/<header class="site-header">[\s\S]*?<\/header>/);
+  assert.ok(match, 'le bandeau public doit être présent');
+  return match[0];
+}
 
 // Spécificité CSS (id, classes/attributs/pseudo-classes, éléments), cf. https://www.w3.org/TR/selectors/#specificity
 function specificity(selector) {
@@ -39,6 +46,13 @@ for (const dataUi of dataUis) {
 }
 
 for (const guide of guides) {
+  test(`${guide} utilise le bandeau commun de la page Guides`, () => {
+    const html = fs.readFileSync(path.join(root, guide), 'utf8');
+
+    assert.equal(siteHeader(html), siteHeader(publicLayout));
+    assert.match(html, /<link rel="stylesheet" href="assets\/css\/public\.css">/);
+  });
+
   test(`${guide} active son premier onglet au chargement`, () => {
     const html = fs.readFileSync(path.join(root, guide), 'utf8');
 
