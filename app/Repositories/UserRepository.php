@@ -67,4 +67,54 @@ class UserRepository
         if ($existing) return $existing;
         return $this->create('legacy/import', null, 'admin', 'Legacy import');
     }
+
+    public function search($query, $plan, $limit, $offset)
+    {
+        list($sql, $params) = $this->searchWhere($query, $plan);
+        $stmt = $this->pdo->prepare('SELECT * FROM users' . $sql . ' ORDER BY created_at DESC LIMIT :limit OFFSET :offset');
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function count($query, $plan)
+    {
+        list($sql, $params) = $this->searchWhere($query, $plan);
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM users' . $sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function countByPlan()
+    {
+        $counts = array('free' => 0, 'paid' => 0, 'admin' => 0);
+        $stmt = $this->pdo->query("SELECT plan, COUNT(*) AS n FROM users GROUP BY plan");
+        foreach ($stmt->fetchAll() as $row) {
+            if (isset($counts[$row['plan']])) {
+                $counts[$row['plan']] = (int)$row['n'];
+            }
+        }
+        return $counts;
+    }
+
+    private function searchWhere($query, $plan)
+    {
+        $conditions = array();
+        $params = array();
+        $query = trim((string)$query);
+        if ($query !== '') {
+            $conditions[] = '(lower(email) LIKE :q OR lower(name) LIKE :q)';
+            $params[':q'] = '%' . strtolower($query) . '%';
+        }
+        if (in_array($plan, array('free', 'paid', 'admin'), true)) {
+            $conditions[] = 'plan = :plan';
+            $params[':plan'] = $plan;
+        }
+        $sql = $conditions ? ' WHERE ' . implode(' AND ', $conditions) : '';
+        return array($sql, $params);
+    }
 }

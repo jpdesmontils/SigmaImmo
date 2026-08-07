@@ -1,0 +1,64 @@
+<div class="admin-actions-row">
+  <div>
+    <h1 class="admin-title">{{page_title}}</h1>
+    <p class="admin-subtitle">{{total}} compte(s) au total.</p>
+  </div>
+</div>
+
+{{#flash}}<div class="admin-alert admin-alert-success">{{flash}}</div>{{/flash}}
+
+<div class="admin-stats-row">
+  <div class="admin-stat-card"><div class="n">{{plan_counts.free}}</div><div class="l">Free</div></div>
+  <div class="admin-stat-card"><div class="n">{{plan_counts.paid}}</div><div class="l">Paid</div></div>
+  <div class="admin-stat-card"><div class="n">{{plan_counts.admin}}</div><div class="l">Admin</div></div>
+</div>
+
+<div class="admin-toolbar">
+  <form class="admin-search" method="get" action="/admin/users/index.php">
+    <input type="hidden" name="plan" value="{{plan_filter}}">
+    <input type="search" name="q" value="{{query}}" placeholder="Rechercher par email ou nom…">
+  </form>
+  <div class="admin-filter-pills">
+    <a class="admin-filter-pill {{#is_all}}active{{/is_all}}" href="/admin/users/index.php?q={{query_url}}">Tous</a>
+    <a class="admin-filter-pill {{#is_free}}active{{/is_free}}" href="/admin/users/index.php?q={{query_url}}&amp;plan=free">Free</a>
+    <a class="admin-filter-pill {{#is_paid}}active{{/is_paid}}" href="/admin/users/index.php?q={{query_url}}&amp;plan=paid">Paid</a>
+    <a class="admin-filter-pill {{#is_admin}}active{{/is_admin}}" href="/admin/users/index.php?q={{query_url}}&amp;plan=admin">Admin</a>
+  </div>
+</div>
+
+<table class="admin-table">
+  <thead>
+    <tr><th>Utilisateur</th><th>Plan</th><th>Biens</th><th>Dernière connexion</th><th>Inscrit le</th><th></th></tr>
+  </thead>
+  <tbody>
+    {{#users}}
+    <tr>
+      <td>
+        <div class="admin-user-cell">
+          <div class="admin-avatar">{{initial}}</div>
+          <div class="who">
+            <span class="name">{{name}}</span>
+            <span class="email">{{email}}</span>
+          </div>
+        </div>
+      </td>
+      <td><span class="plan-badge {{plan}}">{{plan}}</span></td>
+      <td>{{properties_count}}</td>
+      <td>{{last_login_at}}</td>
+      <td>{{created_at}}</td>
+      <td class="admin-row-actions"><a href="/admin/users/show.php?id={{id}}">Voir →</a></td>
+    </tr>
+    {{/users}}
+    {{^users}}
+    <tr><td colspan="6">Aucun utilisateur ne correspond à cette recherche.</td></tr>
+    {{/users}}
+  </tbody>
+</table>
+
+<div class="admin-pagination">
+  {{#has_prev}}<a href="/admin/users/index.php?q={{query_url}}&amp;plan={{plan_filter}}&amp;page={{prev_page}}">← Précédent</a>{{/has_prev}}
+  {{^has_prev}}<span class="disabled">← Précédent</span>{{/has_prev}}
+  <span>Page {{page}} / {{total_pages}}</span>
+  {{#has_next}}<a href="/admin/users/index.php?q={{query_url}}&amp;plan={{plan_filter}}&amp;page={{next_page}}">Suivant →</a>{{/has_next}}
+  {{^has_next}}<span class="disabled">Suivant →</span>{{/has_next}}
+</div>
