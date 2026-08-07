@@ -8,6 +8,9 @@
   if (window.__immoCapture) return;
   window.__immoCapture = true;
 
+  const hostname = location.hostname.toLowerCase().replace(/\.$/, '');
+  if (hostname === 'bienaufait.fr' || hostname.endsWith('.bienaufait.fr')) return;
+
   // ── Détection page d'annonce ────────────────────────────────
   function isListingPage() {
     const url = location.href.toLowerCase();

@@ -31,6 +31,7 @@ class APIApplication
     }
     private function authenticate($mode)
     {
+        if ($mode === 'public') return array();
         if ($mode === 'session') { require_once dirname(__DIR__) . '/Middleware/CurrentUserMiddleware.php'; $user = sigma_current_user(); if ($user) return $user; }
         if ($mode === 'user') { require_once dirname(__DIR__) . '/Middleware/CurrentUserMiddleware.php'; $user = sigma_current_user(); if ($user) return $user; }
         $header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : ''; if (preg_match('/^Bearer\s+(.+)$/i', $header, $match)) { $user = (new ApiTokenService())->authenticate(trim($match[1])); if ($user) return $user; }
@@ -45,7 +46,14 @@ class APIApplication
     }
     private function cors($origin)
     {
-        if (!$origin) return; $config = $this->jsonFile($this->root . '/public/api/CORS.json'); if (!in_array($origin, $config['allowed_origins'], true)) throw new APIException(403, 'cors.origin_forbidden', 'Origine CORS interdite.');
+        if (!$origin) return; $config = $this->jsonFile($this->root . '/public/api/CORS.json');
+        $allowed = in_array($origin, $config['allowed_origins'], true);
+        if (!$allowed && isset($config['allowed_origin_patterns']) && is_array($config['allowed_origin_patterns'])) {
+            foreach ($config['allowed_origin_patterns'] as $pattern) {
+                if (@preg_match($pattern, $origin) === 1) { $allowed = true; break; }
+            }
+        }
+        if (!$allowed) throw new APIException(403, 'cors.origin_forbidden', 'Origine CORS interdite.');
         header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS'); header('Access-Control-Allow-Headers: Authorization, Content-Type');
     }
     private function jsonFile($path) { $data = is_file($path) ? json_decode(file_get_contents($path), true) : null; if (!is_array($data)) throw new APIException(500, 'configuration.invalid', 'Configuration API invalide.'); return $data; }

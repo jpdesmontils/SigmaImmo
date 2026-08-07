@@ -51,12 +51,14 @@
 <div class="config-section" id="config-section">
   <div class="field">
     <label>URL du serveur</label>
-    <input type="url" id="cfg-server" placeholder="https://votre-serveur.com/api/v1/sync">
+    <input type="url" id="cfg-server" placeholder="https://votre-serveur.com/api">
   </div>
   <div class="field">
-    <label>Token utilisateur</label>
-    <input type="password" id="cfg-apikey" placeholder="Votre token API">
+    <label>Identifiant</label>
+    <input type="email" id="login-email" autocomplete="username" placeholder="vous@exemple.fr">
   </div>
+  <div class="field"><label>Mot de passe</label><input type="password" id="login-password" autocomplete="current-password" placeholder="Votre mot de passe"></div>
+  <button class="btn-save" id="btn-login">Se connecter</button>
   <div class="field">
     <label>URL de la galerie</label>
     <input type="url" id="cfg-gallery" placeholder="https://bienaufait.fr/app.html">
@@ -65,7 +67,7 @@
     <span>Sync automatique</span>
     <div class="toggle on" id="toggle-auto"></div>
   </div>
-  <button class="btn-save" id="btn-save-config">Enregistrer</button>
+  <button class="btn-save btn-secondary" id="btn-save-config">Enregistrer les paramètres</button>
 </div>
 
 <div class="status-bar idle" id="status-bar">Prêt</div>
