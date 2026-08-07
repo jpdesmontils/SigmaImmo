@@ -78,6 +78,10 @@ class cAPI_Processor
     protected function scope()
     {
         $table = $this->route['table']; $uid = (int)$this->user['id'];
+        if ((new PlanService())->isAdmin($this->user)) {
+            if ($table === 'properties') return array(' WHERE deleted_at IS NULL', array());
+            if ($table === 'property_tags' || $table === 'analyses' || $table === 'analysis_jobs') return array(' WHERE property_id IN (SELECT id FROM properties WHERE deleted_at IS NULL)', array());
+        }
         if ($table === 'properties') return array(' WHERE deleted_at IS NULL AND (user_id = :user_id OR visibility = \'shared\')', array(':user_id' => $uid));
         if ($table === 'property_tags' || $table === 'analyses' || $table === 'analysis_jobs') return array(' WHERE property_id IN (SELECT id FROM properties WHERE deleted_at IS NULL AND (user_id = :user_id OR visibility = \'shared\'))', array(':user_id' => $uid));
         return array('', array());
@@ -86,6 +90,7 @@ class cAPI_Processor
     protected function writeScope()
     {
         $table = $this->route['table']; $uid = (int)$this->user['id'];
+        if ((new PlanService())->isAdmin($this->user)) return array('', array());
         if ($table === 'properties') return array(' WHERE user_id = :user_id', array(':user_id' => $uid));
         return array(' WHERE property_id IN (SELECT id FROM properties WHERE user_id = :user_id AND deleted_at IS NULL)', array(':user_id' => $uid));
     }

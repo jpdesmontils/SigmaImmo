@@ -2,6 +2,7 @@
 require_once __DIR__ . '/cAPI_Processor.php';
 require_once dirname(__DIR__) . '/Repositories/PropertyRepository.php';
 require_once dirname(__DIR__) . '/Services/AuditLogger.php';
+require_once dirname(__DIR__) . '/Services/PlanService.php';
 
 class SyncAPIProcessor extends cAPI_Processor
 {
@@ -14,6 +15,7 @@ class SyncAPIProcessor extends cAPI_Processor
             $existing = $repo->find((string)$listing['id'], $this->user['id']);
             $global = $repo->find((string)$listing['id']);
             if ($global && !$existing) throw new APIException(409, 'property.id_conflict', 'Ce bien appartient déjà à un autre utilisateur.');
+            $listing['visibility'] = $existing ? $existing['visibility'] : (new PlanService())->defaultVisibility($this->user);
             try { $repo->upsert($listing, $this->user); }
             catch (RuntimeException $e) { if ($e->getMessage() === 'property.quota_reached') throw new APIException(429, 'property.quota_reached', 'Le quota de favoris est atteint.'); throw $e; }
             $existing ? $updated++ : $added++;

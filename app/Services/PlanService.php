@@ -17,7 +17,7 @@ class PlanService
     public function defaultVisibility($user)
     {
         $plan = $this->normalizePlan(isset($user['plan']) ? $user['plan'] : 'free');
-        return $plan === 'free' ? 'shared' : 'private';
+        return $plan === 'paid' ? 'private' : 'shared';
     }
 
     public function isAdmin($user)

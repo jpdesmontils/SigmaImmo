@@ -749,6 +749,7 @@ function cardHTML(item, idx) {
   return `
     <div class="card" data-idx="${idx}" data-id="${esc(item.id || '')}">
       ${badge}
+      ${item.visibility === 'private' ? '<span class="card-private-corner">Privé</span>' : ''}
       <div class="card-media" title="Ouvrir la fiche dans un nouvel onglet">${imgEl}${placeholder}${analysisTagsHTML(item, 'card-analysis-tags')}${locatifSummaryHTML(item)}${scoreCircleHTML(item)}</div>
       <div class="card-body">
         <div class="card-tags">

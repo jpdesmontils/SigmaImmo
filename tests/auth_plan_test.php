@@ -49,6 +49,8 @@ assertTrue($properties->find('paid-1', $free['id']) === null, 'user cannot acces
 
 $legacy = $users->ensureLegacyImportUser();
 assertTrue($legacy['email'] === 'legacy/import' && $legacy['plan'] === 'admin', 'legacy import user exists as admin');
+$properties->upsert(array('id' => 'admin-1', 'title' => 'Admin'), $legacy);
+assertTrue($properties->find('admin-1', $legacy['id'])['visibility'] === 'shared', 'admin favorites are public by default');
 
 unlink($tmp);
 echo "auth_plan_test ok\n";
