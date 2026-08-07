@@ -5,4 +5,11 @@ RewriteRule ^api/v1(?:/.*)?$ api/index.php [QSA,L]
 # La réécriture ci-dessus repasse dans les règles avec api/index.php.
 # Seuls les anciens scripts PHP doivent répondre 410, pas le point d'entrée v1.
 RewriteRule ^api/(?!index\.php$)[^/]+\.php$ - [R=410,L]
-RewriteRule ^(app|fiche-bien|guide-investissement-locatif|guide-mdb-division-parcellaire)\.html$ protected_page.php?page=$1.html [QSA,L]
+RewriteRule ^(app|fiche-bien)\.html$ protected_page.php?page=$1.html [QSA,L]
+RewriteRule ^sitemap\.xml$ sitemap.php [QSA,L]
+RewriteRule ^investissement-locatif/?$ investissement-locatif.php [QSA,L]
+RewriteRule ^marchand-de-biens/?$ marchand-de-biens.php [QSA,L]
+RewriteRule ^analyse-rentabilite/?$ analyse-rentabilite.php [QSA,L]
+RewriteRule ^guides/?$ guides.php [QSA,L]
+RewriteRule ^blog/?$ blog/index.php [QSA,L]
+RewriteRule ^blog/([a-z0-9-]+)/?$ blog/article.php?slug=$1 [QSA,L]

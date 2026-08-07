@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr" data-ui="public">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{seo.title}}</title>
+<meta name="description" content="{{seo.meta_description}}">
+<link rel="canonical" href="{{seo.canonical}}">
+<meta property="og:site_name" content="BienAuFait">
+<meta property="og:type" content="{{seo.og_type}}">
+<meta property="og:title" content="{{seo.og_title}}">
+<meta property="og:description" content="{{seo.og_description}}">
+<meta property="og:url" content="{{seo.canonical}}">
+<meta property="og:image" content="{{seo.og_image}}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{seo.og_title}}">
+<meta name="twitter:description" content="{{seo.og_description}}">
+<meta name="twitter:image" content="{{seo.og_image}}">
+{{#seo.structured_data_json}}<script type="application/ld+json">{{{seo.structured_data_json}}}</script>{{/seo.structured_data_json}}
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/assets/img/favicon/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="/assets/img/favicon/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;family=Roboto+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/design-system.css">
+<link rel="stylesheet" href="/assets/css/public.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="site-logo" href="/" aria-label="BienAuFait, accueil"><span class="logo-mark">B</span>BienAuFait<span class="logo-dot">.</span></a>
+  <nav class="site-nav" aria-label="Navigation principale">
+    <a href="/investissement-locatif">Investissement locatif</a>
+    <a href="/marchand-de-biens">Marchand de biens</a>
+    <a href="/analyse-rentabilite">Analyse de rentabilité</a>
+    <a href="/guides">Guides</a>
+    <a href="/blog">Blog</a>
+  </nav>
+  <a class="header-cta" href="/auth/register.php">Créer mon espace</a>
+</header>
+<main class="public-main">
+{{{content}}}
+</main>
+<footer class="site-footer">
+  <a class="site-logo" href="/"><span class="logo-mark">B</span>BienAuFait<span class="logo-dot">.</span></a>
+  <p>La veille immobilière qui mène à une décision.</p>
+  <nav class="footer-nav" aria-label="Navigation pied de page">
+    <a href="/investissement-locatif">Investissement locatif</a>
+    <a href="/marchand-de-biens">Marchand de biens</a>
+    <a href="/analyse-rentabilite">Analyse de rentabilité</a>
+    <a href="/guides">Guides</a>
+    <a href="/blog">Blog</a>
+    <a href="/plugin.html">Extension Chrome</a>
+  </nav>
+</footer>
+</body>
+</html>

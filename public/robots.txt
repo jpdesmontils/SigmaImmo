@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /app.html
+Disallow: /fiche-bien.html
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+
+Sitemap: https://bienaufait.fr/sitemap.xml

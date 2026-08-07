@@ -1,0 +1,237 @@
+/* ── Site public & blog — feuille dédiée ─────────────────────────────
+   Sert les pages marketing (investissement locatif, marchand de biens,
+   analyse de rentabilité, guides) et le blog. Ne dépend que des tokens
+   de design-system.css, volontairement indépendante de landing.css. */
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+
+/* ── Header / footer communs ─────────────────────────────────────── */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 32px;
+  background: var(--text);
+  color: var(--bg);
+}
+.site-logo {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-d);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  color: inherit;
+}
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+}
+.logo-dot { color: var(--go); }
+.site-nav { display: flex; gap: 22px; flex-wrap: wrap; }
+.site-nav a {
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  color: rgba(245, 243, 238, .78);
+  transition: color .15s;
+}
+.site-nav a:hover { color: var(--bg); }
+.header-cta {
+  padding: 9px 16px;
+  border-radius: 4px;
+  background: var(--go);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.public-main { min-height: 60vh; }
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 32px;
+  border-top: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 13px;
+}
+.site-footer .site-logo { color: var(--text); }
+.footer-nav { display: flex; gap: 18px; flex-wrap: wrap; }
+.footer-nav a { text-decoration: none; color: var(--text-2); font-size: 13px; }
+.footer-nav a:hover { color: var(--text); }
+
+/* ── Pages marketing statiques ───────────────────────────────────── */
+.page-hero {
+  padding: 56px 32px 40px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.page-eyebrow {
+  font-family: var(--font-m);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 14px;
+}
+.page-hero h1 {
+  font-family: var(--font-d);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.15;
+  max-width: 760px;
+  margin-bottom: 16px;
+}
+.page-lead {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-2);
+  max-width: 680px;
+}
+.page-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.btn-primary { background: var(--go); color: #fff; }
+.btn-ghost { border-color: var(--border-hi); color: var(--text); }
+
+.section-block { padding: 40px 32px; max-width: 960px; margin: 0 auto; }
+.section-block h2 {
+  font-family: var(--font-d);
+  font-size: 24px;
+  margin-bottom: 14px;
+}
+.section-block p { line-height: 1.7; color: var(--text-2); margin-bottom: 12px; }
+.section-block ul { padding-left: 20px; line-height: 1.8; color: var(--text-2); }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+}
+.info-card h3 { font-family: var(--font-d); font-size: 16px; margin-bottom: 8px; }
+.info-card p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+.guide-card {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 22px;
+  text-decoration: none;
+  color: var(--text);
+}
+.guide-card:hover { border-color: var(--border-hi); }
+.guide-card .guide-tag {
+  font-family: var(--font-m);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--go);
+  margin-bottom: 8px;
+  display: block;
+}
+.guide-card h3 { font-family: var(--font-d); font-size: 18px; margin-bottom: 8px; }
+.guide-card p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+/* ── Blog ─────────────────────────────────────────────────────────── */
+.blog-list { padding: 40px 32px; max-width: 880px; margin: 0 auto; display: grid; gap: 18px; }
+.blog-card {
+  display: block;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text);
+}
+.blog-card:hover { border-color: var(--border-hi); }
+.blog-card-date {
+  font-family: var(--font-m);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 8px;
+  display: block;
+}
+.blog-card h2 { font-family: var(--font-d); font-size: 20px; margin-bottom: 8px; }
+.blog-card p { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+.blog-empty { color: var(--text-2); font-size: 14px; }
+
+.article {
+  padding: 48px 32px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.article-eyebrow {
+  font-family: var(--font-m);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+.article h1 {
+  font-family: var(--font-d);
+  font-size: 32px;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.article-meta { font-size: 13px; color: var(--text-2); margin-bottom: 28px; }
+.article-body { font-size: 16px; line-height: 1.8; color: var(--text); }
+.article-body h2 { font-family: var(--font-d); font-size: 22px; margin: 32px 0 12px; }
+.article-body p { margin-bottom: 16px; }
+.article-body ul { padding-left: 22px; margin-bottom: 16px; }
+.article-body li { margin-bottom: 6px; }
+.article-body blockquote {
+  border-left: 3px solid var(--go);
+  padding-left: 16px;
+  color: var(--text-2);
+  margin: 20px 0;
+}
+.article-back { display: inline-block; margin-top: 32px; font-size: 13px; color: var(--text-2); text-decoration: none; }
+.article-back:hover { color: var(--text); }
+
+@media (max-width: 720px) {
+  .site-nav { display: none; }
+  .page-hero h1 { font-size: 28px; }
+}

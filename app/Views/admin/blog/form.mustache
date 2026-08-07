@@ -1,0 +1,46 @@
+<h1 class="admin-title">{{page_title}}</h1>
+{{#has_error}}<div class="admin-alert admin-alert-error">{{error}}</div>{{/has_error}}
+<form method="post" action="/admin/blog/save.php">
+  {{#form.id}}<input type="hidden" name="id" value="{{form.id}}">{{/form.id}}
+  <div class="admin-field">
+    <label for="title">Titre</label>
+    <input id="title" name="title" type="text" value="{{form.title}}" required>
+  </div>
+  <div class="admin-field">
+    <label for="slug">Slug</label>
+    <input id="slug" name="slug" type="text" value="{{form.slug}}" placeholder="généré depuis le titre si laissé vide">
+  </div>
+  <div class="admin-field">
+    <label for="meta_description">Meta description</label>
+    <input id="meta_description" name="meta_description" type="text" maxlength="160" value="{{form.meta_description}}">
+    <small>160 caractères maximum, affichée dans les résultats de recherche.</small>
+  </div>
+  <div class="admin-field">
+    <label for="canonical_url">URL canonique</label>
+    <input id="canonical_url" name="canonical_url" type="text" value="{{form.canonical_url}}" placeholder="/blog/mon-slug">
+  </div>
+  <div class="admin-field">
+    <label for="excerpt">Résumé (liste du blog)</label>
+    <input id="excerpt" name="excerpt" type="text" value="{{form.excerpt}}">
+  </div>
+  <div class="admin-field">
+    <label for="cover_image_url">Image de couverture (URL)</label>
+    <input id="cover_image_url" name="cover_image_url" type="text" value="{{form.cover_image_url}}">
+  </div>
+  <div class="admin-field">
+    <label for="author">Auteur</label>
+    <input id="author" name="author" type="text" value="{{form.author}}">
+  </div>
+  <div class="admin-field">
+    <label for="content_blocks_json">Contenu (blocs JSON)</label>
+    <textarea id="content_blocks_json" name="content_blocks_json">{{form.content_blocks_json}}</textarea>
+    <small>Tableau JSON de blocs, ex. [{"type":"heading","text":"..."},{"type":"paragraph","text":"..."},{"type":"list","items":["..."]}].</small>
+  </div>
+  <div class="admin-field">
+    <label><input type="checkbox" name="is_published" value="1" {{#form.is_published}}checked{{/form.is_published}}> Publié</label>
+  </div>
+  <div class="admin-form-actions">
+    <button class="admin-btn" type="submit">Enregistrer</button>
+    <a class="admin-btn secondary" href="/admin/blog/index.php">Annuler</a>
+  </div>
+</form>

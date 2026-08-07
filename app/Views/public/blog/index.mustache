@@ -1,0 +1,18 @@
+<section class="page-hero">
+  <div class="page-eyebrow">Blog</div>
+  <h1>Analyses et méthodes d'investissement immobilier</h1>
+  <p class="page-lead">Retours d'expérience, méthodes de sélection et explications chiffrées pour investir avec méthode.</p>
+</section>
+
+<div class="blog-list">
+  {{#articles}}
+  <a class="blog-card" href="/blog/{{slug}}">
+    <span class="blog-card-date">{{published_date}}</span>
+    <h2>{{title}}</h2>
+    <p>{{excerpt}}</p>
+  </a>
+  {{/articles}}
+  {{^articles}}
+  <p class="blog-empty">Aucun article publié pour le moment.</p>
+  {{/articles}}
+</div>
