@@ -22,8 +22,9 @@ class PropertyRepository
         return array_map(array($this, 'rowToListing'), $rows);
     }
 
-    public function allAccessible($userId)
+    public function allAccessible($userId, $isAdmin = false)
     {
+        if ($isAdmin) return $this->allActive();
         $stmt = $this->pdo->prepare("SELECT * FROM properties WHERE deleted_at IS NULL AND (user_id = :user_id OR visibility = 'shared') ORDER BY COALESCE(captured_at, 0) DESC");
         $stmt->execute(array(':user_id' => (int)$userId));
         return array_map(array($this, 'rowToListing'), $stmt->fetchAll());
@@ -49,8 +50,9 @@ class PropertyRepository
         return $row ? $this->rowToListing($row) : null;
     }
 
-    public function findAccessible($id, $userId)
+    public function findAccessible($id, $userId, $isAdmin = false)
     {
+        if ($isAdmin) return $this->find($id);
         $stmt = $this->pdo->prepare("SELECT * FROM properties WHERE id = :id AND deleted_at IS NULL AND (user_id = :user_id OR visibility = 'shared')");
         $stmt->execute(array(':id' => $id, ':user_id' => (int)$userId));
         $row = $stmt->fetch();

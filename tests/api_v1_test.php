@@ -10,6 +10,7 @@ require_once __DIR__ . '/../app/API/PropertyAPIProcessor.php';
 require_once __DIR__ . '/../app/API/PropertyAnalysisResultAPIProcessor.php';
 
 $pdo = sigma_db(); $auth = new AuthService(); $owner = $auth->register('owner@example.test', 'password123'); $other = $auth->register('other@example.test', 'password123');
+$admin = (new UserRepository($pdo))->ensureLegacyImportUser();
 $tokenService = new ApiTokenService(new ApiTokenRepository($pdo)); $issued = $tokenService->issue($owner['id'], 'test');
 assertApi(strlen($issued['token']) === 64, 'token is returned once with 256 bits');
 assertApi($tokenService->authenticate($issued['token'])['id'] === (int)$owner['id'], 'hashed token authenticates its owner');
@@ -20,6 +21,10 @@ $reader = new cAPI_Processor($pdo, $route, $other, array('id'=>'shared-one')); $
 $hidden = false; try { (new cAPI_Processor($pdo, $route, $other, array('id'=>'private-one')))->process('GET', null); } catch (APIException $e) { $hidden = $e->status() === 404; } assertApi($hidden, 'private property is hidden from another user');
 $propertyReader = new PropertyAPIProcessor($pdo, $route, $other); $propertyList = $propertyReader->process('GET', null); assertApi(count($propertyList['data']) === 1 && $propertyList['data'][0]['id'] === 'shared-one', 'property collection includes another user shared property but excludes their private property');
 $propertyDetail = (new PropertyAPIProcessor($pdo, $route, $other, array('id'=>'shared-one')))->process('GET', null); assertApi($propertyDetail['data']['listing']['id'] === 'shared-one', 'property detail uses the same shared visibility scope as the collection');
+$adminList = (new PropertyAPIProcessor($pdo, $route, $admin))->process('GET', null); assertApi(count($adminList['data']) === 2, 'admin sees shared and private properties');
+$adminDetail = (new PropertyAPIProcessor($pdo, $route, $admin, array('id'=>'private-one')))->process('GET', null); assertApi($adminDetail['data']['permissions']['canManageVisibility'] === true, 'admin receives visibility management permission');
+$visibilityBlocked = false; try { (new PropertyAPIProcessor($pdo, $route, $owner, array('id'=>'private-one')))->process('PATCH', array('visibility'=>'shared')); } catch (APIException $e) { $visibilityBlocked = $e->status() === 403; } assertApi($visibilityBlocked, 'non-admin owner cannot change visibility');
+$published = (new PropertyAPIProcessor($pdo, $route, $admin, array('id'=>'private-one')))->process('PATCH', array('visibility'=>'shared')); assertApi($published['data']['listing']['visibility'] === 'shared', 'admin can publish any property');
 $now = gmdate('c'); $analysisInsert = $pdo->prepare("INSERT INTO analyses (property_id,type,status,summary_json,result_json,created_at,updated_at) VALUES (:property_id,'locatif','completed',:summary_json,:result_json,:now,:now)"); $analysisInsert->execute(array(':property_id'=>'shared-one', ':summary_json'=>'{"score":null}', ':result_json'=>'{"score":82,"note_globale":{"score":71},"annonce":{"revenus":{"total_annonce_an":18800}},"exec_summary":{"rendement_net_min_pct":6.1,"cashflow_min_mois":279}}', ':now'=>$now));
 $propertyList = $propertyReader->process('GET', null); $galleryAnalysis = $propertyList['data'][0]['analyses']['locatif'];
 assertApi($galleryAnalysis['score'] === 71.0, 'property collection rebuilds a missing gallery score from the stored analysis');

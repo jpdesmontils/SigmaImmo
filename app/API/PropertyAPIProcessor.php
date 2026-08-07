@@ -14,19 +14,21 @@ class PropertyAPIProcessor extends cAPI_Processor
 
     private function collection()
     {
-        $repo = new PropertyRepository($this->pdo); $items = $repo->allAccessible($this->user['id']);
+        $plans = new PlanService();
+        $repo = new PropertyRepository($this->pdo); $items = $repo->allAccessible($this->user['id'], $plans->isAdmin($this->user));
         foreach ($items as &$item) $this->addAnalysisState($item); unset($item);
         return array('data' => $items, 'meta' => array('count' => count($items)));
     }
 
     private function detail($id)
     {
-        $listing = (new PropertyRepository($this->pdo))->findAccessible($id, $this->user['id']);
+        $plans = new PlanService();
+        $listing = (new PropertyRepository($this->pdo))->findAccessible($id, $this->user['id'], $plans->isAdmin($this->user));
         if (!$listing) throw new APIException(404, 'resource.not_found', 'Annonce introuvable.');
         $settings = $this->settings();
         if (empty($listing['primaryResidenceCity'])) $listing['primaryResidenceCity'] = $settings['primaryResidenceCity'];
         $analyses = $this->analysisSummaries($id); $job = $this->latestJob($id);
-        return array('data' => array('listing' => $listing, 'settings' => $settings, 'analyses' => $analyses, 'job' => $job, 'requirements' => $this->requirements($listing)), 'meta' => array());
+        return array('data' => array('listing' => $listing, 'settings' => $settings, 'analyses' => $analyses, 'job' => $job, 'requirements' => $this->requirements($listing), 'permissions' => array('canManageVisibility' => $plans->isAdmin($this->user))), 'meta' => array());
     }
 
     private function addAnalysisState(&$item)
@@ -66,7 +68,12 @@ class PropertyAPIProcessor extends cAPI_Processor
 
     private function databaseFields($body)
     {
-        if (!is_array($body)) return $body; $map = array('visitAt'=>'visit_at','agentName'=>'agent_name','agentPhone'=>'agent_phone','agentEmail'=>'agent_email');
+        if (!is_array($body)) return $body;
+        if (array_key_exists('visibility', $body)) {
+            if (!(new PlanService())->isAdmin($this->user)) throw new APIException(403, 'property.visibility_forbidden', 'Seul un administrateur peut modifier la visibilité.');
+            if (!in_array($body['visibility'], array('shared', 'private'), true)) throw new APIException(422, 'property.visibility_invalid', 'Visibilité invalide.');
+        }
+        $map = array('visitAt'=>'visit_at','agentName'=>'agent_name','agentPhone'=>'agent_phone','agentEmail'=>'agent_email');
         foreach ($map as $web=>$column) if (array_key_exists($web, $body)) { $body[$column] = $body[$web]; unset($body[$web]); }
         if (array_key_exists('primaryResidenceCity', $body)) { $raw = (new PropertyRepository($this->pdo))->find((string)$this->params['id'], $this->user['id']); if (!is_array($raw)) $raw = array(); $raw['primaryResidenceCity'] = mb_substr(trim(strip_tags((string)$body['primaryResidenceCity'])), 0, 120); $body['raw_json'] = $raw; unset($body['primaryResidenceCity']); }
         return $body;
@@ -76,7 +83,7 @@ class PropertyAPIProcessor extends cAPI_Processor
         $repo = new PropertyRepository($this->pdo); $plans = new PlanService();
         if (isset($body['id']) && $repo->find((string)$body['id'])) throw new APIException(409, 'property.id_conflict', 'Un bien utilise déjà cet identifiant.');
         if (!$plans->canAddFavorite($this->user, $repo->countActiveByUser($this->user['id']))) throw new APIException(429, 'property.quota_reached', 'Le quota de favoris est atteint.');
-        if (!isset($body['visibility'])) $body['visibility'] = $plans->defaultVisibility($this->user);
+        $body['visibility'] = $plans->defaultVisibility($this->user);
         return parent::create($body);
     }
 }
