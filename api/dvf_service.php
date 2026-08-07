@@ -1,6 +1,8 @@
 <?php
 /** Fonctions d'accès et de calcul DVF, compatibles PHP 7.0. */
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/../app/Repositories/CacheRepository.php';
+require_once __DIR__ . '/../app/Repositories/AnalysisRepository.php';
 
 function dvfHttpJson($url) {
     $response = dvfHttpResponse($url, 12, "Accept: application/json\r\nUser-Agent: SigmaImmo/1.0\r\n", 'Le service public de données immobilières ne répond pas.');
@@ -29,18 +31,14 @@ function dvfHttpStatus($responseHeaders) {
 }
 
 function dvfCache($key, $ttl, $loader, $observer = null) {
-    $directory = __DIR__ . '/../data/cache/dvf/';
-    if (!is_dir($directory)) @mkdir($directory, 0775, true);
-    $file = $directory . preg_replace('/[^a-z0-9_-]/i', '_', $key) . '.json';
-    if (is_file($file) && filemtime($file) >= time() - $ttl) {
-        $cached = json_decode(file_get_contents($file), true);
-        if (is_array($cached)) {
-            if ($observer) call_user_func($observer, 'hit', $cached);
-            return $cached;
-        }
+    $cache = new CacheRepository();
+    $cached = $cache->get($key);
+    if (is_array($cached)) {
+        if ($observer) call_user_func($observer, 'hit', $cached);
+        return $cached;
     }
     $value = call_user_func($loader);
-    if (is_dir($directory) && is_writable($directory)) @file_put_contents($file, json_encode($value, JSON_UNESCAPED_UNICODE), LOCK_EX);
+    $cache->put($key, $value, $ttl);
     if ($observer) call_user_func($observer, 'miss', $value);
     return $value;
 }
@@ -124,15 +122,13 @@ function dvfResolveLocation($context) {
     return dvfGeocode($context['query']);
 }
 
-function dvfAnalysisFile($id, $dataDirectory) {
+function dvfValidateAnalysisId($id) {
     if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id)) throw new InvalidArgumentException('Identifiant invalide.');
-    return rtrim($dataDirectory, '/') . '/analyses/prix/' . $id . '.json';
 }
 
-function dvfReadAnalysis($id, $dataDirectory) {
-    $file = dvfAnalysisFile($id, $dataDirectory);
-    if (!is_file($file)) return null;
-    $analysis = json_decode(file_get_contents($file), true);
+function dvfReadAnalysis($id, PDO $pdo = null) {
+    dvfValidateAnalysisId($id);
+    $analysis = (new AnalysisRepository($pdo))->find($id, 'prix');
     return is_array($analysis) && isset($analysis['result']) && is_array($analysis['result']) ? $analysis : null;
 }
 
@@ -146,19 +142,12 @@ function dvfAnalysisMatchesListing($analysis, $listing) {
     return $storedAddress === $current['exact_address'];
 }
 
-function dvfWriteAnalysis($id, $dataDirectory, $analysis) {
-    $file = dvfAnalysisFile($id, $dataDirectory);
-    $directory = dirname($file);
-    if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) throw new RuntimeException('Le répertoire des analyses Prix ne peut pas être créé.');
-    $temporary = $file . '.tmp.' . uniqid('', true);
-    $json = json_encode($analysis, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    if ($json === false || file_put_contents($temporary, $json, LOCK_EX) === false || !rename($temporary, $file)) {
-        if (is_file($temporary)) @unlink($temporary);
-        throw new RuntimeException('L’analyse Prix ne peut pas être enregistrée.');
-    }
+function dvfWriteAnalysis($id, $analysis, PDO $pdo = null) {
+    dvfValidateAnalysisId($id);
+    (new AnalysisRepository($pdo))->save($id, 'prix', $analysis);
 }
 
-function dvfCreateAnalysis($id, $listing, $dataDirectory, $logContext = [], $persistFile = true) {
+function dvfCreateAnalysis($id, $listing, $logContext = array(), $persist = true, PDO $pdo = null) {
     $context = dvfListingContext($listing);
     $propertyType = dvfPropertyType($context['type']);
     $missing = [];
@@ -179,7 +168,7 @@ function dvfCreateAnalysis($id, $listing, $dataDirectory, $logContext = [], $per
     $source = ['name' => 'DVF — DGFiP / data.gouv.fr', 'url' => 'https://www.data.gouv.fr/fr/datasets/demandes-de-valeurs-foncieres-geolocalisees/', 'limitations' => 'Les données DVF décrivent des mutations enregistrées et ne reflètent ni l’état intérieur, ni les travaux, ni les conditions particulières de chaque vente.'];
     $result = ['source' => $source, 'captured_at' => $capturedAt, 'property' => ['asking_price' => $context['price'], 'surface' => $context['surface'], 'type' => $propertyType], 'location' => $origin, 'perimeter' => $selection['perimeter'], 'transactions' => $selection['items'], 'summary' => dvfSummary($selection['items'], $context['price'], $context['surface'])];
     $analysis = ['version' => 2, 'id' => $id, 'captured_at' => $capturedAt, 'input' => $context, 'api_data' => ['geocoding' => $origin, 'dvf_rows' => $rows], 'result' => $result];
-    if ($persistFile) dvfWriteAnalysis($id, $dataDirectory, $analysis);
+    if ($persist) dvfWriteAnalysis($id, $analysis, $pdo);
     return $analysis;
 }
 

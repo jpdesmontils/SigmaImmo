@@ -205,3 +205,18 @@ curl -H 'Authorization: Bearer VOTRE_TOKEN' http://127.0.0.1:8000/api/v1/propert
 ```
 
 Les origines autorisées sont déclarées dans `public/api/CORS.json`. Remplacez impérativement `chrome-extension://REMPLACER_PAR_ID_EXTENSION` par l'identifiant publié de l'extension avant le déploiement.
+
+## Migration du répertoire `data`
+
+Les caches DVF et les analyses sont désormais conservés dans SQLite. Lors d'une
+mise à jour d'une installation existante, exécuter une seule fois :
+
+```bash
+php scripts/migrate.php
+php scripts/migrate_data_to_sqlite.php
+```
+
+La seconde commande archive chaque fichier de `data/` dans SQLite, importe les
+caches et analyses reconnus dans leurs tables métier, valide la transaction,
+puis supprime le répertoire. En cas d'échec avant la validation, la transaction
+est annulée et aucun fichier n'est supprimé.

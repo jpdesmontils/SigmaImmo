@@ -7,7 +7,7 @@ class PropertyPriceAPIProcessor extends cAPI_Processor
     public function process($method, $body)
     {
         $id=(string)$this->params['property_id']; $this->assertPropertyCalculationAllowed($id); $listing=(new PropertyRepository($this->pdo))->find($id);
-        try { if($method==='GET'){ $stored=dvfReadAnalysis($id, dirname(dirname(__DIR__)).'/data/'); if($stored && dvfAnalysisMatchesListing($stored,$listing)) return array('data'=>$stored['result'],'meta'=>array('stored'=>true)); } $stored=dvfCreateAnalysis($id,$listing,dirname(dirname(__DIR__)).'/data/',array('id'=>$id)); return array('data'=>$stored['result'],'meta'=>array('stored'=>true)); }
+        try { if($method==='GET'){ $stored=dvfReadAnalysis($id, $this->pdo); if($stored && dvfAnalysisMatchesListing($stored,$listing)) return array('data'=>$stored['result'],'meta'=>array('stored'=>true)); } $stored=dvfCreateAnalysis($id,$listing,array('id'=>$id),true,$this->pdo); return array('data'=>$stored['result'],'meta'=>array('stored'=>true)); }
         catch(InvalidArgumentException $e){throw new APIException(422,'prices.invalid_property',$e->getMessage());} catch(RuntimeException $e){throw new APIException(503,'prices.unavailable',$e->getMessage());}
     }
 }
