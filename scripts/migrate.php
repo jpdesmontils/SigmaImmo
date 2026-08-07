@@ -35,7 +35,7 @@ exit($response['ok'] ? 0 : 1);
 
 function missingRequiredTables($tables)
 {
-    $required = array('schema_migrations', 'users', 'sessions', 'api_tokens', 'properties', 'property_tags');
+    $required = array('schema_migrations', 'users', 'sessions', 'api_tokens', 'properties', 'property_tags', 'analyses', 'analysis_jobs', 'cache_entries', 'legacy_data_files');
     $missing = array();
     foreach ($required as $table) {
         if (!in_array($table, $tables, true)) {

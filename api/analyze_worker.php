@@ -6,7 +6,6 @@ require_once __DIR__ . '/dvf_service.php';
 require_once __DIR__ . '/../app/Database/bootstrap.php';
 require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 if (PHP_SAPI !== 'cli') exit(1);
-define('DATA_DIR', __DIR__ . '/../data/');
 define('PROMPTS_DIR', __DIR__ . '/../resources/prompts/');
 $id = $argv[1] ?? ''; $type = $argv[2] ?? '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) || !validAnalysisType($type)) exit(1);
@@ -31,7 +30,7 @@ try {
         $priceAnalysis = readSqliteAnalysis($id, 'prix');
         if (!$priceAnalysis || !dvfAnalysisMatchesListing($priceAnalysis, $listing)) {
             aiLog('analysis.price_data_started', ['id' => $id, 'type' => $type]);
-            $priceAnalysis = dvfCreateAnalysis($id, $listing, DATA_DIR, ['id' => $id, 'source' => 'patrimonial_worker'], false);
+            $priceAnalysis = dvfCreateAnalysis($id, $listing, ['id' => $id, 'source' => 'patrimonial_worker'], false, $pdo);
             saveAnalysis($id, 'prix', $priceAnalysis);
             aiLog('analysis.price_data_succeeded', ['id' => $id, 'type' => $type, 'captured_at' => $priceAnalysis['captured_at']]);
         }
