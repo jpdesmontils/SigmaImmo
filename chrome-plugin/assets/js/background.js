@@ -9,7 +9,8 @@ const QUEUE_VERSION_KEY = 'immo_queue_version';
 const QUEUE_VERSION = 2;
 
 const DEFAULT_CONFIG = {
-  serverUrl: 'https://bienaufait.fr/api/v1/sync',
+  serverUrl: 'https://bienaufait.fr/api',
+  galleryUrl: 'https://bienaufait.fr/app.html',
   apiToken: '',
   autoSync: true,
   syncIntervalMinutes: 5
@@ -21,6 +22,10 @@ chrome.runtime.onInstalled.addListener(async () => {
   if (!cfg) {
     await chrome.storage.local.set({ [CONFIG_KEY]: DEFAULT_CONFIG });
     console.log('[BienAuFait] Config initialisée avec les valeurs par défaut');
+  } else if (/\/api\/v1\/sync\/?$/.test(cfg.serverUrl || '')) {
+    await chrome.storage.local.set({
+      [CONFIG_KEY]: { ...cfg, serverUrl: cfg.serverUrl.replace(/\/v1\/sync\/?$/, '') }
+    });
   }
   // La version précédente conservait toute la collection localement. Cette
   // migration la vide afin qu'une annonce supprimée ne soit jamais recréée.
@@ -50,9 +55,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'GA_FAVORITES')  handleFavorites(msg.data, sendResponse);
   if (msg.type === 'GA_LISTING')    handleListing(msg.data, sendResponse);
   if (msg.type === 'GET_STATS')     getStats(sendResponse);
-  if (msg.type === 'FORCE_SYNC')    flushQueue().then(() => sendResponse({ ok: true }));
+  if (msg.type === 'FORCE_SYNC')    flushQueue().then(sendResponse);
   if (msg.type === 'SAVE_CONFIG')   saveConfig(msg.data, sendResponse);
   if (msg.type === 'GET_CONFIG')    getConfig(sendResponse);
+  if (msg.type === 'LOGIN')         login(msg.data).then(sendResponse);
   return true; // async response
 });
 
@@ -124,10 +130,11 @@ async function flushQueue() {
   };
 
   try {
-    console.log('[BienAuFait][SYNC] POST:', cfg.serverUrl);
+    const syncUrl = apiEndpoint(cfg.serverUrl, 'sync');
+    console.log('[BienAuFait][SYNC] POST:', syncUrl);
     console.log('[BienAuFait][SYNC] Payload size:', JSON.stringify(payload).length);
 
-    const res = await fetch(cfg.serverUrl, {
+    const res = await fetch(syncUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -203,6 +210,23 @@ async function getConfig(sendResponse) {
   sendResponse(cfg || DEFAULT_CONFIG);
 }
 
+async function login(credentials) {
+  const { [CONFIG_KEY]: stored } = await chrome.storage.local.get(CONFIG_KEY);
+  const cfg = { ...DEFAULT_CONFIG, ...(stored || {}) };
+  try {
+    const res = await fetch(apiEndpoint(credentials.serverUrl || cfg.serverUrl, 'login'), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: credentials.email, password: credentials.password })
+    });
+    const result = await res.json();
+    if (!res.ok || !result?.data?.token) return { ok: false, status: res.status, error: result?.error?.message || 'Authentification impossible.' };
+    cfg.serverUrl = credentials.serverUrl || cfg.serverUrl;
+    cfg.apiToken = result.data.token;
+    await chrome.storage.local.set({ [CONFIG_KEY]: cfg });
+    return { ok: true };
+  } catch (error) { return { ok: false, error: error.message }; }
+}
+
 function normalizeUrl(url) {
   try {
     const u = new URL(url);
@@ -210,4 +234,8 @@ function normalizeUrl(url) {
   } catch {
     return url;
   }
+}
+
+function apiEndpoint(serverUrl, endpoint) {
+  return `${String(serverUrl || '').replace(/\/+$/, '')}/v1/${endpoint}`;
 }

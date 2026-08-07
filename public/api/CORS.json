@@ -1,8 +1,10 @@
 {
   "allowed_origins": [
     "https://solenis-studio.fr",
+    "https://bienaufait.fr",
+    "http://dev.bienaufait.fr",
     "http://127.0.0.1:8000",
-    "http://localhost:8000",
-    "chrome-extension://REMPLACER_PAR_ID_EXTENSION"
-  ]
+    "http://localhost:8000"
+  ],
+  "allowed_origin_patterns": ["~^chrome-extension://[a-p]{32}$~"]
 }

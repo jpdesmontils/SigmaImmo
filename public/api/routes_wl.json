@@ -7,6 +7,7 @@
     "api_tokens": {"table":"api_tokens","primary_key":"id","writable":["label"]}
   },
   "routes": [
+    {"path":"/api/v1/login","methods":["POST"],"processor":"LoginAPIProcessor","auth":"public","body_optional":true},
     {"path":"/api/v1/sync","methods":["POST"],"processor":"SyncAPIProcessor","resource":"properties","auth":"token"},
     {"path":"/api/v1/properties","methods":["GET","POST"],"processor":"PropertyAPIProcessor","resource":"properties","auth":"user"},
     {"path":"/api/v1/properties/{id}","methods":["GET","PUT","PATCH","DELETE"],"processor":"PropertyAPIProcessor","resource":"properties","auth":"user"},

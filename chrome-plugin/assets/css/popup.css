@@ -143,6 +143,9 @@
       cursor: pointer;
     }
     .btn-save:hover { background: #0284c7; }
+    .btn-save:disabled { opacity: .55; cursor: default; }
+    .btn-secondary { background: #334155; }
+    .btn-secondary:hover { background: #475569; }
 
     .status-bar {
       padding: 6px 16px;

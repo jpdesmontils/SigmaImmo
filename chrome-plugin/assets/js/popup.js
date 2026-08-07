@@ -27,7 +27,6 @@ async function loadStats() {
 async function loadConfig() {
   config = await sendMsg({ type: 'GET_CONFIG' });
   $('cfg-server').value  = config.serverUrl  || '';
-  $('cfg-apikey').value  = config.apiToken   || '';
   $('cfg-gallery').value = config.galleryUrl || '';
   autoSyncOn = config.autoSync !== false;
   updateToggle();
@@ -43,7 +42,8 @@ $('btn-sync').addEventListener('click', async () => {
   $('btn-sync').disabled = true;
   setStatus('Synchronisation en cours…', '');
   try {
-    await sendMsg({ type: 'FORCE_SYNC' });
+    const result = await sendMsg({ type: 'FORCE_SYNC' });
+    if (!result.ok) throw new Error(result.reason || result.error || 'Synchronisation refusée');
     setStatus('✅ Synchronisation réussie', '');
     await loadStats();
   } catch (e) {
@@ -75,7 +75,6 @@ $('btn-save-config').addEventListener('click', async () => {
   const newConfig = {
     ...config,
     serverUrl:  $('cfg-server').value.trim(),
-    apiToken:   $('cfg-apikey').value.trim(),
     galleryUrl: $('cfg-gallery').value.trim(),
     autoSync:   autoSyncOn
   };
@@ -84,6 +83,14 @@ $('btn-save-config').addEventListener('click', async () => {
   if (config.galleryUrl) $('btn-gallery').href = config.galleryUrl;
   $('config-section').classList.remove('open');
   setStatus('✅ Configuration enregistrée', '');
+});
+
+$('btn-login').addEventListener('click', async () => {
+  const button = $('btn-login'); button.disabled = true; setStatus('Connexion en cours…', '');
+  const result = await sendMsg({ type: 'LOGIN', data: { serverUrl: $('cfg-server').value.trim(), email: $('login-email').value.trim(), password: $('login-password').value } });
+  $('login-password').value = ''; button.disabled = false;
+  if (!result.ok) { setStatus('❌ ' + (result.error || 'Connexion impossible'), 'error'); return; }
+  await loadConfig(); setStatus('✅ Connecté', '');
 });
 
 // ── Clear cache ───────────────────────────────────────────────
