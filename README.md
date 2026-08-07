@@ -144,6 +144,33 @@ php scripts/import_analyses_sqlite.php /chemin/vers/storage/analyses
 php -l app/Database/Connection.php app/Database/Migrator.php app/Database/bootstrap.php app/Repositories/PropertyRepository.php scripts/migrate.php scripts/import_properties_json.php
 ```
 
+## Site public, blog et SEO
+
+Les pages marketing publiques (`/investissement-locatif`, `/marchand-de-biens`,
+`/analyse-rentabilite`, `/guides`) et le blog (`/blog`, `/blog/{slug}`) sont
+rendues côté serveur avec `app/Views/layouts/public.mustache`. Les deux guides
+interactifs existants (`guide-investissement-locatif.html`,
+`guide-mdb-division-parcellaire.html`) sont accessibles sans connexion.
+
+- `sitemap.xml` et `robots.txt` sont servis dynamiquement depuis `public/`.
+- `SIGMAIMMO_BASE_URL` (optionnelle) force le domaine absolu utilisé pour les
+  URLs canoniques, Open Graph et le sitemap ; à défaut, l'hôte de la requête
+  courante est utilisé.
+- Les articles de blog sont stockés dans la table `blog_articles` (contenu en
+  blocs JSON, statut `draft`/`published`, champs SEO : title, meta
+  description, canonical, slug).
+- Panneau d'administration du blog : `/admin/blog/index.php` (réservé aux
+  comptes `plan=admin`, créés avec `php scripts/create_admin.php`).
+- Génération de brouillons d'articles par IA : bouton « Générer avec l'IA »
+  dans l'admin, ou en CLI :
+
+```bash
+php scripts/generate_blog_article.php "Comment calculer le rendement locatif net"
+```
+
+Un article généré est toujours créé en `draft` : il doit être relu puis publié
+manuellement depuis l'admin.
+
 ## Notes de production v0
 
 - Donnez au user système du serveur web les droits de lecture/écriture sur `storage/`.

@@ -1,0 +1,91 @@
+/* ── Panneau admin blog — feuille dédiée ─────────────────────────────
+   Ne dépend que des tokens de design-system.css. */
+
+body.admin-body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+}
+a { color: inherit; }
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  background: var(--text);
+  color: var(--bg);
+}
+.admin-header .site-logo { font-family: var(--font-d); font-weight: 700; text-decoration: none; color: inherit; }
+.admin-header nav { display: flex; gap: 18px; font-size: 13px; }
+.admin-header nav a { color: rgba(245, 243, 238, .78); text-decoration: none; }
+.admin-header nav a:hover { color: var(--bg); }
+
+.admin-main { max-width: 960px; margin: 0 auto; padding: 32px; }
+.admin-title { font-family: var(--font-d); font-size: 24px; margin-bottom: 6px; }
+.admin-subtitle { color: var(--text-2); font-size: 13px; margin-bottom: 24px; }
+
+.admin-actions-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+
+.admin-alert {
+  display: flex;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  border: 1px solid;
+  margin-bottom: 18px;
+}
+.admin-alert-error { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger); }
+.admin-alert-success { background: var(--go-bg); border-color: var(--go-border); color: var(--go); }
+
+.admin-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.admin-table th, .admin-table td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.admin-table th { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); background: var(--card); }
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-status { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.admin-status.published { background: var(--go-bg); color: var(--go); }
+.admin-status.draft { background: var(--warn-bg); color: var(--warn); }
+.admin-row-actions { display: flex; gap: 10px; }
+.admin-row-actions a, .admin-row-actions button {
+  font-size: 12px;
+  color: var(--text-2);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.admin-row-actions a:hover, .admin-row-actions button:hover { color: var(--text); }
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 4px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+.admin-btn.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border-hi); }
+
+.admin-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.admin-field label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.admin-field input, .admin-field textarea, .admin-field select {
+  padding: 10px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border-hi);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+}
+.admin-field textarea { min-height: 220px; font-family: var(--font-m); font-size: 12px; line-height: 1.6; }
+.admin-field small { color: var(--muted); font-size: 11px; }
+.admin-form-actions { display: flex; gap: 12px; margin-top: 8px; }

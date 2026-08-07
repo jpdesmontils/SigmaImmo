@@ -1,0 +1,52 @@
+<div class="admin-actions-row">
+  <div>
+    <h1 class="admin-title">{{page_title}}</h1>
+    <p class="admin-subtitle">Gérez le statut de publication des articles du blog.</p>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <a class="admin-btn secondary" href="/admin/blog/generate.php">Générer avec l'IA</a>
+    <a class="admin-btn" href="/admin/blog/new.php">Nouvel article</a>
+  </div>
+</div>
+
+{{#flash}}<div class="admin-alert admin-alert-success">{{flash}}</div>{{/flash}}
+
+<table class="admin-table">
+  <thead>
+    <tr><th>Titre</th><th>Slug</th><th>Statut</th><th>Mis à jour</th><th></th></tr>
+  </thead>
+  <tbody>
+    {{#articles}}
+    <tr>
+      <td>{{title}}</td>
+      <td class="mono">/blog/{{slug}}</td>
+      <td><span class="admin-status {{status}}">{{status}}</span></td>
+      <td>{{updated_at}}</td>
+      <td class="admin-row-actions">
+        <a href="/admin/blog/edit.php?id={{id}}">Éditer</a>
+        {{#is_published}}
+        <form method="post" action="/admin/blog/publish.php" style="display:inline">
+          <input type="hidden" name="id" value="{{id}}">
+          <input type="hidden" name="action" value="unpublish">
+          <button type="submit">Dépublier</button>
+        </form>
+        {{/is_published}}
+        {{^is_published}}
+        <form method="post" action="/admin/blog/publish.php" style="display:inline">
+          <input type="hidden" name="id" value="{{id}}">
+          <input type="hidden" name="action" value="publish">
+          <button type="submit">Publier</button>
+        </form>
+        {{/is_published}}
+        <form method="post" action="/admin/blog/delete.php" style="display:inline" onsubmit="return confirm('Supprimer cet article ?');">
+          <input type="hidden" name="id" value="{{id}}">
+          <button type="submit">Supprimer</button>
+        </form>
+      </td>
+    </tr>
+    {{/articles}}
+    {{^articles}}
+    <tr><td colspan="5">Aucun article pour le moment.</td></tr>
+    {{/articles}}
+  </tbody>
+</table>

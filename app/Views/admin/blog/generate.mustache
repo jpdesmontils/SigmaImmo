@@ -1,0 +1,13 @@
+<h1 class="admin-title">{{page_title}}</h1>
+<p class="admin-subtitle">Génère un brouillon d'article via LLM à partir d'un sujet. L'article est créé en brouillon (non publié) : relisez-le avant de le publier.</p>
+{{#has_error}}<div class="admin-alert admin-alert-error">{{error}}</div>{{/has_error}}
+<form method="post" action="/admin/blog/generate.php">
+  <div class="admin-field">
+    <label for="topic">Sujet de l'article</label>
+    <input id="topic" name="topic" type="text" required placeholder="Ex. Comment calculer le rendement locatif net">
+  </div>
+  <div class="admin-form-actions">
+    <button class="admin-btn" type="submit">Générer le brouillon</button>
+    <a class="admin-btn secondary" href="/admin/blog/index.php">Annuler</a>
+  </div>
+</form>
