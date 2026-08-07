@@ -39,9 +39,9 @@ class PropertyAPIProcessor extends cAPI_Processor
 
     private function analysisSummaries($id)
     {
-        $stmt = $this->pdo->prepare("SELECT type,summary_json,result_json,score,updated_at FROM analyses WHERE property_id=:id AND status='completed'"); $stmt->execute(array(':id' => $id));
+        $stmt = $this->pdo->prepare("SELECT type,result_json,updated_at FROM analyses WHERE property_id=:id AND status='completed'"); $stmt->execute(array(':id' => $id));
         $result = array_fill_keys(analysisTypes(), false);
-        foreach ($stmt->fetchAll() as $row) { $summary = json_decode((string)$row['summary_json'], true); if (!is_array($summary)) $summary = array(); $summary['available'] = true; $summary['analyzedAt'] = $row['updated_at']; $summary['score'] = $row['score']; $result[$row['type']] = $summary; }
+        foreach ($stmt->fetchAll() as $row) { $analysis = json_decode((string)$row['result_json'], true); if (!is_array($analysis)) $analysis = array(); $result[$row['type']] = analysisSummary($analysis, $row['type'], $row['updated_at']); }
         return $result;
     }
 

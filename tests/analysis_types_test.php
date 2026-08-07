@@ -38,6 +38,16 @@ $latest = latestAnalysisSummary($summaries);
 assertSameValue('patrimonial', $latest['type'], 'La date métier la plus récente doit déterminer le score de galerie.');
 assertSameValue(0.0, $latest['score'], 'La dernière analyse peut légitimement avoir un score nul.');
 
+$sqliteSummary = analysisSummary([
+    'note_globale' => ['score' => 71],
+    'annonce' => ['revenus' => ['total_annonce_an' => 18800]],
+    'exec_summary' => ['rendement_net_min_pct' => 6.1, 'cashflow_min_mois' => 279],
+], 'locatif', '2026-07-20T00:00:00+00:00');
+assertSameValue($summaries['locatif']['score'], $sqliteSummary['score'], 'La synthèse SQLite doit partager la même extraction du score.');
+assertSameValue($summaries['locatif']['revenuBrutAnnuel'], $sqliteSummary['revenuBrutAnnuel'], 'La synthèse SQLite doit partager la même extraction du revenu.');
+assertSameValue($summaries['locatif']['rendementNetPct'], $sqliteSummary['rendementNetPct'], 'La synthèse SQLite doit partager la même extraction du rendement.');
+assertSameValue($summaries['locatif']['cashflowMensuel'], $sqliteSummary['cashflowMensuel'], 'La synthèse SQLite doit partager la même extraction du cashflow.');
+
 array_map('unlink', glob($root . 'analyses/*/*.json'));
 foreach (array_reverse(glob($root . 'analyses/*', GLOB_ONLYDIR)) as $dir) rmdir($dir);
 rmdir($root . 'analyses');

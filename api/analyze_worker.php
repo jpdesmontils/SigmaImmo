@@ -82,8 +82,8 @@ function updateJob($jobId, $status, $error) {
 }
 function deleteJob($jobId) { $stmt = sigma_db()->prepare('DELETE FROM analysis_jobs WHERE id = :id'); $stmt->execute(array(':id' => (int)$jobId)); }
 function saveAnalysis($id, $type, $analysis) {
-    $now = gmdate('c'); $score = isset($analysis['score']) && is_numeric($analysis['score']) ? (float)$analysis['score'] : (isset($analysis['notation']['score_global']) && is_numeric($analysis['notation']['score_global']) ? (float)$analysis['notation']['score_global'] : null);
-    $params = array(':property_id' => $id, ':type' => $type, ':summary' => json_encode(array('score' => $score), JSON_UNESCAPED_UNICODE), ':result' => json_encode($analysis, JSON_UNESCAPED_UNICODE), ':score' => $score, ':now' => $now);
+    $now = gmdate('c'); $summary = analysisSummary($analysis, $type, $now);
+    $params = array(':property_id' => $id, ':type' => $type, ':summary' => json_encode($summary, JSON_UNESCAPED_UNICODE), ':result' => json_encode($analysis, JSON_UNESCAPED_UNICODE), ':score' => $summary['score'], ':now' => $now);
     $update = sigma_db()->prepare('UPDATE analyses SET status=\'completed\',summary_json=:summary,result_json=:result,score=:score,updated_at=:now WHERE property_id=:property_id AND type=:type'); $update->execute($params);
     if ($update->rowCount() === 0) { $insert = sigma_db()->prepare('INSERT INTO analyses (property_id,type,status,summary_json,result_json,score,created_at,updated_at) VALUES (:property_id,:type,\'completed\',:summary,:result,:score,:now,:now)'); $insert->execute($params); }
 }
