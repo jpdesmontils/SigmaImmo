@@ -226,6 +226,48 @@ a { color: inherit; }
 }
 
 /* ── Compte (page connectée, hors écran scindé) ──────────────────────── */
+.account-app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(22,21,15,.94);
+  backdrop-filter: blur(12px);
+}
+
+.account-app-brand {
+  color: var(--bg);
+  font-family: var(--font-d);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -.3px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.account-app-brand span { color: #e0a84a; font-weight: 500; }
+
+.account-app-back {
+  padding: 7px 11px;
+  border: 1px solid rgba(245,243,238,.24);
+  border-radius: 4px;
+  color: rgba(245,243,238,.82);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.account-app-back:hover {
+  border-color: var(--bg);
+  background: rgba(245,243,238,.1);
+  color: var(--bg);
+}
+
 .account-shell {
   max-width: 760px;
   margin: 0 auto;
@@ -348,6 +390,8 @@ a { color: inherit; }
 }
 
 @media (max-width: 480px) {
+  .account-app-header { padding: 0 16px; }
+  .account-app-back { padding: 7px 9px; }
   .account-shell { padding: 24px 16px 48px; }
   .account-header { flex-direction: column; align-items: flex-start; }
   .account-row { flex-wrap: wrap; }
