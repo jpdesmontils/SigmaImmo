@@ -26,18 +26,25 @@ function analysisSummaries($dataDir, $id) {
 
         $date = analysisDateValue($analysis, $type);
         $timestamp = $date ? strtotime($date) : false;
-        $summaries[$type] = [
-            'available' => true,
-            'analyzedAt' => date(DATE_ATOM, $timestamp !== false ? $timestamp : filemtime($file)),
-            'score' => analysisScoreValue($analysis, $type),
-        ];
-        if ($type === 'locatif') {
-            $summaries[$type]['revenuBrutAnnuel'] = locatifAnnualGrossRevenue($analysis);
-            $summaries[$type]['rendementNetPct'] = locatifNetYield($analysis);
-            $summaries[$type]['cashflowMensuel'] = locatifMonthlyCashflow($analysis);
-        }
+        $analyzedAt = date(DATE_ATOM, $timestamp !== false ? $timestamp : filemtime($file));
+        $summaries[$type] = analysisSummary($analysis, $type, $analyzedAt);
     }
     return $summaries;
+}
+
+/** Construit l'unique synthèse légère consommée par la galerie et stockée en base. */
+function analysisSummary($analysis, $type, $analyzedAt) {
+    $summary = array(
+        'available' => true,
+        'analyzedAt' => $analyzedAt,
+        'score' => analysisScoreValue($analysis, $type),
+    );
+    if ($type === 'locatif') {
+        $summary['revenuBrutAnnuel'] = locatifAnnualGrossRevenue($analysis);
+        $summary['rendementNetPct'] = locatifNetYield($analysis);
+        $summary['cashflowMensuel'] = locatifMonthlyCashflow($analysis);
+    }
+    return $summary;
 }
 
 function latestAnalysisSummary($summaries) {
