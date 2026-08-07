@@ -9,8 +9,7 @@ class PropertyAnalysisAPIProcessor extends cAPI_Processor
         $propertyId = isset($this->params['property_id']) ? (string)$this->params['property_id'] : '';
         $type = is_array($body) && isset($body['type']) ? (string)$body['type'] : '';
         if (!validAnalysisType($type)) throw new APIException(422, 'analysis.invalid_type', 'Type d’analyse invalide.');
-        $owner = $this->pdo->prepare('SELECT 1 FROM properties WHERE id = :id AND user_id = :user_id AND deleted_at IS NULL'); $owner->execute(array(':id' => $propertyId, ':user_id' => (int)$this->user['id']));
-        if (!$owner->fetchColumn()) throw new APIException(403, 'property.forbidden', 'Analyse du bien interdite.');
+        $this->assertPropertyCalculationAllowed($propertyId);
         $active = $this->pdo->prepare("SELECT id FROM analysis_jobs WHERE property_id = :id AND status IN ('queued','running') LIMIT 1"); $active->execute(array(':id' => $propertyId));
         if ($active->fetchColumn()) throw new APIException(409, 'analysis.already_running', 'Une analyse est déjà en cours.');
         if (!function_exists('exec') || !is_executable(PHP_BINARY)) throw new APIException(503, 'analysis.worker_unavailable', 'Le worker d’analyse est indisponible.');

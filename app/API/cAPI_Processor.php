@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/APIException.php';
+require_once dirname(__DIR__) . '/Services/PlanService.php';
 
 class cAPI_Processor
 {
@@ -94,6 +95,16 @@ class cAPI_Processor
         list($where, $bindings) = $this->writeScope(); $where .= ($where === '' ? ' WHERE ' : ' AND ') . $this->primaryKey() . ' = :pk'; $bindings[':pk'] = $id;
         $stmt = $this->pdo->prepare('SELECT 1 FROM ' . $this->route['table'] . $where . ' LIMIT 1'); $stmt->execute($bindings);
         if (!$stmt->fetchColumn()) throw new APIException(403, 'resource.forbidden', 'Modification de la ressource interdite.');
+    }
+
+    protected function assertPropertyCalculationAllowed($propertyId)
+    {
+        $plans = new PlanService();
+        $sql = 'SELECT 1 FROM properties WHERE id = :id AND deleted_at IS NULL AND (user_id = :user_id';
+        if ($plans->isAdmin($this->user)) $sql .= ' OR user_id IS NULL';
+        $stmt = $this->pdo->prepare($sql . ') LIMIT 1');
+        $stmt->execute(array(':id' => $propertyId, ':user_id' => (int)$this->user['id']));
+        if (!$stmt->fetchColumn()) throw new APIException(403, 'property.forbidden', 'Calcul du bien interdit.');
     }
 
     protected function writableData($body, $creating)
