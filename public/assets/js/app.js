@@ -90,8 +90,9 @@ function initUserMenu() {
 }
 
 async function loadCurrentUser() {
-  const emailEl  = document.getElementById('user-menu-email');
-  const avatarEl = document.getElementById('user-avatar');
+  const emailEl    = document.getElementById('user-menu-email');
+  const avatarEl   = document.getElementById('user-avatar');
+  const adminGroup = document.getElementById('user-menu-admin-group');
   try {
     const res = await fetch('api/v1/me');
     const json = await res.json();
@@ -99,6 +100,7 @@ async function loadCurrentUser() {
     const email = json.data.email || '';
     if (emailEl)  emailEl.textContent = email;
     if (avatarEl) avatarEl.textContent = email.slice(0, 2) || '??';
+    if (adminGroup) adminGroup.hidden = json.data.plan !== 'admin';
   } catch (e) {
     if (emailEl) emailEl.textContent = 'Connecté';
   }

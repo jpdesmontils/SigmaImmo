@@ -29,6 +29,9 @@ $now = gmdate('c'); $analysisInsert = $pdo->prepare("INSERT INTO analyses (prope
 $propertyList = $propertyReader->process('GET', null); $galleryAnalysis = $propertyList['data'][0]['analyses']['locatif'];
 assertApi($galleryAnalysis['score'] === 71.0, 'property collection rebuilds a missing gallery score from the stored analysis');
 assertApi($galleryAnalysis['revenuBrutAnnuel'] === 18800.0 && $galleryAnalysis['rendementNetPct'] === 6.1 && $galleryAnalysis['cashflowMensuel'] === 279.0, 'property collection rebuilds missing rental figures from the stored analysis');
+$priceInsert = $pdo->prepare("INSERT INTO analyses (property_id,type,status,result_json,created_at,updated_at) VALUES (:property_id,'prix','completed',:result_json,:now,:now)"); $priceInsert->execute(array(':property_id'=>'shared-one', ':result_json'=>'{"api_data":{"dvf_rows":[{"large":"payload"}]}}', ':now'=>$now));
+$propertyList = $propertyReader->process('GET', null);
+assertApi(!array_key_exists('prix', $propertyList['data'][0]['analyses']), 'property collection excludes the large raw market-price analysis');
 $analysisRoute = array('table'=>'analyses','primary_key'=>'id','writable'=>array());
 $sharedAnalysis = (new PropertyAnalysisResultAPIProcessor($pdo, $analysisRoute, $other, array('property_id'=>'shared-one','type'=>'locatif')))->process('GET', null); assertApi($sharedAnalysis['data']['analysis']['score'] === 82, 'analysis result of a shared property is visible to another authenticated user');
 $analysisDeleteBlocked = false; try { (new PropertyAnalysisResultAPIProcessor($pdo, $analysisRoute, $other, array('property_id'=>'shared-one','type'=>'locatif')))->process('DELETE', null); } catch (APIException $e) { $analysisDeleteBlocked = $e->status() === 404; } assertApi($analysisDeleteBlocked, 'analysis result of a shared property remains deletable only by its owner');
