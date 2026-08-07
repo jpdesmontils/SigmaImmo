@@ -7,6 +7,7 @@ require_once __DIR__ . '/../app/Database/bootstrap.php';
 require_once __DIR__ . '/../app/Repositories/PropertyRepository.php';
 if (PHP_SAPI !== 'cli') exit(1);
 define('DATA_DIR', __DIR__ . '/../data/');
+define('PROMPTS_DIR', __DIR__ . '/../resources/prompts/');
 $id = $argv[1] ?? ''; $type = $argv[2] ?? '';
 if (!preg_match('/^[A-Za-z0-9_-]{1,180}$/', $id) || !validAnalysisType($type)) exit(1);
 $pdo = sigma_db();
@@ -94,7 +95,7 @@ function promptInputVariables($listing) {
     return ['dpe' => $dpe, 'ges' => $ges, 'ville_residence_principale' => $city];
 }
 function runAnalysisStage($apiKey, $model, $promptName, $replacements, $id, $type) {
-    $template = @file_get_contents(DATA_DIR . 'prompts/' . $promptName . '.txt');
+    $template = @file_get_contents(PROMPTS_DIR . $promptName . '.txt');
     if (!$template) throw new RuntimeException('Prompt d’analyse introuvable ou vide : ' . $promptName . '.');
     $prompt = str_replace(array_keys($replacements), array_values($replacements), $template);
     aiLog('analysis.openai_request_started', ['id' => $id, 'type' => $type, 'stage' => $promptName]);
