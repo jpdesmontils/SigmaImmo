@@ -1,0 +1,67 @@
+<a class="admin-back-link" href="/admin/users/index.php">← Retour à la liste</a>
+
+{{#flash}}<div class="admin-alert admin-alert-success">{{flash}}</div>{{/flash}}
+{{#has_error}}<div class="admin-alert admin-alert-error">{{error}}</div>{{/has_error}}
+
+<div class="admin-detail-grid">
+  <div>
+    <div class="admin-card">
+      <div class="admin-identity">
+        <div class="admin-avatar">{{user.initial}}</div>
+        <div>
+          <div class="name">{{user.name}}</div>
+          <div class="email">{{user.email}}</div>
+        </div>
+      </div>
+      <div class="admin-meta-list">
+        <div class="row"><span class="k">Plan actuel</span><span class="v"><span class="plan-badge {{user.plan}}">{{user.plan}}</span></span></div>
+        <div class="row"><span class="k">Biens enregistrés</span><span class="v">{{properties_count}}{{#is_free_plan}} / {{favorites_limit}}{{/is_free_plan}}</span></div>
+        <div class="row"><span class="k">Inscrit le</span><span class="v">{{user.created_at}}</span></div>
+        <div class="row"><span class="k">Dernière connexion</span><span class="v">{{user.last_login_at}}</span></div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <h2>Changer le plan</h2>
+      <form method="post" action="/admin/users/update-plan.php" onsubmit="return confirm('Confirmer le changement de plan de cet utilisateur ?');">
+        <input type="hidden" name="id" value="{{user.id}}">
+        <div class="admin-field">
+          <label for="plan">Plan</label>
+          <select name="plan" id="plan">
+            {{#plan_options}}
+            <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+            {{/plan_options}}
+          </select>
+          <small>Le passage en « Admin » donne accès à ce panneau et à toutes les actions de gestion.</small>
+        </div>
+        <div class="admin-form-actions">
+          <button type="submit" class="admin-btn">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="admin-card">
+      <h2>Mot de passe</h2>
+      <p class="admin-subtitle" style="margin-bottom:14px;">Envoie un lien de réinitialisation par email, valable 1 heure. Aucun mot de passe n'est visible ni saisi ici.</p>
+      <form method="post" action="/admin/users/send-reset.php" onsubmit="return confirm('Envoyer un email de réinitialisation à cet utilisateur ?');">
+        <input type="hidden" name="id" value="{{user.id}}">
+        <button type="submit" class="admin-btn secondary">Envoyer le lien de réinitialisation</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>Activité récente</h2>
+    <div class="admin-timeline">
+      {{#audit_entries}}
+      <div class="entry">
+        <span class="action">{{action}}</span>
+        <span class="when">{{created_at}}</span>
+      </div>
+      {{/audit_entries}}
+      {{^audit_entries}}
+      <div class="admin-empty">Aucune activité enregistrée pour cet utilisateur.</div>
+      {{/audit_entries}}
+    </div>
+  </div>
+</div>
