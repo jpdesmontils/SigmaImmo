@@ -925,4 +925,4 @@
     }
 
 /* Triangle de confidentialité des vignettes. */
-.card-private-corner{position:absolute;right:0;bottom:0;z-index:12;width:82px;height:82px;overflow:hidden;color:#fff;font:700 9px var(--font-m);letter-spacing:.08em;text-transform:uppercase;pointer-events:none}.card-private-corner:before{content:"";position:absolute;right:0;bottom:0;border-style:solid;border-width:0 0 82px 82px;border-color:transparent transparent var(--go) transparent}.card-private-corner{display:flex;align-items:flex-end;justify-content:flex-end;padding:0 7px 9px 0}
+.card-private-corner{position:absolute;right:0;bottom:0;z-index:12;width:41px;height:41px;overflow:hidden;color:#fff;font:700 9px var(--font-m);letter-spacing:.08em;text-transform:uppercase;pointer-events:none}.card-private-corner:before{content:"";position:absolute;right:0;bottom:0;border-style:solid;border-width:0 0 41px 41px;border-color:transparent transparent var(--go) transparent}.card-private-corner{display:flex;align-items:flex-end;justify-content:flex-end;padding:0 7px 9px 0}

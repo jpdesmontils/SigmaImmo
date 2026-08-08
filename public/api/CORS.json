@@ -2,7 +2,8 @@
   "allowed_origins": [
     "https://solenis-studio.fr",
     "https://bienaufait.fr",
-    "http://dev.bienaufait.fr",
+    "https://dev.bienaufait.fr",
+	"http://dev.bienaufait.fr",	
     "http://127.0.0.1:8000",
     "http://localhost:8000"
   ],
