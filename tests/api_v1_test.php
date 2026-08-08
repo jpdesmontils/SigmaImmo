@@ -21,6 +21,17 @@ $reader = new cAPI_Processor($pdo, $route, $other, array('id'=>'shared-one')); $
 $hidden = false; try { (new cAPI_Processor($pdo, $route, $other, array('id'=>'private-one')))->process('GET', null); } catch (APIException $e) { $hidden = $e->status() === 404; } assertApi($hidden, 'private property is hidden from another user');
 $propertyReader = new PropertyAPIProcessor($pdo, $route, $other); $propertyList = $propertyReader->process('GET', null); assertApi(count($propertyList['data']) === 1 && $propertyList['data'][0]['id'] === 'shared-one', 'property collection includes another user shared property but excludes their private property');
 $propertyDetail = (new PropertyAPIProcessor($pdo, $route, $other, array('id'=>'shared-one')))->process('GET', null); assertApi($propertyDetail['data']['listing']['id'] === 'shared-one', 'property detail uses the same shared visibility scope as the collection');
+$ownerProperty = new PropertyAPIProcessor($pdo, $route, $owner, array('id'=>'shared-one'));
+$otherProperty = new PropertyAPIProcessor($pdo, $route, $other, array('id'=>'shared-one'));
+$ownerProperty->process('PATCH', array('selection'=>'shortlist', 'notes'=>'Note du propriétaire', 'visitAt'=>'2026-08-10T14:00'));
+$otherPersonal = $otherProperty->process('PATCH', array('selection'=>'a_visiter', 'notes'=>'Note privée du lecteur'));
+assertApi($otherPersonal['data']['listing']['selection'] === 'a_visiter' && $otherPersonal['data']['listing']['notes'] === 'Note privée du lecteur', 'a user can classify and annotate an accessible shared property');
+$ownerPersonal = $ownerProperty->process('GET', null);
+assertApi($ownerPersonal['data']['listing']['selection'] === 'shortlist' && $ownerPersonal['data']['listing']['notes'] === 'Note du propriétaire', 'status and notes are isolated for each user');
+assertApi($ownerPersonal['data']['listing']['visitAt'] === '2026-08-10T14:00' && !isset($otherPersonal['data']['listing']['visitAt']), 'visit information is not exposed to another user');
+$invalidStatus = false; try { $otherProperty->process('PATCH', array('selection'=>'inconnu')); } catch (APIException $e) { $invalidStatus = $e->status() === 422; } assertApi($invalidStatus, 'unknown personal status is rejected');
+$propertyColumns = array(); foreach ($pdo->query('PRAGMA table_info(properties)')->fetchAll() as $column) $propertyColumns[] = $column['name'];
+assertApi(!in_array('selection', $propertyColumns, true) && !in_array('notes', $propertyColumns, true), 'personal columns are removed from properties');
 $adminList = (new PropertyAPIProcessor($pdo, $route, $admin))->process('GET', null); assertApi(count($adminList['data']) === 2, 'admin sees shared and private properties');
 $adminDetail = (new PropertyAPIProcessor($pdo, $route, $admin, array('id'=>'private-one')))->process('GET', null); assertApi($adminDetail['data']['permissions']['canManageVisibility'] === true, 'admin receives visibility management permission');
 $visibilityBlocked = false; try { (new PropertyAPIProcessor($pdo, $route, $owner, array('id'=>'private-one')))->process('PATCH', array('visibility'=>'shared')); } catch (APIException $e) { $visibilityBlocked = $e->status() === 403; } assertApi($visibilityBlocked, 'non-admin owner cannot change visibility');
