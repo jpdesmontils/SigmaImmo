@@ -23,16 +23,17 @@ $pdo->beginTransaction();
 try {
     foreach ($files as $file) {
         $relative = str_replace(DIRECTORY_SEPARATOR, '/', substr($file, strlen($rootReal) + 1));
-        $contents = file_get_contents($file);
-        if ($contents === false) throw new RuntimeException('Fichier illisible: ' . $relative);
-        archiveLegacyFile($pdo, $relative, $contents, filemtime($file));
+        $mtime = filemtime($file);
+        archiveLegacyFile($pdo, $relative, $file, $mtime);
         $imported++;
-        $decoded = json_decode($contents, true);
-        if (is_array($decoded) && preg_match('#^cache/(?:dvf/)?([^/]+)\.json$#', $relative, $match)) {
-            importLegacyCache($pdo, $match[1], $decoded, filemtime($file)); $caches++;
+        if (preg_match('#^cache/(?:dvf/)?([^/]+)\.json$#', $relative, $match)) {
+            importLegacyCache($pdo, $match[1], $file, $mtime); $caches++;
         }
-        if (is_array($decoded) && preg_match('#^analyses/([a-z0-9_-]+)/([A-Za-z0-9_-]+)\.json$#', $relative, $match) && propertyExists($pdo, $match[2])) {
-            (new AnalysisRepository($pdo))->save($match[2], $match[1], $decoded); $analyses++;
+        if (preg_match('#^analyses/([a-z0-9_-]+)/([A-Za-z0-9_-]+)\.json$#', $relative, $match) && propertyExists($pdo, $match[2])) {
+            $decoded = decodeLegacyJsonFile($file, $relative);
+            if (is_array($decoded)) {
+                (new AnalysisRepository($pdo))->save($match[2], $match[1], $decoded); $analyses++;
+            }
         }
     }
     $count = (int)$pdo->query('SELECT COUNT(*) FROM legacy_data_files')->fetchColumn();
@@ -60,20 +61,41 @@ function legacyDataFiles($root)
     }
     sort($result); return $result;
 }
-function archiveLegacyFile(PDO $pdo, $path, $contents, $mtime)
+function archiveLegacyFile(PDO $pdo, $path, $file, $mtime)
 {
+    $stream = openLegacyFile($file, $path);
     $stmt = $pdo->prepare('INSERT OR REPLACE INTO legacy_data_files (relative_path,contents,modified_at,imported_at) VALUES (:path,:contents,:mtime,:now)');
-    $stmt->bindValue(':path', $path, PDO::PARAM_STR); $stmt->bindValue(':contents', $contents, PDO::PARAM_LOB);
+    $stmt->bindValue(':path', $path, PDO::PARAM_STR); $stmt->bindParam(':contents', $stream, PDO::PARAM_LOB);
     $stmt->bindValue(':mtime', $mtime === false ? null : (int)$mtime, $mtime === false ? PDO::PARAM_NULL : PDO::PARAM_INT);
-    $stmt->bindValue(':now', gmdate('c'), PDO::PARAM_STR); $stmt->execute();
+    $stmt->bindValue(':now', gmdate('c'), PDO::PARAM_STR);
+    try { $stmt->execute(); } finally { closeLegacyStream($stream); }
 }
-function importLegacyCache(PDO $pdo, $key, $value, $mtime)
+function importLegacyCache(PDO $pdo, $key, $file, $mtime)
 {
-    $json = json_encode($value, JSON_UNESCAPED_UNICODE);
-    if ($json === false) throw new RuntimeException('Cache JSON impossible à encoder: ' . $key);
+    $stream = openLegacyFile($file, 'cache/' . $key . '.json');
     $timestamp = $mtime === false ? time() : (int)$mtime; $now = gmdate('c');
     $stmt = $pdo->prepare('INSERT OR REPLACE INTO cache_entries (cache_key,value_json,expires_at,created_at,updated_at) VALUES (:key,:value,:expires,:now,:now)');
-    $stmt->execute(array(':key'=>$key, ':value'=>$json, ':expires'=>$timestamp + 86400, ':now'=>$now));
+    $stmt->bindValue(':key', $key, PDO::PARAM_STR); $stmt->bindParam(':value', $stream, PDO::PARAM_LOB);
+    $stmt->bindValue(':expires', $timestamp + 86400, PDO::PARAM_INT); $stmt->bindValue(':now', $now, PDO::PARAM_STR);
+    try { $stmt->execute(); } finally { closeLegacyStream($stream); }
+}
+function openLegacyFile($file, $label)
+{
+    $stream = fopen($file, 'rb');
+    if ($stream === false) throw new RuntimeException('Fichier illisible: ' . $label);
+    return $stream;
+}
+function closeLegacyStream(&$stream)
+{
+    // PDO SQLite remplace parfois la ressource liée par son contenu après execute().
+    if (is_resource($stream)) fclose($stream);
+    $stream = null;
+}
+function decodeLegacyJsonFile($file, $relative)
+{
+    $contents = file_get_contents($file);
+    if ($contents === false) throw new RuntimeException('Fichier illisible: ' . $relative);
+    return json_decode($contents, true);
 }
 function propertyExists(PDO $pdo, $id)
 {
