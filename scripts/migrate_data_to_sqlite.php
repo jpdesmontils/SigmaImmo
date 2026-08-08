@@ -31,16 +31,22 @@ migrationLog('Inventaire des fichiers à migrer...');
 $files = legacyDataFiles($rootReal);
 $totalFiles = count($files);
 migrationLog($totalFiles . ' fichier(s) trouvé(s).');
-$imported = 0; $analyses = 0; $caches = 0;
-$pdo->beginTransaction();
-try {
-    foreach ($files as $index => $file) {
+$imported = 0; $alreadyImported = 0; $analyses = 0; $caches = 0;
+foreach ($files as $index => $file) {
+    try {
         $relative = str_replace(DIRECTORY_SEPARATOR, '/', substr($file, strlen($rootReal) + 1));
         $mtime = filemtime($file);
         $size = filesize($file);
         $migrationContext['file'] = $relative;
         $migrationContext['stage'] = 'archivage du fichier';
         migrationLog('[' . ($index + 1) . '/' . $totalFiles . '] ' . $relative . ' (' . formatMigrationBytes($size) . ').');
+        if (legacyFileExists($pdo, $relative)) {
+            migrationLog('  Fichier déjà présent dans legacy_data_files; suppression de la source.');
+            removeMigratedFile($file, $relative);
+            $alreadyImported++;
+            continue;
+        }
+        $pdo->beginTransaction();
         migrationLog('  Archivage dans legacy_data_files...');
         archiveLegacyFile($pdo, $relative, $file, $mtime);
         $imported++;
@@ -48,7 +54,7 @@ try {
         if (preg_match('#^cache/(?:dvf/)?([^/]+)\.json$#', $relative, $match)) {
             $migrationContext['stage'] = 'import du cache ' . $match[1];
             migrationLog('  Import du cache "' . $match[1] . '"...');
-            importLegacyCache($pdo, $match[1], $file, $mtime); $caches++;
+            importLegacyCache($pdo, $match[1], $relative, $mtime); $caches++;
             migrationLog('  Cache importé.');
         }
         if (preg_match('#^analyses/([a-z0-9_-]+)/([A-Za-z0-9_-]+)\.json$#', $relative, $match) && propertyExists($pdo, $match[2])) {
@@ -64,30 +70,29 @@ try {
                 migrationLog('  Analyse ignorée: le contenu JSON n’est pas un tableau.');
             }
         }
+        $migrationContext['stage'] = 'validation du fichier archivé';
+        validateLegacyFile($pdo, $relative, $size);
+        $pdo->commit();
+        $migrationContext['stage'] = 'suppression du fichier source';
+        removeMigratedFile($file, $relative);
+        migrationLog('  Source supprimée après validation.');
         migrationLog('  Fichier terminé; mémoire: ' . formatMigrationBytes(memory_get_usage(true)) . ', pic: ' . formatMigrationBytes(memory_get_peak_usage(true)) . '.');
+    } catch (Exception $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        fwrite(STDERR, $error->getMessage() . "\nLe fichier source concerné a été conservé.\n"); exit(1);
     }
-    $migrationContext['file'] = null;
-    $migrationContext['stage'] = 'validation de l’import';
-    migrationLog('Validation du nombre de fichiers archivés...');
-    $count = (int)$pdo->query('SELECT COUNT(*) FROM legacy_data_files')->fetchColumn();
-    if ($count < count($files)) throw new RuntimeException('La validation de l’import exhaustif a échoué.');
-    $migrationContext['stage'] = 'validation de la transaction';
-    migrationLog('Validation de la transaction SQLite...');
-    $pdo->commit();
-} catch (Exception $error) {
-    if ($pdo->inTransaction()) $pdo->rollBack();
-    fwrite(STDERR, $error->getMessage() . "\nAucun fichier n’a été supprimé.\n"); exit(1);
 }
 
 try {
-    $migrationContext['stage'] = 'suppression du répertoire source';
-    migrationLog('Suppression du répertoire source validé...');
+    $migrationContext['file'] = null;
+    $migrationContext['stage'] = 'suppression des répertoires source vides';
+    migrationLog('Suppression des répertoires source désormais vides...');
     removeLegacyDataTree($rootReal);
 } catch (Exception $error) {
     fwrite(STDERR, $error->getMessage() . "\nLes données sont importées, mais le répertoire n’a pas pu être supprimé intégralement.\n"); exit(1);
 }
 $migrationContext['stage'] = 'terminée';
-echo 'Migration terminée: ' . $imported . ' fichier(s), ' . $caches . ' cache(s), ' . $analyses . " analyse(s). data/ a été supprimé.\n";
+echo 'Migration terminée: ' . $imported . ' fichier(s) importé(s), ' . $alreadyImported . ' déjà en base, ' . $caches . ' cache(s), ' . $analyses . " analyse(s). data/ a été supprimé.\n";
 
 function legacyDataFiles($root)
 {
@@ -102,20 +107,47 @@ function legacyDataFiles($root)
 function archiveLegacyFile(PDO $pdo, $path, $file, $mtime)
 {
     $stream = openLegacyFile($file, $path);
-    $stmt = $pdo->prepare('INSERT OR REPLACE INTO legacy_data_files (relative_path,contents,modified_at,imported_at) VALUES (:path,:contents,:mtime,:now)');
-    $stmt->bindValue(':path', $path, PDO::PARAM_STR); $stmt->bindParam(':contents', $stream, PDO::PARAM_LOB);
+    $stmt = $pdo->prepare('INSERT INTO legacy_data_files (relative_path,contents,modified_at,imported_at) VALUES (:path,X\'\',:mtime,:now)');
+    $stmt->bindValue(':path', $path, PDO::PARAM_STR);
     $stmt->bindValue(':mtime', $mtime === false ? null : (int)$mtime, $mtime === false ? PDO::PARAM_NULL : PDO::PARAM_INT);
     $stmt->bindValue(':now', gmdate('c'), PDO::PARAM_STR);
-    try { $stmt->execute(); } finally { closeLegacyStream($stream); }
+    $append = $pdo->prepare('UPDATE legacy_data_files SET contents=CAST(contents || :chunk AS BLOB) WHERE relative_path=:path');
+    try {
+        $stmt->execute();
+        while (!feof($stream)) {
+            $chunk = fread($stream, 1048576);
+            if ($chunk === false) throw new RuntimeException('Lecture impossible: ' . $path);
+            if ($chunk === '') continue;
+            $append->bindValue(':chunk', $chunk, PDO::PARAM_LOB);
+            $append->bindValue(':path', $path, PDO::PARAM_STR);
+            $append->execute();
+        }
+    } finally { closeLegacyStream($stream); }
 }
-function importLegacyCache(PDO $pdo, $key, $file, $mtime)
+function importLegacyCache(PDO $pdo, $key, $relative, $mtime)
 {
-    $stream = openLegacyFile($file, 'cache/' . $key . '.json');
     $timestamp = $mtime === false ? time() : (int)$mtime; $now = gmdate('c');
-    $stmt = $pdo->prepare('INSERT OR REPLACE INTO cache_entries (cache_key,value_json,expires_at,created_at,updated_at) VALUES (:key,:value,:expires,:now,:now)');
-    $stmt->bindValue(':key', $key, PDO::PARAM_STR); $stmt->bindParam(':value', $stream, PDO::PARAM_LOB);
+    $stmt = $pdo->prepare('INSERT OR REPLACE INTO cache_entries (cache_key,value_json,expires_at,created_at,updated_at) SELECT :key,contents,:expires,:now,:now FROM legacy_data_files WHERE relative_path=:path');
+    $stmt->bindValue(':key', $key, PDO::PARAM_STR);
     $stmt->bindValue(':expires', $timestamp + 86400, PDO::PARAM_INT); $stmt->bindValue(':now', $now, PDO::PARAM_STR);
-    try { $stmt->execute(); } finally { closeLegacyStream($stream); }
+    $stmt->bindValue(':path', $relative, PDO::PARAM_STR); $stmt->execute();
+}
+function legacyFileExists(PDO $pdo, $path)
+{
+    $stmt = $pdo->prepare('SELECT 1 FROM legacy_data_files WHERE relative_path=:path');
+    $stmt->execute(array(':path' => $path)); return (bool)$stmt->fetchColumn();
+}
+function validateLegacyFile(PDO $pdo, $path, $expectedSize)
+{
+    $stmt = $pdo->prepare('SELECT length(contents) FROM legacy_data_files WHERE relative_path=:path');
+    $stmt->execute(array(':path' => $path)); $actualSize = $stmt->fetchColumn();
+    if ($actualSize === false || (int)$actualSize !== (int)$expectedSize) {
+        throw new RuntimeException('Validation impossible après archivage: ' . $path);
+    }
+}
+function removeMigratedFile($file, $relative)
+{
+    if (!unlink($file)) throw new RuntimeException('Suppression impossible: ' . $relative);
 }
 function openLegacyFile($file, $label)
 {
