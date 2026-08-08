@@ -1,4 +1,5 @@
 <?php
+declare(ticks=1);
 /** Worker CLI : appelle OpenAI puis enregistre strictement le JSON produit. */
 require_once __DIR__ . '/logger.php';
 require_once __DIR__ . '/analysis_types.php';
@@ -20,9 +21,12 @@ try {
     $apiKey = getenv('OPENAI_API_KEY');
     if (!$apiKey) throw new RuntimeException('OPENAI_API_KEY est absente de api/.env.');
     $model = getenv('OPENAI_MODEL') ?: 'gpt-5.3-chat-latest';
+    $ttl = llmJobTtlSeconds();
+    $deadline = microtime(true) + $ttl;
+    updateJob($jobId, 'running', null, $ttl);
+    armJobTimeout($ttl);
     $listing = findFavorite($id);
     if (!$listing) throw new RuntimeException('Annonce favorite introuvable.');
-    updateJob($jobId, 'running', null);
     $inputVariables = promptInputVariables($listing);
     $listingJson = json_encode($listing, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     $baseReplacements = ['{{annonce_complete}}' => $listingJson, '{{dpe}}' => $inputVariables['dpe'], '{{ges}}' => $inputVariables['ges']];
@@ -34,7 +38,7 @@ try {
             saveAnalysis($id, 'prix', $priceAnalysis);
             aiLog('analysis.price_data_succeeded', ['id' => $id, 'type' => $type, 'captured_at' => $priceAnalysis['captured_at']]);
         }
-        $travel = runAnalysisStage($apiKey, $model, 'ana_trajet_rp', $baseReplacements + ['{{ville_residence_principale}}' => $inputVariables['ville_residence_principale']], $id, $type);
+        $travel = runAnalysisStage($apiKey, $model, 'ana_trajet_rp', $baseReplacements + ['{{ville_residence_principale}}' => $inputVariables['ville_residence_principale']], $id, $type, $deadline, $ttl);
         applyTravelScore($travel);
         $analysis = runAnalysisStage($apiKey, $model, 'ana_patrimonial', [
             '{{annonce_complete}}' => $listingJson,
@@ -43,25 +47,29 @@ try {
             '{{ville_residence_principale}}' => $inputVariables['ville_residence_principale'],
             '{{analyse_trajet}}' => json_encode($travel, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
             '{{analyse_prix}}' => json_encode($priceAnalysis['result'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
-        ], $id, $type);
+        ], $id, $type, $deadline, $ttl);
         $analysis['accessibilite_depuis_rp'] = $travel;
         $analysis['accessibilite_depuis_paris'] = $travel;
         $analysis['notation']['axes']['accessibilite']['score'] = $travel['evaluation']['score'] ?? null;
         $analysis['sources'] = array_merge($analysis['sources'] ?? [], $travel['sources'] ?? []);
         applyPatrimonialScore($analysis);
     } else {
-        $analysis = runAnalysisStage($apiKey, $model, 'ana_' . $type, $baseReplacements, $id, $type);
+        $analysis = runAnalysisStage($apiKey, $model, 'ana_' . $type, $baseReplacements, $id, $type, $deadline, $ttl);
     }
     if (!findFavorite($id)) {
         deleteJob($jobId);
         aiLog('analysis.result_discarded_deleted_listing', ['id' => $id, 'type' => $type]);
         exit(0);
     }
+    assertJobWithinTtl($deadline, $ttl);
     saveAnalysis($id, $type, $analysis);
+    assertJobWithinTtl($deadline, $ttl);
+    if (function_exists('pcntl_alarm')) pcntl_alarm(0);
     aiLog('analysis.result_written', ['id' => $id, 'type' => $type, 'storage' => 'sqlite']);
     updateJob($jobId, 'completed', null);
     aiLog('analysis.completed', ['id' => $id, 'type' => $type]);
 } catch (Throwable $error) {
+    if (function_exists('pcntl_alarm')) pcntl_alarm(0);
     aiLog('analysis.failed', ['id' => $id, 'type' => $type, 'error' => $error->getMessage()]);
     if (findFavorite($id)) {
         updateJob($jobId, 'failed', $error->getMessage());
@@ -72,10 +80,10 @@ try {
 function loadEnv($path) { if (!is_file($path)) return; foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) { $line = trim($line); if ($line === '' || $line[0] === '#') continue; $line = preg_replace('/^export\s+/', '', $line); if (!preg_match('/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/', $line, $m)) continue; $value = trim($m[2]); if (strlen($value) > 1 && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) $value = substr($value, 1, -1); putenv($m[1] . '=' . $value); $_ENV[$m[1]] = $value; } }
 function findFavorite($id) { return (new PropertyRepository(sigma_db()))->find($id); }
 function readSqliteAnalysis($id, $type) { $stmt = sigma_db()->prepare('SELECT result_json FROM analyses WHERE property_id = :id AND type = :type AND status = \'completed\''); $stmt->execute(array(':id' => $id, ':type' => $type)); $value = json_decode((string)$stmt->fetchColumn(), true); return is_array($value) ? $value : null; }
-function updateJob($jobId, $status, $error) {
+function updateJob($jobId, $status, $error, $ttl = 1200) {
     $now = gmdate('c'); $fields = array('status = :status', 'updated_at = :now', 'error = :error');
     if ($status === 'running') $fields[] = 'started_at = :now';
-    if ($status === 'running') $fields[] = "lease_expires_at = datetime('now', '+620 seconds')";
+    if ($status === 'running') $fields[] = "lease_expires_at = datetime('now', '+" . (int)$ttl . " seconds')";
     if ($status === 'completed' || $status === 'failed') $fields[] = 'finished_at = :now';
     $stmt = sigma_db()->prepare('UPDATE analysis_jobs SET ' . implode(',', $fields) . ' WHERE id = :id'); $stmt->execute(array(':status' => $status, ':now' => $now, ':error' => $error, ':id' => (int)$jobId));
 }
@@ -93,12 +101,13 @@ function promptInputVariables($listing) {
     if ($city === '') $city = 'Paris';
     return ['dpe' => $dpe, 'ges' => $ges, 'ville_residence_principale' => $city];
 }
-function runAnalysisStage($apiKey, $model, $promptName, $replacements, $id, $type) {
+function runAnalysisStage($apiKey, $model, $promptName, $replacements, $id, $type, $deadline, $ttl) {
+    assertJobWithinTtl($deadline, $ttl);
     $template = @file_get_contents(PROMPTS_DIR . $promptName . '.txt');
     if (!$template) throw new RuntimeException('Prompt d’analyse introuvable ou vide : ' . $promptName . '.');
     $prompt = str_replace(array_keys($replacements), array_values($replacements), $template);
     aiLog('analysis.openai_request_started', ['id' => $id, 'type' => $type, 'stage' => $promptName]);
-    $result = requestOpenAi($apiKey, $model, $prompt);
+    $result = requestOpenAi($apiKey, $model, $prompt, remainingJobSeconds($deadline, $ttl), $ttl);
     aiLog('analysis.openai_request_succeeded', ['id' => $id, 'type' => $type, 'stage' => $promptName]);
     $decoded = json_decode($result, true);
     if (!is_array($decoded)) throw new RuntimeException('OpenAI n’a pas renvoyé de JSON valide pour l’étape ' . $promptName . '.');
@@ -137,15 +146,17 @@ function applyPatrimonialScore(&$analysis) {
     $analysis['decision']['score_global'] = $analysis['notation']['score_global'];
     $analysis['qualite_patrimoniale']['score'] = round(($axes['emplacement_valeur']['score'] * 25 + $axes['qualite_bati']['score'] * 15 + $axes['liquidite_rarete']['score'] * 15) / 55);
 }
-function requestOpenAi($apiKey, $model, $prompt) {
+function requestOpenAi($apiKey, $model, $prompt, $timeout, $ttl) {
     if (!function_exists('curl_init')) throw new RuntimeException('Extension PHP cURL indisponible.');
     $payload = ['model' => $model, 'input' => [['role' => 'user', 'content' => [['type' => 'input_text', 'text' => $prompt]]]], 'text' => ['format' => ['type' => 'json_object']]];
     $curl = curl_init('https://api.openai.com/v1/responses');
-    curl_setopt_array($curl, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 15, CURLOPT_TIMEOUT => 300, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $apiKey, 'Content-Type: application/json'], CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE)]);
+    curl_setopt_array($curl, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => min(15, $timeout), CURLOPT_TIMEOUT => $timeout, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $apiKey, 'Content-Type: application/json'], CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE)]);
     $body = curl_exec($curl);
     $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
     $error = curl_error($curl);
+    $errorNumber = curl_errno($curl);
     curl_close($curl);
+    if ($errorNumber === CURLE_OPERATION_TIMEDOUT) throw new RuntimeException(llmJobTimeoutMessage($ttl));
     if ($body === false || $status < 200 || $status >= 300) {
         $details = openAiErrorDetails($body, $error);
         throw new RuntimeException('Erreur OpenAI (' . $status . ') avec le modèle ' . $model . ' : ' . $details);
@@ -153,6 +164,17 @@ function requestOpenAi($apiKey, $model, $prompt) {
     $decoded = json_decode($body, true);
     foreach (($decoded['output'] ?? []) as $output) foreach (($output['content'] ?? []) as $content) if (($content['type'] ?? '') === 'output_text') return $content['text'];
     throw new RuntimeException('Réponse OpenAI sans contenu texte.');
+}
+function remainingJobSeconds($deadline, $ttl) {
+    $remaining = (int)ceil($deadline - microtime(true));
+    if ($remaining <= 0) throw new RuntimeException(llmJobTimeoutMessage($ttl));
+    return $remaining;
+}
+function assertJobWithinTtl($deadline, $ttl) { remainingJobSeconds($deadline, $ttl); }
+function armJobTimeout($ttl) {
+    if (!function_exists('pcntl_signal') || !function_exists('pcntl_alarm')) return;
+    pcntl_signal(SIGALRM, function () use ($ttl) { throw new RuntimeException(llmJobTimeoutMessage($ttl)); });
+    pcntl_alarm((int)$ttl);
 }
 function openAiErrorDetails($body, $curlError) {
     if ($curlError) return $curlError;
