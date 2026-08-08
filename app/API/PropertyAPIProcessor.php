@@ -8,7 +8,7 @@ class PropertyAPIProcessor extends cAPI_Processor
     public function process($method, $body)
     {
         if ($method === 'GET') return isset($this->params['id']) ? $this->detail((string)$this->params['id']) : $this->collection();
-        if ($method === 'PATCH') { $body = $this->databaseFields($body); parent::process($method, $body); return $this->detail((string)$this->params['id']); }
+        if ($method === 'PATCH') return $this->patchProperty($body);
         return parent::process($method, $body);
     }
 
@@ -78,12 +78,36 @@ class PropertyAPIProcessor extends cAPI_Processor
         if (array_key_exists('primaryResidenceCity', $body)) { $raw = (new PropertyRepository($this->pdo))->find((string)$this->params['id'], $this->user['id']); if (!is_array($raw)) $raw = array(); $raw['primaryResidenceCity'] = mb_substr(trim(strip_tags((string)$body['primaryResidenceCity'])), 0, 120); $body['raw_json'] = $raw; unset($body['primaryResidenceCity']); }
         return $body;
     }
+
+    private function patchProperty($body)
+    {
+        if (!is_array($body)) throw new APIException(400, 'json.invalid', 'Corps JSON invalide.');
+        $personalFields = array('selection','notes','visitAt','agentName','agentPhone','agentEmail');
+        $personal = array(); $property = $body;
+        foreach ($personalFields as $field) {
+            if (array_key_exists($field, $property)) { $personal[$field] = $property[$field]; unset($property[$field]); }
+        }
+        $id = (string)$this->params['id']; $repo = new PropertyRepository($this->pdo); $plans = new PlanService();
+        if (!$repo->areUserAttributesValid($personal)) throw new APIException(422, 'property.status_invalid', 'Classement invalide.');
+        if (!$repo->findAccessible($id, $this->user['id'], $plans->isAdmin($this->user))) throw new APIException(404, 'resource.not_found', 'Annonce introuvable.');
+        if ($property) { $property = $this->databaseFields($property); parent::process('PATCH', $property); }
+        if ($personal && !$repo->saveUserAttributes($id, $this->user['id'], $personal)) throw new APIException(422, 'property.attributes_invalid', 'Attributs personnels invalides.');
+        if (!$property && !$personal) throw new APIException(422, 'payload.empty', 'Aucune donnée inscriptible.');
+        return $this->detail($id);
+    }
     protected function create($body)
     {
         $repo = new PropertyRepository($this->pdo); $plans = new PlanService();
         if (isset($body['id']) && $repo->find((string)$body['id'])) throw new APIException(409, 'property.id_conflict', 'Un bien utilise déjà cet identifiant.');
         if (!$plans->canAddFavorite($this->user, $repo->countActiveByUser($this->user['id']))) throw new APIException(429, 'property.quota_reached', 'Le quota de favoris est atteint.');
         $body['visibility'] = $plans->defaultVisibility($this->user);
-        return parent::create($body);
+        $personal = array();
+        foreach (array('selection','notes','visitAt','agentName','agentPhone','agentEmail') as $field) {
+            if (array_key_exists($field, $body)) { $personal[$field] = $body[$field]; unset($body[$field]); }
+        }
+        if (!$repo->areUserAttributesValid($personal)) throw new APIException(422, 'property.status_invalid', 'Classement invalide.');
+        $result = parent::create($body);
+        if ($personal) $repo->saveUserAttributes((string)$result['data']['id'], $this->user['id'], $personal);
+        return $result;
     }
 }

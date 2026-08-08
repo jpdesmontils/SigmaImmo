@@ -1,6 +1,6 @@
 {
   "resources": {
-    "properties": {"table":"properties","primary_key":"id","writable":["id","visibility","source","source_url","title","location","address","price","price_text","surface","surface_text","rooms","bedrooms","terrain","dpe","ges","description","image_url","images_json","features_json","coords_json","agency","price_reduction","photo_count","selection","notes","visit_at","agent_name","agent_phone","agent_email","raw_json","captured_at","scraped_at"]},
+    "properties": {"table":"properties","primary_key":"id","writable":["id","visibility","source","source_url","title","location","address","price","price_text","surface","surface_text","rooms","bedrooms","terrain","dpe","ges","description","image_url","images_json","features_json","coords_json","agency","price_reduction","photo_count","raw_json","captured_at","scraped_at"]},
     "property_tags": {"table":"property_tags","primary_key":"id","writable":["property_id","tag"]},
     "analyses": {"table":"analyses","primary_key":"id","writable":["property_id","type","status","summary_json","result_json","score"]},
     "analysis_jobs": {"table":"analysis_jobs","primary_key":"id","writable":["property_id","type","status","queued_at","started_at","lease_expires_at","finished_at","error"]},
