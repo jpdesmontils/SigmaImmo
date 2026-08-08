@@ -30,6 +30,20 @@ if ($archivedSize !== $expectedSize || $cacheSize !== $expectedSize) {
     failMigrationTest('Le cache doit être importé intégralement dans les deux tables.', $temporary);
 }
 
+if (!mkdir($cacheDirectory, 0755, true)) failMigrationTest('Le cache déjà importé doit pouvoir être recréé.', $temporary);
+file_put_contents($cacheFile, '[1]');
+$output = array();
+exec($command . ' 2>&1', $output, $status);
+if ($status !== 0) failMigrationTest('La reprise de migration doit réussir.', $temporary);
+if (is_dir($data)) failMigrationTest('La source déjà présente en base doit être supprimée.', $temporary);
+if (strpos(implode("\n", $output), 'Fichier déjà présent dans legacy_data_files; suppression de la source.') === false) {
+    failMigrationTest('La reprise doit signaler le fichier déjà présent en base.', $temporary);
+}
+$archivedSizeAfterResume = (int)$pdo->query('SELECT length(contents) FROM legacy_data_files')->fetchColumn();
+if ($archivedSizeAfterResume !== $expectedSize) {
+    failMigrationTest('La reprise ne doit pas remplacer un fichier déjà archivé.', $temporary);
+}
+
 $pdo = null;
 removeMigrationTestTree($temporary);
 echo "migrate_data_to_sqlite_memory_test ok\n";
