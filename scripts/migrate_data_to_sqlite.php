@@ -4,6 +4,9 @@ require_once __DIR__ . '/../app/Database/bootstrap.php';
 require_once __DIR__ . '/../app/Repositories/AnalysisRepository.php';
 
 if (PHP_SAPI !== 'cli') exit(1);
+$migrationContext = array('file' => null, 'stage' => 'initialisation');
+$migrationEmergencyMemory = str_repeat('x', 65536);
+register_shutdown_function('reportMigrationFatalError');
 $root = isset($argv[1]) ? rtrim($argv[1], DIRECTORY_SEPARATOR) : dirname(__DIR__) . '/data';
 if (!is_dir($root)) {
     echo "Aucun répertoire data à migrer.\n";
@@ -16,28 +19,60 @@ if ($databaseReal !== false && strpos($databaseReal, $rootReal . DIRECTORY_SEPAR
     fwrite(STDERR, "La base SQLite ne peut pas se trouver dans le répertoire à supprimer.\n"); exit(1);
 }
 
+migrationLog('Démarrage de la migration.');
+migrationLog('Source: ' . $rootReal);
+migrationLog('Base SQLite: ' . DatabaseConnection::path());
+migrationLog('Limite mémoire PHP: ' . ini_get('memory_limit') . '.');
+$migrationContext['stage'] = 'préparation de la base SQLite';
+migrationLog('Préparation de la base SQLite...');
 $pdo = sigma_db();
+$migrationContext['stage'] = 'inventaire des fichiers';
+migrationLog('Inventaire des fichiers à migrer...');
 $files = legacyDataFiles($rootReal);
+$totalFiles = count($files);
+migrationLog($totalFiles . ' fichier(s) trouvé(s).');
 $imported = 0; $analyses = 0; $caches = 0;
 $pdo->beginTransaction();
 try {
-    foreach ($files as $file) {
+    foreach ($files as $index => $file) {
         $relative = str_replace(DIRECTORY_SEPARATOR, '/', substr($file, strlen($rootReal) + 1));
         $mtime = filemtime($file);
+        $size = filesize($file);
+        $migrationContext['file'] = $relative;
+        $migrationContext['stage'] = 'archivage du fichier';
+        migrationLog('[' . ($index + 1) . '/' . $totalFiles . '] ' . $relative . ' (' . formatMigrationBytes($size) . ').');
+        migrationLog('  Archivage dans legacy_data_files...');
         archiveLegacyFile($pdo, $relative, $file, $mtime);
         $imported++;
+        migrationLog('  Archivage terminé.');
         if (preg_match('#^cache/(?:dvf/)?([^/]+)\.json$#', $relative, $match)) {
+            $migrationContext['stage'] = 'import du cache ' . $match[1];
+            migrationLog('  Import du cache "' . $match[1] . '"...');
             importLegacyCache($pdo, $match[1], $file, $mtime); $caches++;
+            migrationLog('  Cache importé.');
         }
         if (preg_match('#^analyses/([a-z0-9_-]+)/([A-Za-z0-9_-]+)\.json$#', $relative, $match) && propertyExists($pdo, $match[2])) {
+            $migrationContext['stage'] = 'décodage JSON de l’analyse';
+            migrationLog('  Décodage JSON de l’analyse...');
             $decoded = decodeLegacyJsonFile($file, $relative);
             if (is_array($decoded)) {
+                $migrationContext['stage'] = 'enregistrement de l’analyse';
+                migrationLog('  Enregistrement de l’analyse...');
                 (new AnalysisRepository($pdo))->save($match[2], $match[1], $decoded); $analyses++;
+                migrationLog('  Analyse importée.');
+            } else {
+                migrationLog('  Analyse ignorée: le contenu JSON n’est pas un tableau.');
             }
         }
+        migrationLog('  Fichier terminé; mémoire: ' . formatMigrationBytes(memory_get_usage(true)) . ', pic: ' . formatMigrationBytes(memory_get_peak_usage(true)) . '.');
     }
+    $migrationContext['file'] = null;
+    $migrationContext['stage'] = 'validation de l’import';
+    migrationLog('Validation du nombre de fichiers archivés...');
     $count = (int)$pdo->query('SELECT COUNT(*) FROM legacy_data_files')->fetchColumn();
     if ($count < count($files)) throw new RuntimeException('La validation de l’import exhaustif a échoué.');
+    $migrationContext['stage'] = 'validation de la transaction';
+    migrationLog('Validation de la transaction SQLite...');
     $pdo->commit();
 } catch (Exception $error) {
     if ($pdo->inTransaction()) $pdo->rollBack();
@@ -45,10 +80,13 @@ try {
 }
 
 try {
+    $migrationContext['stage'] = 'suppression du répertoire source';
+    migrationLog('Suppression du répertoire source validé...');
     removeLegacyDataTree($rootReal);
 } catch (Exception $error) {
     fwrite(STDERR, $error->getMessage() . "\nLes données sont importées, mais le répertoire n’a pas pu être supprimé intégralement.\n"); exit(1);
 }
+$migrationContext['stage'] = 'terminée';
 echo 'Migration terminée: ' . $imported . ' fichier(s), ' . $caches . ' cache(s), ' . $analyses . " analyse(s). data/ a été supprimé.\n";
 
 function legacyDataFiles($root)
@@ -109,4 +147,27 @@ function removeLegacyDataTree($root)
         if (!$ok) throw new RuntimeException('Suppression impossible: ' . $item->getPathname());
     }
     if (!rmdir($root)) throw new RuntimeException('Suppression impossible: ' . $root);
+}
+function migrationLog($message)
+{
+    echo '[' . gmdate('H:i:s') . '] ' . $message . "\n";
+    if (function_exists('flush')) flush();
+}
+function formatMigrationBytes($bytes)
+{
+    if ($bytes === false) return 'taille inconnue';
+    $units = array('o', 'Kio', 'Mio', 'Gio', 'Tio');
+    $value = (float)$bytes; $unit = 0;
+    while ($value >= 1024 && $unit < count($units) - 1) { $value /= 1024; $unit++; }
+    return ($unit === 0 ? (string)(int)$value : number_format($value, 2, ',', ' ')) . ' ' . $units[$unit];
+}
+function reportMigrationFatalError()
+{
+    global $migrationContext, $migrationEmergencyMemory;
+    $error = error_get_last();
+    if (!is_array($error) || !in_array($error['type'], array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR), true)) return;
+    $migrationEmergencyMemory = null;
+    $file = $migrationContext['file'] === null ? '' : ' Fichier: ' . $migrationContext['file'] . '.';
+    migrationLog('ARRÊT FATAL pendant l’étape « ' . $migrationContext['stage'] . ' ».' . $file);
+    migrationLog('Mémoire au dernier relevé: ' . formatMigrationBytes(memory_get_usage(true)) . '; pic: ' . formatMigrationBytes(memory_get_peak_usage(true)) . '.');
 }
