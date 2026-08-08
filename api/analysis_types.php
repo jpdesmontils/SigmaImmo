@@ -3,6 +3,18 @@
 function analysisTypes() { return ['locatif', 'mdb', 'patrimonial']; }
 function validAnalysisType($type) { return is_string($type) && in_array($type, analysisTypes(), true); }
 
+/** Durée maximale d'exécution d'un job LLM ; la valeur par défaut s'applique si la variable est absente ou vide. */
+function llmJobTtlSeconds() {
+    $configured = getenv('TTL_LLM_IN_SEC');
+    if ($configured === false || trim($configured) === '') return 1200;
+    if (!preg_match('/^[1-9][0-9]*$/', trim($configured))) throw new RuntimeException('TTL_LLM_IN_SEC doit être un nombre entier strictement positif de secondes.');
+    return (int) trim($configured);
+}
+
+function llmJobTimeoutMessage($ttl) {
+    return 'L’analyse a dépassé sa durée maximale d’exécution de ' . (int)$ttl . ' secondes. Veuillez réessayer.';
+}
+
 /** Construit l'unique synthèse légère consommée par la galerie et stockée en base. */
 function analysisSummary($analysis, $type, $analyzedAt) {
     $summary = array(
